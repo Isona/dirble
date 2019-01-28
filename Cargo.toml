@@ -6,3 +6,5 @@ edition = "2018"
 
 [dependencies]
 curl = "0.4.19"
+percent-encoding = "1.0.1"
+

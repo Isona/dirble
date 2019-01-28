@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
+use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 
 struct Collector(Vec<u8>);
 
@@ -51,6 +52,7 @@ impl Config {
 // then it will print the URI it requested and the response
 fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     let url = format!("{}/{}", base, end);
+    let url = utf8_percent_encode(&url, DEFAULT_ENCODE_SET).to_string();
 
     easy.url(&url).unwrap();
     match easy.perform() {
