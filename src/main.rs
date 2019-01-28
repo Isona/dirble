@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
-//use std::io::{stdout, Write};
 
 struct Collector(Vec<u8>);
 
@@ -54,11 +53,13 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     let url = format!("{}/{}", base, end);
 
     easy.url(&url).unwrap();
-    easy.perform().unwrap();
+    match easy.perform() {
+        Ok(_v) => {}
+        Err(_e) => { return(); }
+    }
+
     let code = easy.response_code().unwrap();
     let contents = easy.get_ref();
-
-
     if code != 404 { println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, String::from_utf8_lossy(&contents.0).len()); }
 
 }
