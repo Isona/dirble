@@ -1,0 +1,8 @@
+[package]
+name = "dirble"
+version = "0.1.0"
+authors = ["Izzy Whistlecroft <izzy.whistlecroft@nccgroup.com>"]
+edition = "2018"
+
+[dependencies]
+curl = "0.4.19"
