@@ -1,9 +1,11 @@
-use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+#[macro_use]
+extern crate clap;
+use clap::App;
 
 struct Collector(Vec<u8>);
 
@@ -16,34 +18,19 @@ impl Handler for Collector {
 
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let yml = load_yaml!("args.yml");
+    let m = App::from_yaml(yml).get_matches();
 
-    let config = Config::new(&args);
+    let file = File::open(m.value_of("wordlist").unwrap()).unwrap();
+
+    let hostname = m.value_of("host").unwrap();
+
     let mut easy = Easy2::new(Collector(Vec::new()));
     easy.get(true).unwrap();
 
-    let file = File::open(config.filename).unwrap();
     for line in BufReader::new(file).lines() {
         let line = line.unwrap();
-        request(&mut easy, &config.hostname, &line)
-    }
-}
-
-struct Config {
-    hostname: String,
-    filename: String,
-}
-
-impl Config {
-    fn new(args: &[String]) -> Config {
-        if args.len() < 3 {
-            panic!("Not enough arguments");
-        }
-        
-        let hostname = args[1].clone();
-        let filename = args[2].clone();
-
-        Config { hostname, filename }
+        request(&mut easy, hostname, &line)
     }
 }
 
