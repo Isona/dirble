@@ -55,7 +55,10 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     easy.url(&url).unwrap();
     match easy.perform() {
         Ok(_v) => {}
-        Err(_e) => { return(); }
+        Err(_e) => 
+        {   println!("- {} (CODE: 0|SIZE: 0)", url);
+            return(); 
+        }
     }
 
     let code = easy.response_code().unwrap();
