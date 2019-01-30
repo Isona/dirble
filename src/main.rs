@@ -32,6 +32,8 @@ fn main() {
 
     // Get the host URI from the arguments
     let hostname = Arc::new(String::from(m.value_of("host").unwrap().clone()));
+    assert!(hostname.starts_with("https://") || hostname.starts_with("http://"), 
+        "The provided target URI must start with http:// or https://");
 
     let mut handles = vec![];
 
@@ -71,8 +73,7 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     //If it's empty then output info and return
     match easy.perform() {
         Ok(_v) => {}
-        Err(_e) => 
-        {   println!("- {} (CODE: 0|SIZE: 0)", url);
+        Err(_e) => {   println!("- {} (CODE: 0|SIZE: 0)", url);
             return(); 
         }
     }
@@ -83,11 +84,25 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     let contents = easy.get_ref();
     
     // Print some output if the 
-    if code != 404 
-    { 
-        let content_len = String::from_utf8_lossy(&contents.0).len();
-        println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
+    match code {
+        404 => return,
+        301 | 302 => {
+            let content_len = String::from_utf8_lossy(&contents.0).len();
+            let redir_dest = easy.redirect_url().unwrap().unwrap();
+            let dir_url = url.clone() + "/";
+            if dir_url == redir_dest {
+                println!("==> DIRECTORY: {}", dir_url);
+            }
+            else {
+                println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", url, code, content_len, redir_dest);
+            }
+        },
+        _ => {
+            let content_len = String::from_utf8_lossy(&contents.0).len();
+            println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
+        },
     }
+
 
 }
 
