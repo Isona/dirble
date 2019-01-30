@@ -1,11 +1,15 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{self, BufRead, BufReader};
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 #[macro_use]
 extern crate clap;
 use clap::App;
+use std::sync::Arc;
+use std::path::Path;
+use std::thread;
+
 
 struct Collector(Vec<u8>);
 
@@ -23,20 +27,34 @@ fn main() {
     let m = App::from_yaml(yml).get_matches();
 
     // Get the wordlist file from the arguments and open it
-    let file = File::open(m.value_of("wordlist").unwrap()).unwrap();
+    let wordlist = Arc::new(lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
+    //let file = File::open(m.value_of("wordlist").unwrap()).unwrap();
 
     // Get the host URI from the arguments
-    let hostname = m.value_of("host").unwrap();
+    let hostname = Arc::new(String::from(m.value_of("host").unwrap().clone()));
 
-    // Create a new curl Easy2 instance and set it to use GET requests
-    let mut easy = Easy2::new(Collector(Vec::new()));
-    easy.get(true).unwrap();
+    let mut handles = vec![];
 
-    // For each line in the file, call the request function on it
-    for line in BufReader::new(file).lines() {
-        let line = line.unwrap();
-        request(&mut easy, hostname, &line)
+    let wordlist_clone = wordlist.clone();
+    let hostname_clone = hostname.clone();
+    let handle = thread::spawn(move || {
+        // Create a new curl Easy2 instance and set it to use GET requests
+        let mut easy = Easy2::new(Collector(Vec::new()));
+        easy.get(true).unwrap();
+
+        // For each line in the file, call the request function on it
+        for line in 0..wordlist_clone.len() {
+            //let line ;
+            request(&mut easy, &hostname_clone, &wordlist_clone[line]);
+        }
+    });
+
+    handles.push(handle);
+
+    for handle in handles {
+        handle.join().unwrap();
     }
+
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
@@ -71,4 +89,11 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
         println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
     }
 
+}
+
+fn lines_from_file<P>(filename: P) -> io::Result<Vec<String>>
+where
+    P: AsRef<Path>,
+{
+    BufReader::new(File::open(filename)?).lines().collect()
 }
