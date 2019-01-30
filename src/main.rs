@@ -6,7 +6,7 @@ use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 #[macro_use]
 extern crate clap;
 use clap::App;
-use std::sync::Arc;
+use std::sync::{mpsc, Arc};
 use std::path::Path;
 use std::thread;
 
@@ -35,8 +35,10 @@ fn main() {
     assert!(hostname.starts_with("https://") || hostname.starts_with("http://"), 
         "The provided target URI must start with http:// or https://");
 
+    let (tx, rx) = mpsc::channel();
     let mut handles = vec![];
 
+    let tx_clone = mpsc::Sender::clone(&tx);
     let wordlist_clone = wordlist.clone();
     let hostname_clone = hostname.clone();
     let handle = thread::spawn(move || {
@@ -47,8 +49,17 @@ fn main() {
         // For each line in the file, call the request function on it
         for line in 0..wordlist_clone.len() {
             //let line ;
-            request(&mut easy, &hostname_clone, &wordlist_clone[line]);
+            let code = request(&mut easy, &hostname_clone, &wordlist_clone[line]);
+            match code {
+                1 => {
+                    let dir_url = format!("{}/", &wordlist_clone[line]);
+                    tx_clone.send(dir_url).unwrap();
+                },
+                _ => {},
+            }
         }
+
+        tx_clone.send(String::from("END")).unwrap();
     });
 
     handles.push(handle);
@@ -62,7 +73,7 @@ fn main() {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will print the URI it requested and the response
-fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
+fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
 
     //Concatenate and url encode the url, then set it in the Easy2 instance
     let url = format!("{}/{}", base, end);
@@ -74,7 +85,7 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     match easy.perform() {
         Ok(_v) => {}
         Err(_e) => {   println!("- {} (CODE: 0|SIZE: 0)", url);
-            return(); 
+            return 0; 
         }
     }
 
@@ -85,21 +96,24 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) {
     
     // Print some output if the 
     match code {
-        404 => return,
+        404 => return code,
         301 | 302 => {
             let content_len = String::from_utf8_lossy(&contents.0).len();
             let redir_dest = easy.redirect_url().unwrap().unwrap();
             let dir_url = url.clone() + "/";
             if dir_url == redir_dest {
                 println!("==> DIRECTORY: {}", dir_url);
+                1
             }
             else {
                 println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", url, code, content_len, redir_dest);
+                code
             }
         },
         _ => {
             let content_len = String::from_utf8_lossy(&contents.0).len();
             println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
+            code
         },
     }
 
