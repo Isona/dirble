@@ -89,7 +89,7 @@ fn main() {
         }
 
         // Sleep to reduce CPU cycles used by main
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(1));
     }
 }
 
