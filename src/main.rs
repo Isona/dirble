@@ -41,26 +41,8 @@ fn main() {
     let tx_clone = mpsc::Sender::clone(&tx);
     let wordlist_clone = wordlist.clone();
     let hostname_clone = hostname.clone();
-    let handle = thread::spawn(move || {
-        // Create a new curl Easy2 instance and set it to use GET requests
-        let mut easy = Easy2::new(Collector(Vec::new()));
-        easy.get(true).unwrap();
-
-        // For each line in the file, call the request function on it
-        for line in 0..wordlist_clone.len() {
-            //let line ;
-            let code = request(&mut easy, &hostname_clone, &wordlist_clone[line]);
-            match code {
-                1 => {
-                    let dir_url = format!("{}/", &wordlist_clone[line]);
-                    tx_clone.send(dir_url).unwrap();
-                },
-                _ => {},
-            }
-        }
-
-        tx_clone.send(String::from("END")).unwrap();
-    });
+    let handle = thread::spawn(|| 
+        thread_spawn(tx_clone, hostname_clone, wordlist_clone));
 
     handles.push(handle);
 
@@ -116,8 +98,27 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
             code
         },
     }
+}
 
+fn thread_spawn(tx: mpsc::Sender<String>, hostname: Arc<String>, wordlist: Arc<Vec<String>>) {
+    // Create a new curl Easy2 instance and set it to use GET requests
+    let mut easy = Easy2::new(Collector(Vec::new()));
+    easy.get(true).unwrap();
 
+    // For each line in the file, call the request function on it
+    for line in 0..wordlist.len() {
+        //let line ;
+        let code = request(&mut easy, &hostname, &wordlist[line]);
+        match code {
+            1 => {
+                let dir_url = format!("{}/", &wordlist[line]);
+                tx.send(dir_url).unwrap();
+            },
+            _ => {},
+        }
+    }
+
+    tx.send(String::from("END")).unwrap();
 }
 
 fn lines_from_file<P>(filename: P) -> io::Result<Vec<String>>
