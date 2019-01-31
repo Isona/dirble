@@ -10,9 +10,7 @@ use std::{
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
-#[macro_use]
-extern crate clap;
-use clap::App;
+mod arg_parse;
 
 struct Collector(Vec<u8>);
 
@@ -26,8 +24,9 @@ impl Handler for Collector {
 
 fn main() {
     // Load the yaml file containing argument definitions
-    let yml = load_yaml!("args.yml");
-    let m = App::from_yaml(yml).get_matches();
+    //let yml = load_yaml!("args.yml");
+    //let m = App::from_yaml(yml).get_matches();
+    let m = arg_parse::get_args();
 
     // Get the wordlist file from the arguments and open it
     let wordlist = Arc::new(lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
@@ -35,8 +34,6 @@ fn main() {
     
     // Get the host URI from the arguments
     let hostname = String::from(m.value_of("host").unwrap().clone());
-    assert!(hostname.starts_with("https://") || hostname.starts_with("http://"), 
-        "The provided target URI must start with http:// or https://");
 
     // Create a queue for URIs to be scanned
     let mut scan_queue: VecDeque<String> = VecDeque::new();
