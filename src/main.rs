@@ -6,10 +6,12 @@ use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 #[macro_use]
 extern crate clap;
 use clap::App;
-use std::sync::{mpsc, Arc};
+use std::sync::Arc;
+use std::sync::mpsc::{self, Sender, Receiver};
 use std::path::Path;
 use std::thread;
-
+use std::collections::VecDeque;
+use std::time::Duration;
 
 struct Collector(Vec<u8>);
 
@@ -28,28 +30,69 @@ fn main() {
 
     // Get the wordlist file from the arguments and open it
     let wordlist = Arc::new(lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
-    //let file = File::open(m.value_of("wordlist").unwrap()).unwrap();
 
+    
     // Get the host URI from the arguments
-    let hostname = Arc::new(String::from(m.value_of("host").unwrap().clone()));
+    let hostname = String::from(m.value_of("host").unwrap().clone());
     assert!(hostname.starts_with("https://") || hostname.starts_with("http://"), 
         "The provided target URI must start with http:// or https://");
 
-    let (tx, rx) = mpsc::channel();
-    let mut handles = vec![];
+    // Create a queue for URIs to be scanned
+    let mut scan_queue: VecDeque<String> = VecDeque::new();
+    // Push the host URI to the queue to be scanned
+    scan_queue.push_back(hostname);
+    
+    // Create a channel for threads to communicate with the parent on
+    // This is used to send information about ending threads and discovered folders
+    let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
 
-    let tx_clone = mpsc::Sender::clone(&tx);
-    let wordlist_clone = wordlist.clone();
-    let hostname_clone = hostname.clone();
-    let handle = thread::spawn(|| 
-        thread_spawn(tx_clone, hostname_clone, wordlist_clone));
+    // Define the max number of threads and the number of threads currently in use
+    let max_threads = 5;
+    let mut threads_in_use = 0;
 
-    handles.push(handle);
+    // Loop of checking for messages from the threads,
+    // spawning new threads on items in the scan queue
+    // and checking if the program is done
+    loop {
 
-    for handle in handles {
-        handle.join().unwrap();
+        // Check for messages from the threads
+        let reply = rx.try_recv();
+        match reply {
+            Ok(message) => {
+                // If a thread has sent end, then we can reduce the threads in use count
+                if message == "END" { threads_in_use -= 1; }
+                // If a thread sent anything else, then it's a discovered directory
+                // Push it to the scan queue
+                else { scan_queue.push_back(String::from(message)); }
+            },
+            // Ignore any errors - this happens if the queue is empty, that's okay
+            Err(_) => {},
+        };
+
+        // If there are items in the scan queue and available threads
+        // Spawn a new thread to scan an item
+        if threads_in_use < max_threads && scan_queue.len() > 0 {
+
+            // Clone a new sender to the channel and a new wordlist reference
+            // Then pop the scan target from the queue
+            let tx_clone = mpsc::Sender::clone(&tx);
+            let wordlist_clone = wordlist.clone();
+            let target = scan_queue.pop_front().unwrap();
+
+            // Spawn a thread with the arguments and increment the in use counter
+            thread::spawn(|| 
+                thread_spawn(tx_clone, target, wordlist_clone));
+            threads_in_use += 1;
+        }
+
+        // If there are no threads in use and the queue is empty then stop
+        if threads_in_use == 0 && scan_queue.len() == 0 {
+            break;
+        }
+
+        // Sleep to reduce CPU cycles used by main
+        thread::sleep(Duration::from_secs(1));
     }
-
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
@@ -76,9 +119,14 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
     // Get the contents of the response
     let contents = easy.get_ref();
     
-    // Print some output if the 
+    // Determine what to do based on the code
     match code {
+        // If a 404 code, just return the response code
         404 => return code,
+        // If it's a redirect, then check if the redirection destination is
+        // to the same URL with a / on the end, if so return 1 so that the
+        // calling thread knows this is a discovered folder
+        // Otherwise, just print some output and return the response code
         301 | 302 => {
             let content_len = String::from_utf8_lossy(&contents.0).len();
             let redir_dest = easy.redirect_url().unwrap().unwrap();
@@ -92,6 +140,7 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
                 code
             }
         },
+        // If it's anything else, print out some information and return the response code
         _ => {
             let content_len = String::from_utf8_lossy(&contents.0).len();
             println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
@@ -100,27 +149,29 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
     }
 }
 
-fn thread_spawn(tx: mpsc::Sender<String>, hostname: Arc<String>, wordlist: Arc<Vec<String>>) {
+fn thread_spawn(tx: mpsc::Sender<String>, hostname: String, wordlist: Arc<Vec<String>>) {
+    println!("Scanning {}/", hostname);
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector(Vec::new()));
     easy.get(true).unwrap();
 
-    // For each line in the file, call the request function on it
+    // For each item in the wordlist, call the request function on it
     for line in 0..wordlist.len() {
-        //let line ;
         let code = request(&mut easy, &hostname, &wordlist[line]);
         match code {
             1 => {
-                let dir_url = format!("{}/", &wordlist[line]);
+                let dir_url = format!("{}/{}", &hostname, &wordlist[line]);
                 tx.send(dir_url).unwrap();
             },
             _ => {},
         }
     }
-
+    println!("Finished scanning {}/", hostname);
+    // Send an end message to the main thread
     tx.send(String::from("END")).unwrap();
 }
 
+// Function used to read in lines from the wordlist file
 fn lines_from_file<P>(filename: P) -> io::Result<Vec<String>>
 where
     P: AsRef<Path>,
