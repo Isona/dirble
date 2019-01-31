@@ -1,17 +1,18 @@
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::{
+    collections::VecDeque,
+    fs::File,
+    io::{self, BufRead, BufReader},
+    path::Path,
+    sync::{Arc, mpsc::{self, Sender, Receiver}},
+    thread,
+    time::Duration,
+};
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 #[macro_use]
 extern crate clap;
 use clap::App;
-use std::sync::Arc;
-use std::sync::mpsc::{self, Sender, Receiver};
-use std::path::Path;
-use std::thread;
-use std::collections::VecDeque;
-use std::time::Duration;
 
 struct Collector(Vec<u8>);
 
