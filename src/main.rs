@@ -1,8 +1,5 @@
 use std::{
     collections::VecDeque,
-    fs::File,
-    io::{self, BufRead, BufReader},
-    path::Path,
     sync::{Arc, mpsc::{self, Sender, Receiver}},
     thread,
     time::Duration,
@@ -11,6 +8,7 @@ extern crate curl;
 use curl::easy::{Easy2};
 mod arg_parse;
 mod request;
+mod wordlist;
 
 fn main() {
     // Load the yaml file containing argument definitions
@@ -19,7 +17,7 @@ fn main() {
     let m = arg_parse::get_args();
 
     // Get the wordlist file from the arguments and open it
-    let wordlist = Arc::new(lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
+    let wordlist = Arc::new(wordlist::lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
 
     
     // Get the host URI from the arguments
@@ -105,10 +103,3 @@ fn thread_spawn(tx: mpsc::Sender<String>, hostname: String, wordlist: Arc<Vec<St
     tx.send(String::from("END")).unwrap();
 }
 
-// Function used to read in lines from the wordlist file
-fn lines_from_file<P>(filename: P) -> io::Result<Vec<String>>
-where
-    P: AsRef<Path>,
-{
-    BufReader::new(File::open(filename)?).lines().collect()
-}
