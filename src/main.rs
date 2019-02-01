@@ -9,7 +9,7 @@ use std::{
 };
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
-use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use percent_encoding::{utf8_percent_encode, percent_decode, DEFAULT_ENCODE_SET};
 mod arg_parse;
 
 struct Collector(Vec<u8>);
@@ -127,10 +127,17 @@ fn request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
         // Otherwise, just print some output and return the response code
         301 | 302 => {
             let content_len = String::from_utf8_lossy(&contents.0).len();
+
+            // Get and url decode the redirect destination
             let redir_dest = easy.redirect_url().unwrap().unwrap();
+            let redir_dest = percent_decode(redir_dest.as_bytes()).decode_utf8().unwrap();
+
+            // Clone and url decode the url
             let dir_url = url.clone() + "/";
+            let dir_url = percent_decode(dir_url.as_bytes()).decode_utf8().unwrap();
+
             if dir_url == redir_dest {
-                println!("==> DIRECTORY: {}", dir_url);
+                println!("==> DIRECTORY: {}", url);
                 1
             }
             else {
