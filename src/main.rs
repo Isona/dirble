@@ -64,10 +64,11 @@ fn main() {
             let tx_clone = mpsc::Sender::clone(&tx);
             let wordlist_clone = wordlist.clone();
             let target = scan_queue.pop_front().unwrap();
+            let list_gen = wordlist::UriGenerator::new(target, String::from(""), wordlist_clone);
 
             // Spawn a thread with the arguments and increment the in use counter
             thread::spawn(|| 
-                thread_spawn(tx_clone, target, wordlist_clone));
+                thread_spawn(tx_clone, list_gen));
             threads_in_use += 1;
         }
 
@@ -81,19 +82,20 @@ fn main() {
     }
 }
 
-fn thread_spawn(tx: mpsc::Sender<String>, hostname: String, wordlist: Arc<Vec<String>>) {
+fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator) {
+    let hostname = uri_gen.hostname.clone();
     println!("Scanning {}/", hostname);
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(request::Collector(Vec::new()));
     easy.get(true).unwrap();
 
     // For each item in the wordlist, call the request function on it
-    for line in 0..wordlist.len() {
-        let code = request::make_request(&mut easy, &hostname, &wordlist[line]);
+    for uri in uri_gen {
+        let code = request::make_request(&mut easy, uri.clone());
         match code {
             1 => {
-                let dir_url = format!("{}/{}", &hostname, &wordlist[line]);
-                tx.send(dir_url).unwrap();
+                //let dir_url = format!("{}/{}", &hostname, &wordlist[line]);
+                tx.send(uri).unwrap();
             },
             _ => {},
         }

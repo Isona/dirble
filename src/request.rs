@@ -1,4 +1,4 @@
-use percent_encoding::{utf8_percent_encode, percent_decode, DEFAULT_ENCODE_SET};
+use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 
@@ -14,11 +14,11 @@ impl Handler for Collector {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will print the URI it requested and the response
-pub fn make_request(easy: &mut Easy2<Collector>, base: &str, end: &str) -> u32{
+pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> u32{
 
     //Concatenate and url encode the url, then set it in the Easy2 instance
-    let url = format!("{}/{}", base, end);
-    let url = utf8_percent_encode(&url, DEFAULT_ENCODE_SET).to_string();
+    //let url = format!("{}/{}", base, end);
+    //let url = utf8_percent_encode(&url, DEFAULT_ENCODE_SET).to_string();
     easy.url(&url).unwrap();
 
     //Perform the request and check if it's empty
