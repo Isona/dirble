@@ -3,7 +3,7 @@ use clap::{App, Arg, ArgMatches, AppSettings};
 
 pub fn get_args() -> ArgMatches<'static>
 {
-    let matches = App::new("dirble")
+    App::new("dirble")
                         .version("0.1")
                         .author("Izzy Whistlecroft")
                         .about("Finds pages and folders on websites")
@@ -24,10 +24,14 @@ pub fn get_args() -> ArgMatches<'static>
                             .takes_value(true)
                             .required(true)
                             .validator(starts_with_http))
-                        .get_matches();
-    matches
-
-
+                        .arg(Arg::with_name("extensions")
+                            .short("X")
+                            .value_name("extensions")
+                            .help("Provides comma separated extensions to extend queries with")
+                            .min_values(1)
+                            .default_value("")
+                            .value_delimiter(","))
+                        .get_matches()
 }
 
 

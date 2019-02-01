@@ -11,22 +11,28 @@ mod request;
 mod wordlist;
 
 fn main() {
-    // Load the yaml file containing argument definitions
-    //let yml = load_yaml!("args.yml");
-    //let m = App::from_yaml(yml).get_matches();
+    // Read the arguments in using the arg_parse module
     let m = arg_parse::get_args();
 
     // Get the wordlist file from the arguments and open it
     let wordlist = Arc::new(wordlist::lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
 
-    
     // Get the host URI from the arguments
     let hostname = String::from(m.value_of("host").unwrap().clone());
 
+    // Get extensions and append an empty one to the beginning
+    let mut extensions = m.values_of("extensions").unwrap().collect::<Vec<_>>();
+    extensions.insert(0, "");
+
     // Create a queue for URIs to be scanned
-    let mut scan_queue: VecDeque<String> = VecDeque::new();
+    let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
+
+
     // Push the host URI to the queue to be scanned
-    scan_queue.push_back(hostname);
+    for extension in extensions.clone() {
+        scan_queue.push_back(
+            wordlist::UriGenerator::new(hostname.clone(), String::from(extension), wordlist.clone()));
+    }
     
     // Create a channel for threads to communicate with the parent on
     // This is used to send information about ending threads and discovered folders
@@ -48,8 +54,13 @@ fn main() {
                 // If a thread has sent end, then we can reduce the threads in use count
                 if message == "END" { threads_in_use -= 1; }
                 // If a thread sent anything else, then it's a discovered directory
-                // Push it to the scan queue
-                else { scan_queue.push_back(String::from(message)); }
+                // Create new generators with the folder and each extension, and push them to the scan queue
+                else { 
+                    for extension in extensions.clone() {
+                        scan_queue.push_back(
+                            wordlist::UriGenerator::new(message.clone(), String::from(extension), wordlist.clone()));
+                    }
+                }
             },
             // Ignore any errors - this happens if the queue is empty, that's okay
             Err(_) => {},
@@ -62,9 +73,9 @@ fn main() {
             // Clone a new sender to the channel and a new wordlist reference
             // Then pop the scan target from the queue
             let tx_clone = mpsc::Sender::clone(&tx);
-            let wordlist_clone = wordlist.clone();
-            let target = scan_queue.pop_front().unwrap();
-            let list_gen = wordlist::UriGenerator::new(target, String::from(""), wordlist_clone);
+            //let wordlist_clone = wordlist.clone();
+            let list_gen = scan_queue.pop_front().unwrap();
+            //let list_gen = wordlist::UriGenerator::new(target, String::from(""), wordlist_clone);
 
             // Spawn a thread with the arguments and increment the in use counter
             thread::spawn(|| 

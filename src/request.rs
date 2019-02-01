@@ -16,13 +16,11 @@ impl Handler for Collector {
 // then it will print the URI it requested and the response
 pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> u32{
 
-    //Concatenate and url encode the url, then set it in the Easy2 instance
-    //let url = format!("{}/{}", base, end);
-    //let url = utf8_percent_encode(&url, DEFAULT_ENCODE_SET).to_string();
+    // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
 
-    //Perform the request and check if it's empty
-    //If it's empty then output info and return
+    // Perform the request and check if it's empty
+    // If it's empty then output info and return
     match easy.perform() {
         Ok(_v) => {}
         Err(_e) => {   println!("- {} (CODE: 0|SIZE: 0)", url);
