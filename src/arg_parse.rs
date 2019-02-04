@@ -46,7 +46,9 @@ pub fn get_args() -> GlobalOpts
                         .arg(Arg::with_name("proxy")
                             .long("proxy")
                             .value_name("proxy")
-                            .help("The proxy address to use, including type and port."))
+                            .help("The proxy address to use, including type and port, \
+                                     can also include a username and password in the form \
+                                     \"http://username:password@proxy_url:proxy_port\"."))
                         .arg(Arg::with_name("burp")
                             .long("burp")
                             .value_name("burp")
