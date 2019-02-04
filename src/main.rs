@@ -12,26 +12,19 @@ mod wordlist;
 
 fn main() {
     // Read the arguments in using the arg_parse module
-    let m = arg_parse::get_args();
+    let global_opts = arg_parse::get_args();
 
     // Get the wordlist file from the arguments and open it
-    let wordlist = Arc::new(wordlist::lines_from_file(m.value_of("wordlist").unwrap()).unwrap());
-
-    // Get the host URI from the arguments
-    let hostname = String::from(m.value_of("host").unwrap().clone());
-
-    // Get extensions and append an empty one to the beginning
-    let mut extensions = m.values_of("extensions").unwrap().collect::<Vec<_>>();
-    extensions.insert(0, "");
+    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file).unwrap());
 
     // Create a queue for URIs to be scanned
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
 
 
     // Push the host URI to the queue to be scanned
-    for extension in extensions.clone() {
+    for extension in global_opts.extensions.clone() {
         scan_queue.push_back(
-            wordlist::UriGenerator::new(hostname.clone(), String::from(extension), wordlist.clone()));
+            wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension), wordlist.clone()));
     }
     
     // Create a channel for threads to communicate with the parent on
@@ -56,7 +49,7 @@ fn main() {
                 // If a thread sent anything else, then it's a discovered directory
                 // Create new generators with the folder and each extension, and push them to the scan queue
                 else { 
-                    for extension in extensions.clone() {
+                    for extension in global_opts.extensions.clone() {
                         scan_queue.push_back(
                             wordlist::UriGenerator::new(message.clone(), String::from(extension), wordlist.clone()));
                     }
@@ -73,13 +66,10 @@ fn main() {
             // Clone a new sender to the channel and a new wordlist reference
             // Then pop the scan target from the queue
             let tx_clone = mpsc::Sender::clone(&tx);
-            //let wordlist_clone = wordlist.clone();
             let list_gen = scan_queue.pop_front().unwrap();
-            //let list_gen = wordlist::UriGenerator::new(target, String::from(""), wordlist_clone);
 
             // Spawn a thread with the arguments and increment the in use counter
-            thread::spawn(|| 
-                thread_spawn(tx_clone, list_gen));
+            thread::spawn(|| thread_spawn(tx_clone, list_gen));
             threads_in_use += 1;
         }
 
@@ -105,7 +95,6 @@ fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator) {
         let code = request::make_request(&mut easy, uri.clone());
         match code {
             1 => {
-                //let dir_url = format!("{}/{}", &hostname, &wordlist[line]);
                 tx.send(uri).unwrap();
             },
             _ => {},
