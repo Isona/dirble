@@ -12,10 +12,10 @@ mod wordlist;
 
 fn main() {
     // Read the arguments in using the arg_parse module
-    let global_opts = arg_parse::get_args();
+    let global_opts = Arc::new(arg_parse::get_args());
 
     // Get the wordlist file from the arguments and open it
-    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file).unwrap());
+    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()).unwrap());
 
     // Create a queue for URIs to be scanned
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
@@ -67,9 +67,9 @@ fn main() {
             // Then pop the scan target from the queue
             let tx_clone = mpsc::Sender::clone(&tx);
             let list_gen = scan_queue.pop_front().unwrap();
-
+            let arg_clone = global_opts.clone();
             // Spawn a thread with the arguments and increment the in use counter
-            thread::spawn(|| thread_spawn(tx_clone, list_gen));
+            thread::spawn(|| thread_spawn(tx_clone, list_gen, arg_clone));
             threads_in_use += 1;
         }
 
@@ -83,12 +83,16 @@ fn main() {
     }
 }
 
-fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator) {
+fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
     let hostname = uri_gen.hostname.clone();
     println!("Scanning {}/", hostname);
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(request::Collector(Vec::new()));
     easy.get(true).unwrap();
+
+    if global_opts.proxy_enabled {
+        easy.proxy(&global_opts.proxy_address).unwrap();
+    }
 
     // For each item in the wordlist, call the request function on it
     for uri in uri_gen {
