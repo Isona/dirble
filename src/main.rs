@@ -93,6 +93,10 @@ fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, globa
         easy.proxy(&global_opts.proxy_address).unwrap();
     }
 
+    if global_opts.ignore_cert {
+        easy.ssl_verify_host(false).unwrap();
+    }
+
     // For each item in the wordlist, call the request function on it
     for uri in uri_gen {
         let code = request::make_request(&mut easy, uri.clone());

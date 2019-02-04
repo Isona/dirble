@@ -9,6 +9,7 @@ pub struct GlobalOpts {
     pub proxy_enabled: bool,
     pub proxy_address: String,
     pub proxy_auth_enabled: bool, 
+    pub ignore_cert: bool,
 }
 
 pub fn get_args() -> GlobalOpts
@@ -65,6 +66,10 @@ pub fn get_args() -> GlobalOpts
                             .takes_value(true)
                             .default_value("10")
                             .validator(max_thread_check))
+                        .arg(Arg::with_name("ignore_cert")
+                            .long("ignore-cert")
+                            .short("k")
+                            .help("Ignore the certificate validity for HTTPS."))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -103,6 +108,7 @@ pub fn get_args() -> GlobalOpts
         proxy_enabled: proxy_enabled,
         proxy_address: proxy,
         proxy_auth_enabled: false,   
+        ignore_cert: args.is_present("ignore_cert")
     }
 }
 
