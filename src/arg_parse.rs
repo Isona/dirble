@@ -47,6 +47,12 @@ pub fn get_args() -> GlobalOpts
                             .long("proxy")
                             .value_name("proxy")
                             .help("The proxy address to use, including type and port."))
+                        .arg(Arg::with_name("burp")
+                            .long("burp")
+                            .value_name("burp")
+                            .help("Sets the proxy to use the default burp proxy values (http://localhost:8080).")
+                            .takes_value(false)
+                            .conflicts_with("proxy"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -62,6 +68,13 @@ pub fn get_args() -> GlobalOpts
     if args.is_present("proxy") {
         proxy_enabled = true;
         proxy = args.value_of("proxy").unwrap();
+        if proxy == "http://localhost:8080" {
+            println!("You could use the --burp flag instead of the --proxy flag!");
+        }
+    }
+    else if args.is_present("burp") {
+        proxy_enabled = true;
+        proxy = "http://localhost:8080"
     }
     let proxy = String::from(proxy);
 
