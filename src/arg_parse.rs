@@ -8,9 +8,7 @@ pub struct GlobalOpts {
     pub max_threads: u16,
     pub proxy_enabled: bool,
     pub proxy_address: String,
-    pub proxy_auth_enabled: bool,
-    pub proxy_username: String,
-    pub proxy_password: String,   
+    pub proxy_auth_enabled: bool, 
 }
 
 pub fn get_args() -> GlobalOpts
@@ -51,17 +49,22 @@ pub fn get_args() -> GlobalOpts
                                      \"http://username:password@proxy_url:proxy_port\"."))
                         .arg(Arg::with_name("burp")
                             .long("burp")
-                            .value_name("burp")
                             .help("Sets the proxy to use the default burp proxy values (http://localhost:8080).")
                             .takes_value(false)
                             .conflicts_with("proxy"))
                         .arg(Arg::with_name("no_proxy")
                             .long("no-proxy")
-                            .value_name("no-proxy")
                             .help("Disables proxy use even if there is a system proxy.")
                             .takes_value(false)
                             .conflicts_with("burp")
                             .conflicts_with("proxy"))
+                        .arg(Arg::with_name("max_threads")
+                            .long("max-threads")
+                            .value_name("max-threads")
+                            .help("Sets the maximum number of request threads that will be spawned")
+                            .takes_value(true)
+                            .default_value("10")
+                            .validator(max_thread_check))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -99,9 +102,7 @@ pub fn get_args() -> GlobalOpts
         max_threads: 5,
         proxy_enabled: proxy_enabled,
         proxy_address: proxy,
-        proxy_auth_enabled: false,
-        proxy_username: String::from(""),
-        proxy_password: String::from(""),   
+        proxy_auth_enabled: false,   
     }
 }
 
@@ -113,4 +114,17 @@ fn starts_with_http(hostname: String) -> Result<(), String> {
     else {
         Err(String::from("The provided target URI must start with http:// or https://"))
     }
+}
+
+fn max_thread_check(value: String) -> Result<(), String> {
+    let int_val = value.parse::<u16>();
+    match int_val {
+        Ok(max) => {
+            if max > 0 {
+                return Ok(())
+            }
+        },
+        Err(_) => {},
+    };
+    return Err(String::from("The maximum number of threads must be a positive integer."))
 }

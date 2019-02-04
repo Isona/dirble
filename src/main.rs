@@ -32,7 +32,6 @@ fn main() {
     let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
 
     // Define the max number of threads and the number of threads currently in use
-    let max_threads = 5;
     let mut threads_in_use = 0;
 
     // Loop of checking for messages from the threads,
@@ -61,7 +60,7 @@ fn main() {
 
         // If there are items in the scan queue and available threads
         // Spawn a new thread to scan an item
-        if threads_in_use < max_threads && scan_queue.len() > 0 {
+        if threads_in_use < global_opts.max_threads && scan_queue.len() > 0 {
 
             // Clone a new sender to the channel and a new wordlist reference
             // Then pop the scan target from the queue
