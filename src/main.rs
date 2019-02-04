@@ -95,6 +95,7 @@ fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, globa
 
     if global_opts.ignore_cert {
         easy.ssl_verify_host(false).unwrap();
+        easy.ssl_verify_peer(false).unwrap();
     }
 
     // For each item in the wordlist, call the request function on it
