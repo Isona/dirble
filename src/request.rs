@@ -43,7 +43,7 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<G
 
         403 => {
 
-            if global_opts.show_htaccess && ( url.ends_with("/.htaccess") || url.ends_with("/.hta") 
+            if !global_opts.show_htaccess && ( url.ends_with("/.htaccess") || url.ends_with("/.hta") 
                 || url.ends_with("/.htpasswd") ) { return code }
             
             let content_len = String::from_utf8_lossy(&contents.0).len();
