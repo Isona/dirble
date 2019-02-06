@@ -100,7 +100,7 @@ fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, globa
 
     // For each item in the wordlist, call the request function on it
     for uri in uri_gen {
-        let code = request::make_request(&mut easy, uri.clone());
+        let code = request::make_request(&mut easy, uri.clone(), global_opts.clone());
         match code {
             1 => {
                 tx.send(uri).unwrap();

@@ -1,8 +1,11 @@
+use std::sync::Arc;
 use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 
 pub struct Collector(pub Vec<u8>);
+
+use crate::arg_parse::GlobalOpts;
 
 impl Handler for Collector {
     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
@@ -14,7 +17,7 @@ impl Handler for Collector {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will print the URI it requested and the response
-pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> u32{
+pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<GlobalOpts>) -> u32{
 
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
@@ -37,6 +40,17 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> u32{
     match code {
         // If a 404 code, just return the response code
         404 => return code,
+
+        403 => {
+
+            if global_opts.show_htaccess && ( url.ends_with("/.htaccess") || url.ends_with("/.hta") 
+                || url.ends_with("/.htpasswd") ) { return code }
+            
+            let content_len = String::from_utf8_lossy(&contents.0).len();
+            println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
+            code
+
+        }
         // If it's a redirect, then check if the redirection destination is
         // to the same URL with a / on the end, if so return 1 so that the
         // calling thread knows this is a discovered folder

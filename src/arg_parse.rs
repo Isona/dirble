@@ -10,6 +10,7 @@ pub struct GlobalOpts {
     pub proxy_address: String,
     pub proxy_auth_enabled: bool, 
     pub ignore_cert: bool,
+    pub show_htaccess: bool,
 }
 
 pub fn get_args() -> GlobalOpts
@@ -70,6 +71,9 @@ pub fn get_args() -> GlobalOpts
                             .long("ignore-cert")
                             .short("k")
                             .help("Ignore the certificate validity for HTTPS."))
+                        .arg(Arg::with_name("show_htaccess")
+                            .long("show-htaccess")
+                            .help("Enable display of .htaccess,.htaccess, and .htpasswd when they return 403 responses."))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -108,7 +112,8 @@ pub fn get_args() -> GlobalOpts
         proxy_enabled: proxy_enabled,
         proxy_address: proxy,
         proxy_auth_enabled: false,   
-        ignore_cert: args.is_present("ignore_cert")
+        ignore_cert: args.is_present("ignore_cert"),
+        show_htaccess: args.is_present("show_htaccess")
     }
 }
 
