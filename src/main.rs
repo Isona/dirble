@@ -29,7 +29,7 @@ fn main() {
     
     // Create a channel for threads to communicate with the parent on
     // This is used to send information about ending threads and discovered folders
-    let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
+    let (tx, rx): (Sender<request::RequestResponse>, Receiver<request::RequestResponse>) = mpsc::channel();
 
     // Define the max number of threads and the number of threads currently in use
     let mut threads_in_use = 0;
@@ -44,13 +44,29 @@ fn main() {
         match reply {
             Ok(message) => {
                 // If a thread has sent end, then we can reduce the threads in use count
-                if message == "END" { threads_in_use -= 1; }
+                if message.url == "END" {
+                    threads_in_use -= 1; }
                 // If a thread sent anything else, then it's a discovered directory
                 // Create new generators with the folder and each extension, and push them to the scan queue
                 else { 
-                    for extension in global_opts.extensions.clone() {
-                        scan_queue.push_back(
-                            wordlist::UriGenerator::new(message.clone(), String::from(extension), wordlist.clone()));
+                    match message.code {
+                        301 | 302 => {
+                            if message.is_directory {
+                                println!("==> DIRECTORY: {}", message.url);
+                                for extension in global_opts.extensions.clone() {
+                                    scan_queue.push_back(
+                                        wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));
+                                }
+                            }
+                            else {
+                                println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
+                                    message.url, message.code, message.content_len, message.redirect_url);
+                            }
+                        }
+                        _ => {
+                            println!("+ {} (CODE:{}|SIZE:{:#?})", message.url, message.code, message.content_len); 
+                        }
+
                     }
                 }
             },
@@ -82,7 +98,7 @@ fn main() {
     }
 }
 
-fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
+fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
     let hostname = uri_gen.hostname.clone();
     println!("Scanning {}/", hostname);
     // Create a new curl Easy2 instance and set it to use GET requests
@@ -100,16 +116,29 @@ fn thread_spawn(tx: mpsc::Sender<String>, uri_gen: wordlist::UriGenerator, globa
 
     // For each item in the wordlist, call the request function on it
     for uri in uri_gen {
-        let code = request::make_request(&mut easy, uri.clone(), global_opts.clone());
-        match code {
-            1 => {
-                tx.send(uri).unwrap();
-            },
-            _ => {},
+        let req_response = request::make_request(&mut easy, uri.clone(), global_opts.clone());
+        // match code {
+        //     1 => {
+        //         tx.send(uri).unwrap();
+        //     },
+        //     _ => {},
+        // }
+        match req_response{
+            Some(response) => { tx.send(response).unwrap(); }
+            None => {}
         }
     }
     println!("Finished scanning {}/", hostname);
     // Send an end message to the main thread
-    tx.send(String::from("END")).unwrap();
+
+    let end = request::RequestResponse {
+        url: String::from("END"),
+        code: 0,
+        content_len: 0,
+        is_directory:false,
+        is_listable: false,
+        redirect_url: String::from("")
+    };
+    tx.send(end).unwrap();
 }
 
