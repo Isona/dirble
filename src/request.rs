@@ -1,11 +1,8 @@
-use std::sync::Arc;
 use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 
 pub struct Collector(pub Vec<u8>);
-
-use crate::arg_parse::GlobalOpts;
 
 impl Handler for Collector {
     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
@@ -26,7 +23,7 @@ pub struct RequestResponse {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will print the URI it requested and the response
-pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<GlobalOpts>) -> Option<RequestResponse>{
+pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> Option<RequestResponse>{
 
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
@@ -35,7 +32,7 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<G
     // If it's empty then output info and return
     match easy.perform() {
         Ok(_v) => {}
-        Err(_e) => {   //println!("- {} (CODE: 0|SIZE: 0)", url);
+        Err(_e) => {
             let req_response = RequestResponse {
                 url: url.clone(),
                 code: 0,
@@ -67,23 +64,6 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<G
     };
 
     match req_response.code {
-        // If a 404 code, just return the response code
-        //404 => return None,
-
-        // 403 => {
-
-        //     if !global_opts.show_htaccess && ( url.ends_with("/.htaccess") || url.ends_with("/.hta") 
-        //         || url.ends_with("/.htpasswd") ) { return code }
-            
-        //     let content_len = String::from_utf8_lossy(&contents.0).len();
-        //     println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
-        //     code
-
-        // }
-        // If it's a redirect, then check if the redirection destination is
-        // to the same URL with a / on the end, if so return 1 so that the
-        // calling thread knows this is a discovered folder
-        // Otherwise, just print some output and return the response code
         301 | 302 => {
             // Get and url decode the redirect destination
             let redir_dest = easy.redirect_url().unwrap().unwrap();
@@ -96,18 +76,10 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String, global_opts: Arc<G
             req_response.redirect_url = dir_url.to_string();
 
             if dir_url == redir_dest {
-                //println!("==> DIRECTORY: {}", url);
                 req_response.is_directory = true;
-                //1
             }
-            //else {
-                //println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", url, code, content_len, redir_dest);
-            //}
         },
-        // If it's anything else, print out some information and return the response code
         _ => {
-            //let content_len = String::from_utf8_lossy(&contents.0).len();
-            //println!("+ {} (CODE:{}|SIZE:{:#?})", url, code, content_len); 
         },
 
     }

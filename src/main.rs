@@ -50,6 +50,13 @@ fn main() {
                 // Create new generators with the folder and each extension, and push them to the scan queue
                 else { 
                     match message.code {
+                        403 => {
+                            if !global_opts.show_htaccess && ( message.url.ends_with("/.htaccess") || message.url.ends_with("/.hta") 
+                                || message.url.ends_with("/.htpasswd") ) { }
+                            else {
+                            println!("+ {} (CODE:{}|SIZE:{:#?})", message.url, message.code, message.content_len); 
+                            }
+                        }
                         301 | 302 => {
                             if message.is_directory {
                                 println!("==> DIRECTORY: {}", message.url);
@@ -116,13 +123,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
 
     // For each item in the wordlist, call the request function on it
     for uri in uri_gen {
-        let req_response = request::make_request(&mut easy, uri.clone(), global_opts.clone());
-        // match code {
-        //     1 => {
-        //         tx.send(uri).unwrap();
-        //     },
-        //     _ => {},
-        // }
+        let req_response = request::make_request(&mut easy, uri.clone());
+
         match req_response{
             Some(response) => { tx.send(response).unwrap(); }
             None => {}
