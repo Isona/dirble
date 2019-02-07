@@ -84,6 +84,7 @@ pub fn get_args() -> GlobalOpts
     extensions.sort();
     extensions.dedup();
 
+    // Check for proxy related flags
     let mut proxy_enabled = false;
     let mut proxy = "";
     if args.is_present("proxy") {
@@ -117,7 +118,7 @@ pub fn get_args() -> GlobalOpts
     }
 }
 
-
+// Validator for the provided host name, ensures that the value begins with http:// or https://
 fn starts_with_http(hostname: String) -> Result<(), String> {
     if hostname.starts_with("https://") || hostname.starts_with("http://") {
         Ok(())
@@ -127,6 +128,8 @@ fn starts_with_http(hostname: String) -> Result<(), String> {
     }
 }
 
+// Validator for the number of threads provided in the --max-threads flag
+// Ensures that the value is a positive integer
 fn max_thread_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u16>();
     match int_val {

@@ -18,18 +18,17 @@ fn main() {
     // Get the wordlist file from the arguments and open it
     let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()).unwrap());
 
-    // Create a queue for URIs to be scanned
+    // Create a queue for URIs that need to be scanned
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
 
-
-    // Push the host URI to the queue to be scanned
+    // Push the host URI to the scan queue
     for extension in global_opts.extensions.clone() {
         scan_queue.push_back(
             wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension), wordlist.clone()));
     }
     
     // Create a channel for threads to communicate with the parent on
-    // This is used to send information about ending threads and discovered folders
+    // This is used to send information about ending threads and information on responses
     let (tx, rx): (Sender<request::RequestResponse>, Receiver<request::RequestResponse>) = mpsc::channel();
 
     // Define the max number of threads and the number of threads currently in use
@@ -47,8 +46,9 @@ fn main() {
                 // If a thread has sent end, then we can reduce the threads in use count
                 if message.url == "END" {
                     threads_in_use -= 1; }
-                // If a thread sent anything else, then it's a discovered directory
-                // Create new generators with the folder and each extension, and push them to the scan queue
+
+                // If a thread sent anything else, then call the print_response function to deal with output
+                // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
                     output::print_response(&message, global_opts.clone());
                     if message.is_directory {
@@ -59,7 +59,7 @@ fn main() {
                     }
                 }
             },
-            // Ignore any errors - this happens if the queue is empty, that's okay
+            // Ignore any errors - this happens if the message queue is empty, that's okay
             Err(_) => {},
         };
 
@@ -72,6 +72,7 @@ fn main() {
             let tx_clone = mpsc::Sender::clone(&tx);
             let list_gen = scan_queue.pop_front().unwrap();
             let arg_clone = global_opts.clone();
+
             // Spawn a thread with the arguments and increment the in use counter
             thread::spawn(|| thread_spawn(tx_clone, list_gen, arg_clone));
             threads_in_use += 1;
@@ -88,22 +89,27 @@ fn main() {
 }
 
 fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
+
     let hostname = uri_gen.hostname.clone();
     println!("Scanning {}/", hostname);
+
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(request::Collector(Vec::new()));
     easy.get(true).unwrap();
 
+    // Use proxy settings if they have been provided
     if global_opts.proxy_enabled {
         easy.proxy(&global_opts.proxy_address).unwrap();
     }
 
+    // If the ignore cert flag is enabled, ignore cert validity
     if global_opts.ignore_cert {
         easy.ssl_verify_host(false).unwrap();
         easy.ssl_verify_peer(false).unwrap();
     }
 
     // For each item in the wordlist, call the request function on it
+    // Then if there is a response send it to main
     for uri in uri_gen {
         let req_response = request::make_request(&mut easy, uri.clone());
 
@@ -113,8 +119,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         }
     }
     println!("Finished scanning {}/", hostname);
-    // Send an end message to the main thread
 
+    // Send a message to the main thread so it knows the thread is done
     let end = request::RequestResponse {
         url: String::from("END"),
         code: 0,
