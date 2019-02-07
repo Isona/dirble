@@ -9,6 +9,7 @@ use curl::easy::{Easy2};
 mod arg_parse;
 mod request;
 mod wordlist;
+mod output;
 
 fn main() {
     // Read the arguments in using the arg_parse module
@@ -49,31 +50,12 @@ fn main() {
                 // If a thread sent anything else, then it's a discovered directory
                 // Create new generators with the folder and each extension, and push them to the scan queue
                 else { 
-                    match message.code {
-                        403 => {
-                            if !global_opts.show_htaccess && ( message.url.ends_with("/.htaccess") || message.url.ends_with("/.hta") 
-                                || message.url.ends_with("/.htpasswd") ) { }
-                            else {
-                            println!("+ {} (CODE:{}|SIZE:{:#?})", message.url, message.code, message.content_len); 
-                            }
+                    output::print_response(&message, global_opts.clone());
+                    if message.is_directory {
+                        for extension in global_opts.extensions.clone() {
+                            scan_queue.push_back(
+                                wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));
                         }
-                        301 | 302 => {
-                            if message.is_directory {
-                                println!("==> DIRECTORY: {}", message.url);
-                                for extension in global_opts.extensions.clone() {
-                                    scan_queue.push_back(
-                                        wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));
-                                }
-                            }
-                            else {
-                                println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
-                                    message.url, message.code, message.content_len, message.redirect_url);
-                            }
-                        }
-                        _ => {
-                            println!("+ {} (CODE:{}|SIZE:{:#?})", message.url, message.code, message.content_len); 
-                        }
-
                     }
                 }
             },
@@ -143,4 +125,3 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     };
     tx.send(end).unwrap();
 }
-
