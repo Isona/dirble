@@ -108,7 +108,7 @@ pub fn get_args() -> GlobalOpts
         hostname: String::from(args.value_of("host").unwrap().clone()),
         wordlist_file: String::from(args.value_of("wordlist").unwrap().clone()),
         extensions: extensions,
-        max_threads: 5,
+        max_threads: args.value_of("max_threads").unwrap().parse::<u16>().unwrap(),
         proxy_enabled: proxy_enabled,
         proxy_address: proxy,
         proxy_auth_enabled: false,   
