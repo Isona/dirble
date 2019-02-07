@@ -34,6 +34,8 @@ fn main() {
     // Define the max number of threads and the number of threads currently in use
     let mut threads_in_use = 0;
 
+    let mut response_list: Vec<request::RequestResponse> = Vec::new();
+
     // Loop of checking for messages from the threads,
     // spawning new threads on items in the scan queue
     // and checking if the program is done
@@ -50,13 +52,14 @@ fn main() {
                 // If a thread sent anything else, then call the print_response function to deal with output
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
-                    output::print_response(&message, global_opts.clone());
+                    output::print_response(&message, global_opts.clone(), false);
                     if message.is_directory {
                         for extension in global_opts.extensions.clone() {
                             scan_queue.push_back(
                                 wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));
                         }
                     }
+                    response_list.push(message);
                 }
             },
             // Ignore any errors - this happens if the message queue is empty, that's okay
@@ -86,6 +89,8 @@ fn main() {
         // Sleep to reduce CPU cycles used by main
         thread::sleep(Duration::from_millis(1));
     }
+
+    output::print_report(response_list, global_opts.clone());
 }
 
 fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
