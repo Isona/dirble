@@ -78,7 +78,7 @@ pub fn get_args() -> GlobalOpts
                         .arg(Arg::with_name("throttle")
                             .short("z")
                             .long("throttle")
-                            .help("Time each thread will wait between replies, given in milliseconds")
+                            .help("Time each thread will wait between requests, given in milliseconds")
                             .value_name("milliseconds")
                             .validator(max_thread_check)
                             .takes_value(true))
