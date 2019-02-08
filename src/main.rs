@@ -113,6 +113,11 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         easy.ssl_verify_peer(false).unwrap();
     }
 
+    match &global_opts.user_agent {
+        Some(user_agent) => { easy.useragent(&user_agent.clone()).unwrap(); },
+        None => {}
+    }
+
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
     for uri in uri_gen {

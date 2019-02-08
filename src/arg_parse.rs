@@ -12,7 +12,8 @@ pub struct GlobalOpts {
     pub ignore_cert: bool,
     pub show_htaccess: bool,
     pub throttle: u32,
-    pub disable_recursion: bool
+    pub disable_recursion: bool,
+    pub user_agent: Option<String>
 }
 
 pub fn get_args() -> GlobalOpts
@@ -87,6 +88,11 @@ pub fn get_args() -> GlobalOpts
                             .long("disable-recursion")
                             .short("r")
                             .help("Disable discovered subdirectory scanning"))
+                        .arg(Arg::with_name("user_agent")
+                            .long("user-agent")
+                            .short("a")
+                            .help("Set the user-agent provided with requests, by default it isn't set")
+                            .takes_value(true))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -122,6 +128,11 @@ pub fn get_args() -> GlobalOpts
         throttle = args.value_of("throttle").unwrap().parse::<u32>().unwrap();
     }
 
+    let mut user_agent = None;
+    if args.is_present("user_agent") {
+        user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
@@ -134,7 +145,8 @@ pub fn get_args() -> GlobalOpts
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
         throttle: throttle,
-        disable_recursion: args.is_present("disable_recursion")
+        disable_recursion: args.is_present("disable_recursion"),
+        user_agent: user_agent
     }
 }
 
