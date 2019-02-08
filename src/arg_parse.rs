@@ -5,12 +5,13 @@ pub struct GlobalOpts {
     pub hostname: String,
     pub wordlist_file: String,
     pub extensions: Vec<String>,
-    pub max_threads: u16,
+    pub max_threads: u32,
     pub proxy_enabled: bool,
     pub proxy_address: String,
     pub proxy_auth_enabled: bool, 
     pub ignore_cert: bool,
     pub show_htaccess: bool,
+    pub throttle: u32
 }
 
 pub fn get_args() -> GlobalOpts
@@ -74,6 +75,13 @@ pub fn get_args() -> GlobalOpts
                         .arg(Arg::with_name("show_htaccess")
                             .long("show-htaccess")
                             .help("Enable display of .htaccess,.htaccess, and .htpasswd when they return 403 responses."))
+                        .arg(Arg::with_name("throttle")
+                            .short("z")
+                            .long("throttle")
+                            .help("Time each thread will wait between replies, given in milliseconds")
+                            .value_name("milliseconds")
+                            .validator(max_thread_check)
+                            .takes_value(true))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -104,17 +112,23 @@ pub fn get_args() -> GlobalOpts
     }
     let proxy = String::from(proxy);
 
+    let mut throttle = 0;
+    if args.is_present("throttle") {
+        throttle = args.value_of("throttle").unwrap().parse::<u32>().unwrap();
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
         wordlist_file: String::from(args.value_of("wordlist").unwrap().clone()),
         extensions: extensions,
-        max_threads: args.value_of("max_threads").unwrap().parse::<u16>().unwrap(),
+        max_threads: args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled: proxy_enabled,
         proxy_address: proxy,
         proxy_auth_enabled: false,   
         ignore_cert: args.is_present("ignore_cert"),
-        show_htaccess: args.is_present("show_htaccess")
+        show_htaccess: args.is_present("show_htaccess"),
+        throttle: throttle
     }
 }
 
@@ -131,7 +145,7 @@ fn starts_with_http(hostname: String) -> Result<(), String> {
 // Validator for the number of threads provided in the --max-threads flag
 // Ensures that the value is a positive integer
 fn max_thread_check(value: String) -> Result<(), String> {
-    let int_val = value.parse::<u16>();
+    let int_val = value.parse::<u32>();
     match int_val {
         Ok(max) => {
             if max > 0 {

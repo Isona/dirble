@@ -122,6 +122,9 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
             Some(response) => { tx.send(response).unwrap(); }
             None => {}
         }
+        if global_opts.throttle != 0 {
+            thread::sleep(Duration::from_millis(global_opts.throttle as u64));
+        }
     }
     println!("Finished scanning {}/", hostname);
 
