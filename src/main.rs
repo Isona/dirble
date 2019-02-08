@@ -53,7 +53,7 @@ fn main() {
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
                     output::print_response(&message, global_opts.clone(), false);
-                    if message.is_directory {
+                    if message.is_directory && !global_opts.disable_recursion {
                         for extension in global_opts.extensions.clone() {
                             scan_queue.push_back(
                                 wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));

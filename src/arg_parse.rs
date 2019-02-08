@@ -11,7 +11,8 @@ pub struct GlobalOpts {
     pub proxy_auth_enabled: bool, 
     pub ignore_cert: bool,
     pub show_htaccess: bool,
-    pub throttle: u32
+    pub throttle: u32,
+    pub disable_recursion: bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -82,6 +83,10 @@ pub fn get_args() -> GlobalOpts
                             .value_name("milliseconds")
                             .validator(max_thread_check)
                             .takes_value(true))
+                        .arg(Arg::with_name("disable_recursion")
+                            .long("disable-recursion")
+                            .short("r")
+                            .help("Disable discovered subdirectory scanning"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -128,7 +133,8 @@ pub fn get_args() -> GlobalOpts
         proxy_auth_enabled: false,   
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
-        throttle: throttle
+        throttle: throttle,
+        disable_recursion: args.is_present("disable_recursion")
     }
 }
 
