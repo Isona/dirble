@@ -13,7 +13,9 @@ pub struct GlobalOpts {
     pub show_htaccess: bool,
     pub throttle: u32,
     pub disable_recursion: bool,
-    pub user_agent: Option<String>
+    pub user_agent: Option<String>,
+    pub follow_redirects: bool,
+    pub max_redirects: u32
 }
 
 pub fn get_args() -> GlobalOpts
@@ -93,6 +95,16 @@ pub fn get_args() -> GlobalOpts
                             .short("a")
                             .help("Set the user-agent provided with requests, by default it isn't set")
                             .takes_value(true))
+                        .arg(Arg::with_name("follow_redirects")
+                            .long("follow-redirects")
+                            .help("Follow any redirects received, default max redirects to follow is 5"))
+                        .arg(Arg::with_name("max_redirects")
+                            .long("max-redirects")
+                            .help("Set the max number of redirects to follow, defaults to 5")
+                            .takes_value(true)
+                            //.default_value("5")
+                            .validator(max_thread_check)
+                            .requires("follow_redirects"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -133,6 +145,12 @@ pub fn get_args() -> GlobalOpts
         user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
     }
 
+    let follow_redirects = args.is_present("follow_redirects");
+    let mut max_redirects = 5;
+    if args.is_present("max_redirects") {
+        max_redirects = args.value_of("max_redirects").unwrap().parse::<u32>().unwrap();
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
@@ -146,7 +164,9 @@ pub fn get_args() -> GlobalOpts
         show_htaccess: args.is_present("show_htaccess"),
         throttle: throttle,
         disable_recursion: args.is_present("disable_recursion"),
-        user_agent: user_agent
+        user_agent: user_agent,
+        follow_redirects: follow_redirects,
+        max_redirects: max_redirects
     }
 }
 
