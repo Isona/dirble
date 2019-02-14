@@ -97,6 +97,7 @@ pub fn get_args() -> GlobalOpts
                             .takes_value(true))
                         .arg(Arg::with_name("follow_redirects")
                             .long("follow-redirects")
+                            .short("F")
                             .help("Follow any redirects received, default max redirects to follow is 5"))
                         .arg(Arg::with_name("max_redirects")
                             .long("max-redirects")
@@ -135,16 +136,19 @@ pub fn get_args() -> GlobalOpts
     }
     let proxy = String::from(proxy);
 
+    // Reads in how long each thread should wait after each request
     let mut throttle = 0;
     if args.is_present("throttle") {
         throttle = args.value_of("throttle").unwrap().parse::<u32>().unwrap();
     }
 
+    // Read user agent from arguments
     let mut user_agent = None;
     if args.is_present("user_agent") {
         user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
     }
 
+    // Determine if redirects should be followed or not
     let follow_redirects = args.is_present("follow_redirects");
     let mut max_redirects = 5;
     if args.is_present("max_redirects") {
