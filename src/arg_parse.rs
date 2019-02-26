@@ -1,5 +1,6 @@
 extern crate clap;
 use clap::{App, Arg, AppSettings};
+use crate::wordlist::lines_from_file;
 
 pub struct GlobalOpts {
     pub hostname: String,
@@ -48,6 +49,11 @@ pub fn get_args() -> GlobalOpts
                             .min_values(1)
                             .default_value("")
                             .value_delimiter(","))
+                        .arg(Arg::with_name("extension_file")
+                            .short("x")
+                            .long("extension-file")
+                            .value_name("extension-file")
+                            .help("The name of a file containing extensions to extend queries with, one per line"))
                         .arg(Arg::with_name("proxy")
                             .long("proxy")
                             .value_name("proxy")
@@ -113,6 +119,15 @@ pub fn get_args() -> GlobalOpts
     for extension in args.values_of("extensions").unwrap() {
         extensions.push(String::from(extension));
     }
+
+    // Read in extensions from a file
+    if args.is_present("extension_file") {
+        let extensions_from_file = lines_from_file(args.value_of("extension_file").unwrap()).unwrap();
+        for extension in extensions_from_file {
+            extensions.push(String::from(extension));
+        }
+    }
+
     extensions.sort();
     extensions.dedup();
 
