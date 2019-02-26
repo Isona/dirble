@@ -38,7 +38,7 @@ pub fn get_args() -> GlobalOpts
                             .long("target")
                             .value_name("host_uri")
                             .index(1)
-                            .help("The URI of the host to scan")
+                            .help("The URI of the host to scan, optionally supports basic auth with http://user:pass@host:port")
                             .takes_value(true)
                             .required(true)
                             .validator(starts_with_http))
