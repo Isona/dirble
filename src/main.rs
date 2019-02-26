@@ -123,6 +123,14 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         easy.max_redirections(global_opts.max_redirects).unwrap();
     }
 
+    match &global_opts.username {
+        Some(username) => {
+            easy.username(&username.clone()).unwrap();
+            easy.password(&global_opts.password.clone().unwrap()).unwrap();
+        },
+        None => {}
+    }
+
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
     for uri in uri_gen {

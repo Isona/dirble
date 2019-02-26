@@ -16,7 +16,9 @@ pub struct GlobalOpts {
     pub disable_recursion: bool,
     pub user_agent: Option<String>,
     pub follow_redirects: bool,
-    pub max_redirects: u32
+    pub max_redirects: u32,
+    pub username: Option<String>,
+    pub password: Option<String>
 }
 
 pub fn get_args() -> GlobalOpts
@@ -109,9 +111,18 @@ pub fn get_args() -> GlobalOpts
                             .long("max-redirects")
                             .help("Set the max number of redirects to follow, defaults to 5")
                             .takes_value(true)
-                            //.default_value("5")
                             .validator(max_thread_check)
                             .requires("follow_redirects"))
+                        .arg(Arg::with_name("username")
+                            .long("username")
+                            .help("Sets the username to authenticate with")
+                            .takes_value(true)
+                            .requires("password"))
+                        .arg(Arg::with_name("password")
+                            .long("password")
+                            .help("Sets the password to authenticate with")
+                            .takes_value(true)
+                            .requires("username"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -170,6 +181,13 @@ pub fn get_args() -> GlobalOpts
         max_redirects = args.value_of("max_redirects").unwrap().parse::<u32>().unwrap();
     }
 
+    let mut username = None;
+    let mut password = None;
+    if args.is_present("username") {
+        username = Some(String::from(args.value_of("username").unwrap()));
+        password = Some(String::from(args.value_of("password").unwrap()));
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
@@ -185,7 +203,9 @@ pub fn get_args() -> GlobalOpts
         disable_recursion: args.is_present("disable_recursion"),
         user_agent: user_agent,
         follow_redirects: follow_redirects,
-        max_redirects: max_redirects
+        max_redirects: max_redirects,
+        username: username,
+        password: password
     }
 }
 
