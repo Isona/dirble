@@ -18,7 +18,10 @@ pub struct GlobalOpts {
     pub follow_redirects: bool,
     pub max_redirects: u32,
     pub username: Option<String>,
-    pub password: Option<String>
+    pub password: Option<String>,
+    pub output_file: Option<String>,
+    pub verbose: bool,
+    pub silent: bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -123,6 +126,20 @@ pub fn get_args() -> GlobalOpts
                             .help("Sets the password to authenticate with")
                             .takes_value(true)
                             .requires("username"))
+                        .arg(Arg::with_name("output_file")
+                            .long("output-file")
+                            .help("Sets the file to write the report to")
+                            .takes_value(true))
+                        .arg(Arg::with_name("verbose")
+                            .long("verbose")
+                            .short("v")
+                            .help("Print information when a thread starts and finishes scanning")
+                            .takes_value(false))
+                        .arg(Arg::with_name("silent")
+                            .long("silent")
+                            .short("S")
+                            .help("Don't output information during the scan, only output the report at the end")
+                            .takes_value(false))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -188,6 +205,11 @@ pub fn get_args() -> GlobalOpts
         password = Some(String::from(args.value_of("password").unwrap()));
     }
 
+    let mut output_file = None;
+    if args.is_present("output_file") {
+        output_file = Some(String::from(args.value_of("output_file").unwrap()));
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
@@ -205,7 +227,10 @@ pub fn get_args() -> GlobalOpts
         follow_redirects: follow_redirects,
         max_redirects: max_redirects,
         username: username,
-        password: password
+        password: password,
+        output_file: output_file,
+        verbose: args.is_present("verbose"),
+        silent: args.is_present("silent")
     }
 }
 
