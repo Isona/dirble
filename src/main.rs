@@ -52,7 +52,12 @@ fn main() {
                 // If a thread sent anything else, then call the print_response function to deal with output
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
-                    output::print_response(&message, global_opts.clone(), false);
+                    if !global_opts.silent {
+                        match output::print_response(&message, global_opts.clone(), false) {
+                            Some(output) => { println!("{}", output) },
+                            None => {}
+                        }
+                    }
                     if message.is_directory && !global_opts.disable_recursion {
                         for extension in global_opts.extensions.clone() {
                             scan_queue.push_back(
