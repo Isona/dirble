@@ -3,27 +3,27 @@ use std::cmp::Ordering;
 use crate::request::RequestResponse;
 use crate::arg_parse::GlobalOpts;
 
-pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) {
+pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) -> Option<String> {
     match response.code {
         403 => {
             if !global_opts.show_htaccess && ( response.url.ends_with("/.htaccess") || response.url.ends_with("/.hta") 
-                || response.url.ends_with("/.htpasswd") ) { }
+                || response.url.ends_with("/.htpasswd") ) { None }
             else {
-            println!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len); 
+            Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len))
             }
         }
         301 | 302 => {
             if response.is_directory {
-                if folder_line { println!(""); }
-                println!("==> DIRECTORY: {}", response.url);
+                if folder_line { Some(format!("\n==> DIRECTORY: {}", response.url)) }
+                else { Some(format!("==> DIRECTORY: {}", response.url)) }
             }
             else {
-                println!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
-                    response.url, response.code, response.content_len, response.redirect_url);
+                Some(format!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
+                    response.url, response.code, response.content_len, response.redirect_url))
             }
         }
         _ => {
-            println!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len); 
+            Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len)) 
         }
 
     }
@@ -38,7 +38,10 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
     println!("");
 
     for response in responses {
-        print_response(&response, global_opts.clone(), true)
+        match print_response(&response, global_opts.clone(), true) {
+            Some(line) => { println!("{}", line) },
+            None => {}
+        }
     }
 }
 
