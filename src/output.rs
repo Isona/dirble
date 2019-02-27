@@ -32,8 +32,9 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
 pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts>) {
     let responses = sort_responses(responses);
 
-    println!("");
-    println!("");
+    if !global_opts.silent || global_opts.verbose {
+        println!("\n");
+    }
     println!("Scan Report: ");
     println!("");
 

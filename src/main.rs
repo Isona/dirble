@@ -101,7 +101,10 @@ fn main() {
 fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
 
     let hostname = uri_gen.hostname.clone();
-    println!("Scanning {}/", hostname);
+    
+    if global_opts.verbose {
+        println!("Scanning {}/", hostname);
+    }
 
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(request::Collector(Vec::new()));
@@ -149,7 +152,10 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
             thread::sleep(Duration::from_millis(global_opts.throttle as u64));
         }
     }
-    println!("Finished scanning {}/", hostname);
+
+    if global_opts.verbose {
+        println!("Finished scanning {}/", hostname);
+    }
 
     // Send a message to the main thread so it knows the thread is done
     let end = request::RequestResponse {
