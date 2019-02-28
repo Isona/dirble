@@ -21,7 +21,8 @@ pub struct GlobalOpts {
     pub password: Option<String>,
     pub output_file: Option<String>,
     pub verbose: bool,
-    pub silent: bool
+    pub silent: bool,
+    pub timeout: u32
 }
 
 pub fn get_args() -> GlobalOpts
@@ -141,6 +142,11 @@ pub fn get_args() -> GlobalOpts
                             .short("S")
                             .help("Don't output information during the scan, only output the report at the end")
                             .takes_value(false))
+                        .arg(Arg::with_name("timeout")
+                            .long("timeout")
+                            .help("Maximum time to wait for a response before giving up, given in seconds")
+                            .validator(max_thread_check)
+                            .default_value("5"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -231,7 +237,8 @@ pub fn get_args() -> GlobalOpts
         password: password,
         output_file: output_file,
         verbose: args.is_present("verbose"),
-        silent: args.is_present("silent")
+        silent: args.is_present("silent"),
+        timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap()
     }
 }
 

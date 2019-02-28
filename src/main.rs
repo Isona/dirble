@@ -112,6 +112,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     let mut easy = Easy2::new(request::Collector(Vec::new()));
     easy.get(true).unwrap();
 
+    easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
+
     // Use proxy settings if they have been provided
     if global_opts.proxy_enabled {
         easy.proxy(&global_opts.proxy_address).unwrap();
