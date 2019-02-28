@@ -143,13 +143,40 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         None => {}
     }
 
+    let mut consecutive_errors = 0;
+
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
     for uri in uri_gen {
         let req_response = request::make_request(&mut easy, uri.clone());
 
         match req_response{
-            Some(response) => { tx.send(response).unwrap(); }
+            Some(response) => { 
+                let code = response.code.clone();
+                tx.send(response).unwrap(); 
+                if global_opts.max_errors != 0 {
+                    if code == 0 {
+                        consecutive_errors += 1;
+                        if consecutive_errors >= global_opts.max_errors {
+                            println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
+
+                            let end = request::RequestResponse {
+                                url: String::from("END"),
+                                code: 0,
+                                content_len: 0,
+                                is_directory:false,
+                                is_listable: false,
+                                redirect_url: String::from("")
+                            };
+                            tx.send(end).unwrap();
+                            break;
+                        }
+                    }
+                    else {
+                        consecutive_errors = 0;
+                    }
+                }
+            }
             None => {}
         }
         if global_opts.throttle != 0 {

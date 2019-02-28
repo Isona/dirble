@@ -22,7 +22,8 @@ pub struct GlobalOpts {
     pub output_file: Option<String>,
     pub verbose: bool,
     pub silent: bool,
-    pub timeout: u32
+    pub timeout: u32,
+    pub max_errors: u32
 }
 
 pub fn get_args() -> GlobalOpts
@@ -83,7 +84,7 @@ pub fn get_args() -> GlobalOpts
                             .help("Sets the maximum number of request threads that will be spawned")
                             .takes_value(true)
                             .default_value("10")
-                            .validator(max_thread_check))
+                            .validator(positive_int_check))
                         .arg(Arg::with_name("ignore_cert")
                             .long("ignore-cert")
                             .short("k")
@@ -96,7 +97,7 @@ pub fn get_args() -> GlobalOpts
                             .long("throttle")
                             .help("Time each thread will wait between requests, given in milliseconds")
                             .value_name("milliseconds")
-                            .validator(max_thread_check)
+                            .validator(positive_int_check)
                             .takes_value(true))
                         .arg(Arg::with_name("disable_recursion")
                             .long("disable-recursion")
@@ -115,7 +116,7 @@ pub fn get_args() -> GlobalOpts
                             .long("max-redirects")
                             .help("Set the max number of redirects to follow, defaults to 5")
                             .takes_value(true)
-                            .validator(max_thread_check)
+                            .validator(int_check)
                             .requires("follow_redirects"))
                         .arg(Arg::with_name("username")
                             .long("username")
@@ -145,7 +146,12 @@ pub fn get_args() -> GlobalOpts
                         .arg(Arg::with_name("timeout")
                             .long("timeout")
                             .help("Maximum time to wait for a response before giving up, given in seconds")
-                            .validator(max_thread_check)
+                            .validator(positive_int_check)
+                            .default_value("5"))
+                        .arg(Arg::with_name("max_errors")
+                            .long("max-errors")
+                            .help("The number of consecutive errors a thread can have before it exits, set to 0 to disable")
+                            .validator(int_check)
                             .default_value("5"))
                         .get_matches();
 
@@ -238,7 +244,8 @@ pub fn get_args() -> GlobalOpts
         output_file: output_file,
         verbose: args.is_present("verbose"),
         silent: args.is_present("silent"),
-        timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap()
+        timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
+        max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap()
     }
 }
 
@@ -254,7 +261,7 @@ fn starts_with_http(hostname: String) -> Result<(), String> {
 
 // Validator for the number of threads provided in the --max-threads flag
 // Ensures that the value is a positive integer
-fn max_thread_check(value: String) -> Result<(), String> {
+fn positive_int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
         Ok(max) => {
@@ -264,5 +271,17 @@ fn max_thread_check(value: String) -> Result<(), String> {
         },
         Err(_) => {},
     };
-    return Err(String::from("The maximum number of threads must be a positive integer."))
+    return Err(String::from("The number given must be a positive integer."))
+}
+
+
+fn int_check(value: String) -> Result<(), String> {
+    let int_val = value.parse::<u32>();
+    match int_val {
+        Ok(_) => {
+            return Ok(())
+        },
+        Err(_) => {},
+    };
+    return Err(String::from("The number given must be an integer."))
 }
