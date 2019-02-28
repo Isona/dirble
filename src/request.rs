@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::time::Duration;
+use crate::arg_parse::GlobalOpts;
 use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
@@ -89,4 +92,44 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> Option<RequestR
     req_response.content_len = String::from_utf8_lossy(&contents.0).len() as u32;
 
     Some(req_response)
+}
+
+pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
+{
+    // Create a new curl Easy2 instance and set it to use GET requests
+    let mut easy = Easy2::new(Collector(Vec::new()));
+    easy.get(true).unwrap();
+
+    easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
+
+    // Use proxy settings if they have been provided
+    if global_opts.proxy_enabled {
+        easy.proxy(&global_opts.proxy_address).unwrap();
+    }
+
+    // If the ignore cert flag is enabled, ignore cert validity
+    if global_opts.ignore_cert {
+        easy.ssl_verify_host(false).unwrap();
+        easy.ssl_verify_peer(false).unwrap();
+    }
+
+    match &global_opts.user_agent {
+        Some(user_agent) => { easy.useragent(&user_agent.clone()).unwrap(); },
+        None => {}
+    }
+
+    if global_opts.follow_redirects {
+        easy.follow_location(true).unwrap();
+        easy.max_redirections(global_opts.max_redirects).unwrap();
+    }
+
+    match &global_opts.username {
+        Some(username) => {
+            easy.username(&username.clone()).unwrap();
+            easy.password(&global_opts.password.clone().unwrap()).unwrap();
+        },
+        None => {}
+    }
+
+    easy
 }

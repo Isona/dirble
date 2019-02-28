@@ -5,7 +5,6 @@ use std::{
     time::Duration,
 };
 extern crate curl;
-use curl::easy::{Easy2};
 mod arg_parse;
 mod request;
 mod wordlist;
@@ -108,40 +107,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         println!("Scanning {}/", hostname);
     }
 
-    // Create a new curl Easy2 instance and set it to use GET requests
-    let mut easy = Easy2::new(request::Collector(Vec::new()));
-    easy.get(true).unwrap();
-
-    easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
-
-    // Use proxy settings if they have been provided
-    if global_opts.proxy_enabled {
-        easy.proxy(&global_opts.proxy_address).unwrap();
-    }
-
-    // If the ignore cert flag is enabled, ignore cert validity
-    if global_opts.ignore_cert {
-        easy.ssl_verify_host(false).unwrap();
-        easy.ssl_verify_peer(false).unwrap();
-    }
-
-    match &global_opts.user_agent {
-        Some(user_agent) => { easy.useragent(&user_agent.clone()).unwrap(); },
-        None => {}
-    }
-
-    if global_opts.follow_redirects {
-        easy.follow_location(true).unwrap();
-        easy.max_redirections(global_opts.max_redirects).unwrap();
-    }
-
-    match &global_opts.username {
-        Some(username) => {
-            easy.username(&username.clone()).unwrap();
-            easy.password(&global_opts.password.clone().unwrap()).unwrap();
-        },
-        None => {}
-    }
+    let mut easy = request::generate_easy(global_opts.clone());
 
     let mut consecutive_errors = 0;
 
