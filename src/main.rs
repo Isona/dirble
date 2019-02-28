@@ -36,6 +36,8 @@ fn main() {
 
     let mut response_list: Vec<request::RequestResponse> = Vec::new();
 
+    let file_handles = output::create_files(global_opts.clone());
+
     // Loop of checking for messages from the threads,
     // spawning new threads on items in the scan queue
     // and checking if the program is done
@@ -95,13 +97,13 @@ fn main() {
         thread::sleep(Duration::from_millis(1));
     }
 
-    output::print_report(response_list, global_opts.clone());
+    output::print_report(response_list, global_opts.clone(), file_handles);
 }
 
 fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
 
     let hostname = uri_gen.hostname.clone();
-    
+
     if global_opts.verbose {
         println!("Scanning {}/", hostname);
     }
