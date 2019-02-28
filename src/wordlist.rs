@@ -12,12 +12,19 @@ pub struct UriGenerator {
     suffix: String,
     current_index: usize,
     wordlist: Arc<Vec<String>>,
+    step_size: usize
 }
 
 // Implement a function that generates a new UriGenerator
 impl UriGenerator {
-    pub fn new(hostname: String, suffix: String, wordlist: Arc<Vec<String>>) -> UriGenerator{
-        UriGenerator { hostname: hostname, suffix: suffix, current_index:0, wordlist: wordlist }
+    pub fn new(hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32) -> UriGenerator{
+        UriGenerator { 
+            hostname: hostname,
+            suffix: suffix,
+            current_index: index as usize,
+            wordlist: wordlist,
+            step_size: step as usize
+        }
     }
 }
 
@@ -36,7 +43,7 @@ impl Iterator for UriGenerator {
         let uri = utf8_percent_encode(&uri, DEFAULT_ENCODE_SET).to_string();
 
         // Maintain the index into the wordlist
-        self.current_index += 1;
+        self.current_index += self.step_size;
         // Return the generated Uri
         Some(uri)
 

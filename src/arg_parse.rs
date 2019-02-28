@@ -23,7 +23,8 @@ pub struct GlobalOpts {
     pub verbose: bool,
     pub silent: bool,
     pub timeout: u32,
-    pub max_errors: u32
+    pub max_errors: u32,
+    pub wordlist_split: u32
 }
 
 pub fn get_args() -> GlobalOpts
@@ -154,6 +155,11 @@ pub fn get_args() -> GlobalOpts
                             .help("The number of consecutive errors a thread can have before it exits, set to 0 to disable")
                             .validator(int_check)
                             .default_value("5"))
+                        .arg(Arg::with_name("wordlist_split")
+                            .long("wordlist-split")
+                            .help("The number of threads to run for each folder/extension combo")
+                            .validator(positive_int_check)
+                            .default_value("3"))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -246,7 +252,8 @@ pub fn get_args() -> GlobalOpts
         verbose: args.is_present("verbose"),
         silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
-        max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap()
+        max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
+        wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap()
     }
 }
 

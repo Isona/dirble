@@ -22,8 +22,11 @@ fn main() {
 
     // Push the host URI to the scan queue
     for extension in global_opts.extensions.clone() {
-        scan_queue.push_back(
-            wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension), wordlist.clone()));
+        for start_index in 0..global_opts.wordlist_split {
+            scan_queue.push_back(
+                wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension.clone()), wordlist.clone(), 
+                    start_index, global_opts.wordlist_split));
+        }
     }
     
     // Create a channel for threads to communicate with the parent on
@@ -61,8 +64,11 @@ fn main() {
                     }
                     if message.is_directory && !global_opts.disable_recursion {
                         for extension in global_opts.extensions.clone() {
-                            scan_queue.push_back(
-                                wordlist::UriGenerator::new(message.url.clone(), String::from(extension), wordlist.clone()));
+                            for start_index in 0..global_opts.wordlist_split {
+                                scan_queue.push_back(
+                                    wordlist::UriGenerator::new(message.url.clone(), String::from(extension.clone()), wordlist.clone(), 
+                                        start_index, global_opts.wordlist_split));
+                            }
                         }
                     }
                     response_list.push(message);
