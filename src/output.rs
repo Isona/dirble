@@ -15,8 +15,7 @@ pub struct FileHandles {
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) -> Option<String> {
     match response.code {
         403 => {
-            if !global_opts.show_htaccess && ( response.url.ends_with("/.htaccess") || response.url.ends_with("/.hta") 
-                || response.url.ends_with("/.htpasswd") ) { None }
+            if !global_opts.show_htaccess && response.url.contains("/.ht") { None }
             else {
             Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len))
             }
