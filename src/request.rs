@@ -1,3 +1,4 @@
+use curl::Error;
 use std::sync::Arc;
 use std::time::Duration;
 use crate::arg_parse::GlobalOpts;
@@ -7,9 +8,15 @@ use curl::easy::{Easy2, Handler, WriteError};
 
 pub struct Collector(pub Vec<u8>);
 
+impl Collector {
+    fn clear_buffer(&mut self) {
+        self.0 = Vec::new();
+    }
+}
+
 impl Handler for Collector {
     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
-        self.0 = data.to_vec();
+        self.0.extend_from_slice(data);
         Ok(data.len())
     }
 }
@@ -28,14 +35,14 @@ pub struct RequestResponse {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
-pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> Option<RequestResponse>{
+pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<RequestResponse>{
 
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
 
     // Perform the request and check if it's empty
     // If it's empty then return a RequestResponse struct
-    match easy.perform() {
+    match perform(&mut easy) {
         Ok(_v) => {}
         Err(_e) => {
             let req_response = RequestResponse {
@@ -85,7 +92,7 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> Option<RequestR
 
             // Make another request to get the directory page
             easy.url(&(url.clone()+"/")).unwrap();
-            easy.perform().unwrap();
+            perform(&mut easy).unwrap();
 
 
             let contents = easy.get_ref();
@@ -142,4 +149,10 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
     }
 
     easy
+}
+
+fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error>
+{
+    easy.get_mut().clear_buffer();
+    easy.perform()
 }
