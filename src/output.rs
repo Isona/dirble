@@ -17,13 +17,19 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
         403 => {
             if !global_opts.show_htaccess && response.url.contains("/.ht") { None }
             else {
-            Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len))
+                Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len))
             }
         }
         301 | 302 => {
             if response.is_directory {
-                if folder_line { Some(format!("\n==> DIRECTORY: {}", response.url)) }
-                else { Some(format!("==> DIRECTORY: {}", response.url)) }
+                if response.is_listable {
+                    if folder_line { Some(format!("\n==> LISTABLE DIRECTORY: {}", response.url)) }
+                    else { Some(format!("==> LISTABLE DIRECTORY: {}", response.url)) }
+                }
+                else {
+                    if folder_line { Some(format!("\n==> DIRECTORY: {}", response.url)) }
+                    else { Some(format!("==> DIRECTORY: {}", response.url)) }
+                }
             }
             else {
                 Some(format!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 

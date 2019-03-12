@@ -82,6 +82,17 @@ pub fn make_request(easy: &mut Easy2<Collector>, url: String) -> Option<RequestR
 
         if dir_url == redir_dest {
             req_response.is_directory = true;
+
+            // Make another request to get the directory page
+            easy.url(&(url.clone()+"/")).unwrap();
+            easy.perform().unwrap();
+            
+
+            let contents = easy.get_ref();
+            let contents = String::from_utf8_lossy(&contents.0).to_lowercase();
+            println!("{}: {}", req_response.url, contents);
+            req_response.is_listable = contents.contains("parent directory") || contents.contains("up to ") 
+                || contents.contains("directory listing for");
         }
 
         req_response.redirect_url = dir_url.to_string();
