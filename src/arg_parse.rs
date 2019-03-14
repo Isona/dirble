@@ -158,7 +158,7 @@ pub fn get_args() -> GlobalOpts
                         .arg(Arg::with_name("cookie")
                             .long("cookie")
                             .short("c")
-                            .help("Set a cookie value in form \"name=value\", can be used multiple times")
+                            .help("Provide a cookie in the form \"name=value\", can be used multiple times")
                             .multiple(true)
                             .takes_value(true))
                         .get_matches();
