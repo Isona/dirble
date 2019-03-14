@@ -1,6 +1,6 @@
+use std::process::exit;
 use std::{
     sync::Arc,
-    path::Path,
     fs::File,
     io::{self, BufRead, BufReader},
 };
@@ -51,9 +51,9 @@ impl Iterator for UriGenerator {
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file<P>(filename: P) -> io::Result<Vec<String>>
-where
-    P: AsRef<Path>,
+pub fn lines_from_file(filename: String) -> io::Result<Vec<String>>
 {
-    BufReader::new(File::open(filename)?).lines().collect()
+    let file = File::open(filename.clone())
+        .unwrap_or_else(|error| { println!("Opening file \"{}\" failed: {}", filename, error); exit(2) });
+    BufReader::new(file).lines().collect()
 }

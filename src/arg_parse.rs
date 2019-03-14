@@ -170,7 +170,8 @@ pub fn get_args() -> GlobalOpts
 
     // Read in extensions from a file
     if args.is_present("extension_file") {
-        let extensions_from_file = lines_from_file(args.value_of("extension_file").unwrap()).unwrap();
+        let extensions_file = String::from(args.value_of("extension_file").unwrap());
+        let extensions_from_file = lines_from_file(extensions_file).unwrap();
         for extension in extensions_from_file {
             extensions.push(String::from(extension));
         }
