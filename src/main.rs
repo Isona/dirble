@@ -62,7 +62,7 @@ fn main() {
                             None => {}
                         }
                     }
-                    if message.is_directory && !message.is_listable && !global_opts.disable_recursion {
+                    if message.is_directory && (!message.is_listable || global_opts.scan_listable) && !global_opts.disable_recursion {
                         for extension in global_opts.extensions.clone() {
                             for start_index in 0..global_opts.wordlist_split {
                                 scan_queue.push_back(
@@ -71,7 +71,9 @@ fn main() {
                             }
                         }
                     }
-                    else if message.is_listable{ println!("{} is listable, skipping scanning", message.redirect_url); }
+                    else if message.is_listable && global_opts.verbose && !global_opts.scan_listable 
+                    { println!("{} is listable, skipping scanning", message.redirect_url); }
+                    
                     response_list.push(message);
                 }
             },

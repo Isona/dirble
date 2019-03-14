@@ -22,7 +22,8 @@ pub struct GlobalOpts {
     pub silent: bool,
     pub timeout: u32,
     pub max_errors: u32,
-    pub wordlist_split: u32
+    pub wordlist_split: u32,
+    pub scan_listable: bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -148,6 +149,11 @@ pub fn get_args() -> GlobalOpts
                             .help("The number of threads to run for each folder/extension combo")
                             .validator(positive_int_check)
                             .default_value("3"))
+                        .arg(Arg::with_name("scan_listable")
+                            .long("scan-listable")
+                            .short("l")
+                            .help("Scan listable directories")
+                            .takes_value(false))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -233,7 +239,8 @@ pub fn get_args() -> GlobalOpts
         silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
         max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
-        wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap()
+        wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
+        scan_listable: args.is_present("scan_listable")
     }
 }
 
