@@ -143,6 +143,14 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
         None => {}
     }
 
+    match &global_opts.cookies {
+        Some(cookies) => {
+            easy.cookie(cookies).unwrap();
+        },
+        None => {}
+
+    }
+
     easy
 }
 

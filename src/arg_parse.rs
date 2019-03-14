@@ -23,7 +23,8 @@ pub struct GlobalOpts {
     pub timeout: u32,
     pub max_errors: u32,
     pub wordlist_split: u32,
-    pub scan_listable: bool
+    pub scan_listable: bool,
+    pub cookies: Option<String>
 }
 
 pub fn get_args() -> GlobalOpts
@@ -154,6 +155,12 @@ pub fn get_args() -> GlobalOpts
                             .short("l")
                             .help("Scan listable directories")
                             .takes_value(false))
+                        .arg(Arg::with_name("cookie")
+                            .long("cookie")
+                            .short("c")
+                            .help("Set a cookie value in form \"name=value\", can be used multiple times")
+                            .multiple(true)
+                            .takes_value(true))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -218,6 +225,16 @@ pub fn get_args() -> GlobalOpts
         output_file = Some(String::from(args.value_of("output_file").unwrap()));
     }
 
+    let mut cookies = None;
+    if args.is_present("cookie") {
+        let mut temp_cookies: Vec<String> = Vec::new();
+        for cookie in args.values_of("cookie").unwrap() {
+            temp_cookies.push(String::from(cookie));
+        }
+        
+        cookies = Some(temp_cookies.join("; "));
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostname: String::from(args.value_of("host").unwrap().clone()),
@@ -240,7 +257,8 @@ pub fn get_args() -> GlobalOpts
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
         max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
         wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
-        scan_listable: args.is_present("scan_listable")
+        scan_listable: args.is_present("scan_listable"),
+        cookies: cookies
     }
 }
 
