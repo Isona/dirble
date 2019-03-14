@@ -148,7 +148,17 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
             easy.cookie(cookies).unwrap();
         },
         None => {}
+    }
 
+    match &global_opts.headers {
+        Some(headers) => {
+            let mut header_list = curl::easy::List::new();
+            for header in headers {
+                header_list.append(header).unwrap();
+            }
+            easy.http_headers(header_list).unwrap();
+        },
+        None => {}
     }
 
     easy

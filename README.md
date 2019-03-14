@@ -11,7 +11,7 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | .ht* file filtering              |    ✅   |   ❌  |     ❌     |     ❌    |
 | Cookies                          |    ✅   |   ✅  |     ✅     |     ❌    |
 | Custom HTTP verbs                |    ❌   |   ❌  |     ❌     |     ❌    |
-| Custom headers                   |    ❌   |   ✅  |     ✅     |     ❌    |
+| Custom headers                   |    ✅   |   ✅  |     ✅     |     ❌    |
 | Exclude status codes             |    ❌   |   ✅  |     ✅     |     ❌    |
 | Extensions                       |    ✅   |   ✅  |     ✅     |     ✅    |
 | HTTP basic auth                  |    ✅   |   ✅  |     ❌     |     ✅    |
