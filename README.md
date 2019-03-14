@@ -14,7 +14,6 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | Custom headers                   |    ❌   |   ✅  |     ✅     |     ❌    |
 | Exclude status codes             |    ❌   |   ✅  |     ✅     |     ❌    |
 | Extensions                       |    ✅   |   ✅  |     ✅     |     ✅    |
-| Follow redirects                 |    ✅   |   ❌  |     ✅     |     ✅    |
 | HTTP basic auth                  |    ✅   |   ✅  |     ❌     |     ✅    |
 | Import a base request from file  |    ❌   |   ❌  |     ❌     |     ❌    |
 | Listable directory optimisation  |    ✅   |   ✅  |     ❌     |     ❌    |
