@@ -15,8 +15,6 @@ pub struct GlobalOpts {
     pub throttle: u32,
     pub disable_recursion: bool,
     pub user_agent: Option<String>,
-    pub follow_redirects: bool,
-    pub max_redirects: u32,
     pub username: Option<String>,
     pub password: Option<String>,
     pub output_file: Option<String>,
@@ -109,16 +107,6 @@ pub fn get_args() -> GlobalOpts
                             .short("a")
                             .help("Set the user-agent provided with requests, by default it isn't set")
                             .takes_value(true))
-                        .arg(Arg::with_name("follow_redirects")
-                            .long("follow-redirects")
-                            .short("F")
-                            .help("Follow any redirects received, default max redirects to follow is 5"))
-                        .arg(Arg::with_name("max_redirects")
-                            .long("max-redirects")
-                            .help("Set the max number of redirects to follow, defaults to 5")
-                            .takes_value(true)
-                            .validator(int_check)
-                            .requires("follow_redirects"))
                         .arg(Arg::with_name("username")
                             .long("username")
                             .help("Sets the username to authenticate with")
@@ -212,13 +200,6 @@ pub fn get_args() -> GlobalOpts
         user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
     }
 
-    // Determine if redirects should be followed or not
-    let follow_redirects = args.is_present("follow_redirects");
-    let mut max_redirects = 5;
-    if args.is_present("max_redirects") {
-        max_redirects = args.value_of("max_redirects").unwrap().parse::<u32>().unwrap();
-    }
-
     let mut username = None;
     let mut password = None;
     if args.is_present("username") {
@@ -245,8 +226,6 @@ pub fn get_args() -> GlobalOpts
         throttle: throttle,
         disable_recursion: args.is_present("disable_recursion"),
         user_agent: user_agent,
-        follow_redirects: follow_redirects,
-        max_redirects: max_redirects,
         username: username,
         password: password,
         output_file: output_file,

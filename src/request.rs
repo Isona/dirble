@@ -135,11 +135,6 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
         None => {}
     }
 
-    if global_opts.follow_redirects {
-        easy.follow_location(true).unwrap();
-        easy.max_redirections(global_opts.max_redirects).unwrap();
-    }
-
     match &global_opts.username {
         Some(username) => {
             easy.username(&username.clone()).unwrap();
