@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
-use std::cmp::Ordering;
 use crate::request::RequestResponse;
 use crate::arg_parse::GlobalOpts;
 use std::error::Error;
@@ -81,39 +80,21 @@ fn write_file(mut file_writer: Option<LineWriter<File>>, line: String) -> Option
 }
 
 pub fn sort_responses(mut responses: Vec<RequestResponse>) -> Vec<RequestResponse> {
-    responses.sort_by( |a, b| {
-
-        if !a.is_directory && b.is_directory {
-            if a.url.starts_with(&format!("{}/", b.url)) {
-                Ordering::Greater
-            }
-            else {
-                Ordering::Less
-            }
-        }
-        else if a.is_directory && !b.is_directory {
-            if b.url.starts_with(&format!("{}/", a.url)) {
-                Ordering::Less
-            }
-            else {
-                Ordering::Greater
-            }
-
-        }
-        else {
-            let a_depth = a.url.matches("/").count();
-            let b_depth = b.url.matches("/").count();
-
-            if a_depth == b_depth {
-                a.url.cmp(&b.url)
-            }
-            else {
-                a_depth.cmp(&b_depth)
-            }
-        }
+    responses.sort_by(|a, b| {
+        directory_name(&a).cmp(&directory_name(&b))
+            .then(a.url.cmp(&b.url))
     });
 
     return responses;
+}
+
+pub fn directory_name(response:&RequestResponse) -> String
+{
+    if response.is_directory { response.url.clone() }
+    else {
+        let last_slash = response.url.rfind("/").unwrap();
+        String::from(&response.url[0..last_slash])
+    }
 }
 
 pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
