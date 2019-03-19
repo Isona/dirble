@@ -81,6 +81,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
 
     // If the response was a redirect, check if it's a directory
     // Also add the redirect url to the struct
+    // Generally, directories will redirect requests to them with no trailing /
+    // so that they have a trailing /
     if code == 301 || code == 302 {
 
         // Obtain and url decode the redirect destination
@@ -106,7 +108,7 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
 }
 
 pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable_recursion: bool, scrape_listable: bool) -> Vec<RequestResponse> {
-    //Make a request
+    // Formulate the directory name and make a request to get the contents of the page
     let mut dir_url = String::from(original_url.clone());
     if !dir_url.ends_with("/") {
         dir_url = dir_url + "/";
@@ -116,6 +118,7 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
     let mut output_list:Vec<RequestResponse> = Vec::new();
 
     match response {
+        // If a response was returned then check if the directory is listable or not
         Some(mut resp) => {
             let listable = content.contains("parent directory") || content.contains("up to ") 
                 || content.contains("directory listing for");
@@ -133,6 +136,8 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
                 return output_list
             }
         }
+        // If no response was returned then create a struct
+        // indicating that this is a folder, then return it
         None => {
             output_list.push(fabricate_request_response(
                 original_url, true, false));
@@ -140,42 +145,44 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
         }
     }
 
+    // If scraping of listables is disabled then just return from the function
     if !scrape_listable { return output_list }
 
+    // Get urls scraped from the response
     let scraped_urls:Vec<String> = content_parse::scrape_urls(content, dir_url);
 
     for scraped_url in scraped_urls {
+        // If the scraped url doesn't end in a /, it's unlikely to be a folder
+        // Add it to the list of found URLs to be returned
         if !scraped_url.ends_with("/") {
             output_list.push(fabricate_request_response(
                 scraped_url, false, false));
         }
+        // If the url ends in a /, it is likely to be a folder
         else {
+            // If recursion is enabled then call this function on the discovered folder
+            // Append the discovered items to the current output
             if !disable_recursion {
                 output_list.append(&mut listable_check(easy, scraped_url, disable_recursion, scrape_listable));
             }
+            // If recursion is disabled then just add the url to the values to be returned
             else {
-                output_list.push(fabricate_request_response(scraped_url, true, false))
+                output_list.push(fabricate_request_response(scraped_url, true, false));
             }
         }
     }
-    //Pull out URLs and put them in a list (function call)
-
-
-    //If it ends in / then make a request
-
-    // otherwise add it to the list
-
-    //For each folder found
 
     output_list
 }
 
+// Creates an easy2 instance based on the parameters provided by the user
 pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
 {
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector(Vec::new()));
     easy.get(true).unwrap();
 
+    // Set the timeout of the easy
     easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
 
     // Use proxy settings if they have been provided
@@ -189,11 +196,13 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
         easy.ssl_verify_peer(false).unwrap();
     }
 
+    // Set the user agent
     match &global_opts.user_agent {
         Some(user_agent) => { easy.useragent(&user_agent.clone()).unwrap(); },
         None => {}
     }
 
+    // Set http basic auth options
     match &global_opts.username {
         Some(username) => {
             easy.username(&username.clone()).unwrap();
@@ -202,6 +211,7 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
         None => {}
     }
 
+    // Set cookies
     match &global_opts.cookies {
         Some(cookies) => {
             easy.cookie(cookies).unwrap();
@@ -209,6 +219,7 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
         None => {}
     }
 
+    // Set headers
     match &global_opts.headers {
         Some(headers) => {
             let mut header_list = curl::easy::List::new();
@@ -223,18 +234,23 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
     easy
 }
 
+// Before each request, the buffer should be cleared
+// This provides support for chunked http responses
 fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error>
 {
     easy.get_mut().clear_buffer();
     easy.perform()
 }
 
+// Get the current content of the given easy and return it as a string
 fn get_content(easy: &mut Easy2<Collector>) -> String
 {
     let contents = easy.get_ref();
     String::from_utf8_lossy(&contents.0).to_string()
 }
 
+// Generate a struct for a response for use when a request hasn't been made
+// Used when items were discovered via scraping
 fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
 {
     let mut new_url = url.clone();

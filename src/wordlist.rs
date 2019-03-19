@@ -15,9 +15,10 @@ pub struct UriGenerator {
     step_size: usize
 }
 
-// Implement a function that generates a new UriGenerator
+// Generates a new UriGenerator given various options
 impl UriGenerator {
     pub fn new(mut hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32) -> UriGenerator{
+        // Remove a trailing / characters from the url if there is one
         if hostname.ends_with("/") {
             hostname.pop();
         }

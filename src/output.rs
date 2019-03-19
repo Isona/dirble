@@ -6,11 +6,13 @@ use crate::arg_parse::GlobalOpts;
 use std::error::Error;
 use std::io::{LineWriter, Write};
 
-
+// Struct giving access to each current file handle
+// Will be extended in future with handles for different formats
 pub struct FileHandles {
     pub output_file: Option<LineWriter<File>>
 }
 
+// Given a request response will return the relevant line to output, used during scanning and when printing reports
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) -> Option<String> {
 
     if response.is_directory {
@@ -43,6 +45,7 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
     }
 }
 
+// Called after a scan to print the discovered items in a sorted way - deals with saving to files too
 pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts>, file_handles: FileHandles) {
     let responses = sort_responses(responses);
 
@@ -67,6 +70,7 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
     }
 }
 
+// If a file was provided to save normally formatted output, this will write a string to it
 fn write_file(mut file_writer: Option<LineWriter<File>>, line: String) -> Option<LineWriter<File>>
 {
     let file_writer = file_writer.take();
@@ -80,6 +84,7 @@ fn write_file(mut file_writer: Option<LineWriter<File>>, line: String) -> Option
     }
 }
 
+// Sorts responses so that files in a directory come first, followed by the subdirs
 pub fn sort_responses(mut responses: Vec<RequestResponse>) -> Vec<RequestResponse> {
     responses.sort_by(|a, b| {
         directory_name(&a).cmp(&directory_name(&b))
@@ -89,6 +94,7 @@ pub fn sort_responses(mut responses: Vec<RequestResponse>) -> Vec<RequestRespons
     return responses;
 }
 
+// Gets the base directory name of the requested url of the given struct
 pub fn directory_name(response:&RequestResponse) -> String
 {
     if response.is_directory { 
@@ -105,6 +111,7 @@ pub fn directory_name(response:&RequestResponse) -> String
     }
 }
 
+// Returns a FileHandles struct with LineWriters for each specified output type
 pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
     let mut output_file = None;
 

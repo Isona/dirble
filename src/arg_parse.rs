@@ -31,6 +31,7 @@ pub struct GlobalOpts {
 
 pub fn get_args() -> GlobalOpts
 {
+    // Defines all the command line arguments with the Clap module
     let args = App::new("dirble")
                         .version("0.1")
                         .author("Izzy Whistlecroft")
@@ -225,6 +226,7 @@ pub fn get_args() -> GlobalOpts
         user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
     }
 
+    // Get http basic auth related arguments
     let mut username = None;
     let mut password = None;
     if args.is_present("username") {
@@ -232,11 +234,13 @@ pub fn get_args() -> GlobalOpts
         password = Some(String::from(args.value_of("password").unwrap()));
     }
 
+    // Read the name of the output file if provided
     let mut output_file = None;
     if args.is_present("output_file") {
         output_file = Some(String::from(args.value_of("output_file").unwrap()));
     }
 
+    // Read provided cookie values into a vector
     let mut cookies = None;
     if args.is_present("cookie") {
         let mut temp_cookies: Vec<String> = Vec::new();
@@ -247,7 +251,7 @@ pub fn get_args() -> GlobalOpts
         cookies = Some(temp_cookies.join("; "));
     }
 
-
+    // Read provided headers into a vector
     let mut headers = None;
     if args.is_present("header") {
         let mut temp_headers: Vec<String> = Vec::new();
@@ -296,8 +300,8 @@ fn starts_with_http(hostname: String) -> Result<(), String> {
     }
 }
 
-// Validator for the number of threads provided in the --max-threads flag
-// Ensures that the value is a positive integer
+// Validator for arguments including the --max-threads flag
+// Ensures that the value is a positive integer (not 0)
 fn positive_int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
@@ -311,7 +315,8 @@ fn positive_int_check(value: String) -> Result<(), String> {
     return Err(String::from("The number given must be a positive integer."))
 }
 
-
+// Validator for various arguments, ensures that value is a
+// positive integer, including 0
 fn int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {

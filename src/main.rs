@@ -130,6 +130,9 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
             Some(response) => { 
                 let code = response.code.clone();
 
+                // If the url is a directory, then check if it's listable
+                // This may also scrape listable directories if the parameter is set
+                // Then return each discovered item to the main thread
                 if response.is_directory {
                     let mut response_list = request::listable_check(&mut easy, response.url, 
                         global_opts.disable_recursion, global_opts.scrape_listable);
@@ -143,10 +146,12 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
                     }
 
                 } 
+                // If it isn't a directory then just send the response to the main thread
                 else {
                     tx.send(response).unwrap(); 
                 }
 
+                // Detect consecutive errors and stop the thread if the count is exceeded
                 if global_opts.max_errors != 0 {
                     if code == 0 {
                         consecutive_errors += 1;
@@ -173,6 +178,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
             }
             None => {}
         }
+
+        // Sleep if throttle is set
         if global_opts.throttle != 0 {
             thread::sleep(Duration::from_millis(global_opts.throttle as u64));
         }
