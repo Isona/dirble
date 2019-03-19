@@ -25,7 +25,8 @@ pub struct GlobalOpts {
     pub wordlist_split: u32,
     pub scan_listable: bool,
     pub cookies: Option<String>,
-    pub headers: Option<Vec<String>>
+    pub headers: Option<Vec<String>>,
+    pub scrape_listable: bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -168,6 +169,10 @@ pub fn get_args() -> GlobalOpts
                             .help("Provide an arbitrary header in the form \"header:value\" - headers with no value must end in a semicolon")
                             .multiple(true)
                             .takes_value(true))
+                        .arg(Arg::with_name("scrape_listable")
+                            .long("scrape-listable")
+                            .help("Enable scraping of listable directories for urls, often produces large amounts of output")
+                            .takes_value(false))
                         .get_matches();
 
     // Parse the extensions into a vector, then sort it and remove duplicates
@@ -276,7 +281,8 @@ pub fn get_args() -> GlobalOpts
         wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
         scan_listable: args.is_present("scan_listable"),
         cookies: cookies,
-        headers: headers
+        headers: headers,
+        scrape_listable:args.is_present("scrape_listable")
     }
 }
 

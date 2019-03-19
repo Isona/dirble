@@ -12,6 +12,19 @@ pub struct FileHandles {
 }
 
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) -> Option<String> {
+
+    if response.is_directory {
+        if response.is_listable {
+            if folder_line { return Some(format!("\n==> LISTABLE DIRECTORY: {}", response.url)) }
+            else { return Some(format!("==> LISTABLE DIRECTORY: {}", response.url)) }
+        }
+        else {
+            if folder_line { return Some(format!("\n==> DIRECTORY: {}", response.url)) }
+            else { return Some(format!("==> DIRECTORY: {}", response.url)) }
+        }
+    }
+
+
     match response.code {
         403 => {
             if !global_opts.show_htaccess && response.url.contains("/.ht") { None }
@@ -20,20 +33,8 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
             }
         }
         301 | 302 => {
-            if response.is_directory {
-                if response.is_listable {
-                    if folder_line { Some(format!("\n==> LISTABLE DIRECTORY: {}", response.url)) }
-                    else { Some(format!("==> LISTABLE DIRECTORY: {}", response.url)) }
-                }
-                else {
-                    if folder_line { Some(format!("\n==> DIRECTORY: {}", response.url)) }
-                    else { Some(format!("==> DIRECTORY: {}", response.url)) }
-                }
-            }
-            else {
-                Some(format!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
-                    response.url, response.code, response.content_len, response.redirect_url))
-            }
+            Some(format!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
+                response.url, response.code, response.content_len, response.redirect_url))
         }
         _ => {
             Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len)) 
@@ -90,7 +91,14 @@ pub fn sort_responses(mut responses: Vec<RequestResponse>) -> Vec<RequestRespons
 
 pub fn directory_name(response:&RequestResponse) -> String
 {
-    if response.is_directory { response.url.clone() }
+    if response.is_directory { 
+        if response.url.ends_with("/") {
+            String::from(&response.url[0..response.url.len()-1])
+        }
+        else {
+            response.url.clone()
+        }
+    }
     else {
         let last_slash = response.url.rfind("/").unwrap();
         String::from(&response.url[0..last_slash])

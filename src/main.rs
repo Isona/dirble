@@ -9,6 +9,7 @@ mod arg_parse;
 mod request;
 mod wordlist;
 mod output;
+mod content_parse;
 
 fn main() {
     // Read the arguments in using the arg_parse module
@@ -113,7 +114,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     let hostname = uri_gen.hostname.clone();
 
     if global_opts.verbose {
-        println!("Scanning {}/", hostname);
+        println!("Scanning {}", hostname);
     }
 
     let mut easy = request::generate_easy(global_opts.clone());
@@ -128,7 +129,24 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         match req_response{
             Some(response) => { 
                 let code = response.code.clone();
-                tx.send(response).unwrap(); 
+
+                if response.is_directory {
+                    let mut response_list = request::listable_check(&mut easy, response.url, 
+                        global_opts.disable_recursion, global_opts.scrape_listable);
+
+                    let mut original_response = response_list.remove(0);
+                    original_response.found_from_listable = false;
+                    tx.send(original_response).unwrap();
+
+                    for scraped_response in response_list {
+                        tx.send(scraped_response).unwrap();
+                    }
+
+                } 
+                else {
+                    tx.send(response).unwrap(); 
+                }
+
                 if global_opts.max_errors != 0 {
                     if code == 0 {
                         consecutive_errors += 1;
@@ -141,7 +159,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
                                 content_len: 0,
                                 is_directory:false,
                                 is_listable: false,
-                                redirect_url: String::from("")
+                                redirect_url: String::from(""),
+                                found_from_listable: false
                             };
                             tx.send(end).unwrap();
                             break;
@@ -160,7 +179,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     }
 
     if global_opts.verbose {
-        println!("Finished scanning {}/", hostname);
+        println!("Finished scanning {}", hostname);
     }
 
     // Send a message to the main thread so it knows the thread is done
@@ -170,7 +189,8 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         content_len: 0,
         is_directory:false,
         is_listable: false,
-        redirect_url: String::from("")
+        redirect_url: String::from(""),
+        found_from_listable: false
     };
     tx.send(end).unwrap();
 }

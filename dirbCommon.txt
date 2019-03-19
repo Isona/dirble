@@ -1,4 +1,3 @@
-
 .bash_history
 .bashrc
 .cache
@@ -816,7 +815,6 @@ cgi
 cgi_bin
 cgibin
 cgi-bin
-cgi-bin/
 cgi-bin2
 cgi-data
 cgi-exe
