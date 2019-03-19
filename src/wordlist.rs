@@ -17,7 +17,11 @@ pub struct UriGenerator {
 
 // Implement a function that generates a new UriGenerator
 impl UriGenerator {
-    pub fn new(hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32) -> UriGenerator{
+    pub fn new(mut hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32) -> UriGenerator{
+        if hostname.ends_with("/") {
+            hostname.pop();
+        }
+        
         UriGenerator { 
             hostname: hostname,
             suffix: suffix,

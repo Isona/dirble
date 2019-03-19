@@ -5,6 +5,7 @@ use crate::arg_parse::GlobalOpts;
 use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
+use crate::content_parse;
 
 pub struct Collector(pub Vec<u8>);
 
@@ -29,7 +30,8 @@ pub struct RequestResponse {
     pub content_len: u32,
     pub is_directory: bool,
     pub is_listable: bool,
-    pub redirect_url: String
+    pub redirect_url: String,
+    pub found_from_listable: bool
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
@@ -51,7 +53,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
                 content_len: 0,
                 is_directory:false,
                 is_listable: false,
-                redirect_url: String::from("")
+                redirect_url: String::from(""),
+                found_from_listable: false
             };
             return Some(req_response); 
         }
@@ -72,7 +75,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
         content_len: 0,
         is_directory:false,
         is_listable: false,
-        redirect_url: String::from("")
+        redirect_url: String::from(""),
+        found_from_listable: false
     };
 
     // If the response was a redirect, check if it's a directory
@@ -89,16 +93,6 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
 
         if dir_url == redir_dest {
             req_response.is_directory = true;
-
-            // Make another request to get the directory page
-            easy.url(&(url.clone()+"/")).unwrap();
-            perform(&mut easy).unwrap();
-
-
-            let contents = easy.get_ref();
-            let contents = String::from_utf8_lossy(&contents.0).to_lowercase();
-            req_response.is_listable = contents.contains("parent directory") || contents.contains("up to ") 
-                || contents.contains("directory listing for");
         }
 
         req_response.redirect_url = dir_url.to_string();
@@ -109,6 +103,71 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
     req_response.content_len = String::from_utf8_lossy(&contents.0).len() as u32;
 
     Some(req_response)
+}
+
+pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable_recursion: bool, scrape_listable: bool) -> Vec<RequestResponse> {
+    //Make a request
+    let mut dir_url = String::from(original_url.clone());
+    if !dir_url.ends_with("/") {
+        dir_url = dir_url + "/";
+    }
+    let response = make_request(easy, dir_url.clone());
+    let content = get_content(easy).to_lowercase();
+    let mut output_list:Vec<RequestResponse> = Vec::new();
+
+    match response {
+        Some(mut resp) => {
+            let listable = content.contains("parent directory") || content.contains("up to ") 
+                || content.contains("directory listing for");
+
+            if listable{
+                resp.is_listable = true;
+                resp.is_directory = true;
+                output_list.push(resp);
+            }
+            else{
+                resp.is_listable = false;
+                resp.is_directory = true;
+                
+                output_list.push(resp);
+                return output_list
+            }
+        }
+        None => {
+            output_list.push(fabricate_request_response(
+                original_url, true, false));
+            return output_list
+        }
+    }
+
+    if !scrape_listable { return output_list }
+
+    let scraped_urls:Vec<String> = content_parse::scrape_urls(content, dir_url);
+
+    for scraped_url in scraped_urls {
+        if !scraped_url.ends_with("/") {
+            output_list.push(fabricate_request_response(
+                scraped_url, false, false));
+        }
+        else {
+            if !disable_recursion {
+                output_list.append(&mut listable_check(easy, scraped_url, disable_recursion, scrape_listable));
+            }
+            else {
+                output_list.push(fabricate_request_response(scraped_url, true, false))
+            }
+        }
+    }
+    //Pull out URLs and put them in a list (function call)
+
+
+    //If it ends in / then make a request
+
+    // otherwise add it to the list
+
+    //For each folder found
+
+    output_list
 }
 
 pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
@@ -168,4 +227,28 @@ fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error>
 {
     easy.get_mut().clear_buffer();
     easy.perform()
+}
+
+fn get_content(easy: &mut Easy2<Collector>) -> String
+{
+    let contents = easy.get_ref();
+    String::from_utf8_lossy(&contents.0).to_string()
+}
+
+fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
+{
+    let mut new_url = url.clone();
+    if new_url.ends_with("/") {
+        new_url.pop();
+    }
+    
+    RequestResponse {
+        url: url.clone(),
+        code: 0,
+        content_len: 0,
+        is_directory: is_directory,
+        is_listable: is_listable,
+        redirect_url: String::from(""),
+        found_from_listable: true
+    }
 }
