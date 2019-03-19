@@ -158,16 +158,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
                         if consecutive_errors >= global_opts.max_errors {
                             println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
 
-                            let end = request::RequestResponse {
-                                url: String::from("END"),
-                                code: 0,
-                                content_len: 0,
-                                is_directory:false,
-                                is_listable: false,
-                                redirect_url: String::from(""),
-                                found_from_listable: false
-                            };
-                            tx.send(end).unwrap();
+                            tx.send(generate_end()).unwrap();
                             break;
                         }
                     }
@@ -190,7 +181,11 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     }
 
     // Send a message to the main thread so it knows the thread is done
-    let end = request::RequestResponse {
+    tx.send(generate_end()).unwrap();
+}
+
+fn generate_end() -> request::RequestResponse {
+    request::RequestResponse {
         url: String::from("END"),
         code: 0,
         content_len: 0,
@@ -198,6 +193,5 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false
-    };
-    tx.send(end).unwrap();
+    }
 }
