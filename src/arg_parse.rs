@@ -43,7 +43,7 @@ pub fn get_args() -> GlobalOpts
                             .value_name("wordlist")
                             .help("Sets which wordlist to use")
                             .takes_value(true)
-                            .default_value("dirbCommon.txt"))
+                            .default_value("dirble_wordlist.txt"))
                         .arg(Arg::with_name("host")
                             .short("t")
                             .long("target")
