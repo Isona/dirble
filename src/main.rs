@@ -10,6 +10,7 @@ mod request;
 mod wordlist;
 mod output;
 mod content_parse;
+mod output_format;
 
 fn main() {
     // Read the arguments in using the arg_parse module
@@ -58,7 +59,7 @@ fn main() {
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
                     if !global_opts.silent {
-                        match output::print_response(&message, global_opts.clone(), false) {
+                        match output::print_response(&message, global_opts.clone(), false, false) {
                             Some(output) => { println!("{}", output) },
                             None => {}
                         }

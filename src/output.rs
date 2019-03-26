@@ -3,6 +3,7 @@ use std::path::Path;
 use std::sync::Arc;
 use crate::request::RequestResponse;
 use crate::arg_parse::GlobalOpts;
+use crate::output_format;
 use std::error::Error;
 use std::io::{LineWriter, Write};
 
@@ -12,37 +13,23 @@ pub struct FileHandles {
     pub output_file: Option<LineWriter<File>>
 }
 
-// Given a request response will return the relevant line to output, used during scanning and when printing reports
-pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, folder_line: bool) -> Option<String> {
-
-    if response.is_directory {
-        if response.is_listable {
-            if folder_line { return Some(format!("\n==> LISTABLE DIRECTORY: {}", response.url)) }
-            else { return Some(format!("==> LISTABLE DIRECTORY: {}", response.url)) }
-        }
-        else {
-            if folder_line { return Some(format!("\n==> DIRECTORY: {}", response.url)) }
-            else { return Some(format!("==> DIRECTORY: {}", response.url)) }
-        }
+pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
+    print_newlines: bool, indentation: bool) -> Option<String> {
+    if response.code == 403 && !global_opts.show_htaccess && response.url.contains("/.ht") 
+    {
+        return None 
     }
 
+    let mut output = String::new();
+    output += &output_format::output_indentation(&response, print_newlines, indentation);
 
-    match response.code {
-        403 => {
-            if !global_opts.show_htaccess && response.url.contains("/.ht") { None }
-            else {
-                Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len))
-            }
-        }
-        301 | 302 => {
-            Some(format!("+ {} (CODE: {}|SIZE:{:#?}|DEST:{})", 
-                response.url, response.code, response.content_len, response.redirect_url))
-        }
-        _ => {
-            Some(format!("+ {} (CODE:{}|SIZE:{:#?})", response.url, response.code, response.content_len)) 
-        }
+    output += &output_format::output_letter(&response);
 
-    }
+    output += &output_format::output_url(&response);
+
+    output += &output_format::output_suffix(&response);
+
+    Some(output)
 }
 
 // Called after a scan to print the discovered items in a sorted way - deals with saving to files too
@@ -59,7 +46,7 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
     file_handle = write_file(file_handle, report_string);
 
     for response in responses {
-        match print_response(&response, global_opts.clone(), true) {
+        match print_response(&response, global_opts.clone(), true, true) {
             Some(line) => { 
                 println!("{}", line);
                 let file_line = format!("{}\n", line);
