@@ -13,7 +13,7 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
 
     if !indentation { return output }
 
-    let mut depth = response.url.matches("/").count();
+    let mut depth = response.url.matches("/").count() as i32;
 
     if response.url.ends_with("/") {
         depth -= 1;
