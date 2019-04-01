@@ -1,6 +1,6 @@
 # Introduction
 
-Dirble is a website directory scanning tool for Windows and Linux.
+Dirble is a website directory scanning tool for Windows and Linux. It's designed to be easy to use - the most basic form of running it is `dirble [url]`.
 
 # How to Use
 
@@ -8,8 +8,10 @@ Download one of the precompiled binaries for your system, then run it from a ter
 
 # Example Uses
 
-Run against a website using the default dirble_wordlist.txt:
+Run against a website using the default dirble_wordlist.txt from the current directory:
 `dirble [address]`
+Run with a different wordlist and including .php and .html extensions:
+`dirble [address] -w example_wordlist.txt -X .php,.html`
 
 # Building from source
 
@@ -42,3 +44,6 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | URL list                         |    ❌   |   ❌  |     ✅     |     ❌    |
 | User agents                      |    ✅   |   ✅  |     ✅     |     ✅    |
 | Listable Directory Scraping      |    ✅   |   ❌  |     ❌     |     ❌    |
+
+
+Released under GPL v3.0, see LICENSE for more information
