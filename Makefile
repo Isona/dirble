@@ -15,12 +15,18 @@ help :
 	echo "Supported targets are:"
 	echo $(targets)
 
-release : $(targets)
-	mkdir -p bin
-	cp target/x86_64-unknown-linux-gnu/release/dirble bin/dirble
-	cp target/i686-unknown-linux-gnu/release/dirble bin/dirble32
-	cp target/x86_64-pc-windows-gnu/release/dirble.exe bin/dirble.exe
-	cp target/i686-pc-windows-gnu/release/dirble.exe bin/dirble32.exe
+release : $(targets) dirble_wordlist.txt
+	mkdir -p dirble
+	cp dirble_wordlist.txt dirble/
+	cp target/x86_64-unknown-linux-gnu/release/dirble dirble/dirble
+	cp target/i686-unknown-linux-gnu/release/dirble dirble/dirble32
+	cp target/x86_64-pc-windows-gnu/release/dirble.exe dirble/dirble.exe
+	cp target/i686-pc-windows-gnu/release/dirble.exe dirble/dirble32.exe
+	zip dirble/dirble-x86_64-linux.zip dirble/dirble dirble/dirble_wordlist.txt
+	zip dirble/dirble-i686-linux.zip dirble/dirble32 dirble/dirble_wordlist.txt
+	zip dirble/dirble-x86_64-windows.zip dirble/dirble.exe dirble/dirble_wordlist.txt
+	zip dirble/dirble-i686-windows.zip dirble/dirble32.exe dirble/dirble_wordlist.txt
+	mv dirble release
 
 x86_64-unknown-linux-gnu : 
 	cross build --release --target x86_64-unknown-linux-gnu
