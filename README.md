@@ -1,6 +1,6 @@
 # Introduction
 
-Dirble is a website directory scanning tool for Windows and Linux. It's designed to be easy to use - the most basic form of running it is `dirble [url]`.
+Dirble is a website directory scanning tool for Windows and Linux. It's designed to be fast and easy to use - the most basic form of running it is `dirble [url]`.
 
 # How to Use
 
@@ -25,14 +25,12 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 |----------------------------------|:------:|:----:|:---------:|:--------:|
 | .ht* file filtering              |    ✅   |   ❌  |     ❌     |     ❌    |
 | Cookies                          |    ✅   |   ✅  |     ✅     |     ❌    |
-| Custom HTTP verbs                |    ❌   |   ❌  |     ❌     |     ❌    |
 | Custom headers                   |    ✅   |   ✅  |     ✅     |     ❌    |
 | Exclude status codes             |    ❌   |   ✅  |     ✅     |     ❌    |
 | Extensions                       |    ✅   |   ✅  |     ✅     |     ✅    |
 | HTTP basic auth                  |    ✅   |   ✅  |     ❌     |     ✅    |
-| Import a base request from file  |    ❌   |   ❌  |     ❌     |     ❌    |
 | Listable directory optimisation  |    ✅   |   ✅  |     ❌     |     ❌    |
-| Load headers from a file         |    ❌   |   ❌  |     ❌     |     ❌    |
+| Listable directory scraping      |    ✅   |   ❌  |     ❌     |     ❌    |
 | Output file                      |    ✅   |   ✅  |     ✅     |     ✅    |
 | Positive status codes            |    ❌   |   ❌  |     ❌     |     ✅    |
 | Proxy                            |    ✅   |   ✅  |     ✅     |     ✅    |
@@ -43,7 +41,6 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | Tune 404 based on size/redirection |    ❌   |   ✅  |     ❌     |     ❌    |
 | URL list                         |    ❌   |   ❌  |     ✅     |     ❌    |
 | User agents                      |    ✅   |   ✅  |     ✅     |     ✅    |
-| Listable Directory Scraping      |    ✅   |   ❌  |     ❌     |     ❌    |
 
 
 Released under GPL v3.0, see LICENSE for more information

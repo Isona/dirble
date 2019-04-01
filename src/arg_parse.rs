@@ -49,10 +49,10 @@ pub struct GlobalOpts {
 pub fn get_args() -> GlobalOpts
 {
     // Defines all the command line arguments with the Clap module
-    let args = App::new("dirble")
-                        .version("0.1")
-                        .author("Izzy Whistlecroft")
-                        .about("Finds pages and folders on websites")
+    let args = App::new("Dirble")
+                        .version("1.0")
+                        .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
+                        .about("Fast directory scanning and scraping tool")
                         .setting(AppSettings::ArgRequiredElseHelp)
                         .arg(Arg::with_name("wordlist")
                             .short("w")
