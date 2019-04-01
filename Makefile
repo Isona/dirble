@@ -16,16 +16,30 @@ help :
 	echo $(targets)
 
 release : $(targets) dirble_wordlist.txt
-	mkdir -p dirble
+	mkdir -p dirble/extensions
 	cp dirble_wordlist.txt dirble/
+	cp wordlists/* dirble/extensions
 	cp target/x86_64-unknown-linux-gnu/release/dirble dirble/dirble
 	cp target/i686-unknown-linux-gnu/release/dirble dirble/dirble32
 	cp target/x86_64-pc-windows-gnu/release/dirble.exe dirble/dirble.exe
 	cp target/i686-pc-windows-gnu/release/dirble.exe dirble/dirble32.exe
-	zip dirble/dirble-x86_64-linux.zip dirble/dirble dirble/dirble_wordlist.txt
-	zip dirble/dirble-i686-linux.zip dirble/dirble32 dirble/dirble_wordlist.txt
-	zip dirble/dirble-x86_64-windows.zip dirble/dirble.exe dirble/dirble_wordlist.txt
-	zip dirble/dirble-i686-windows.zip dirble/dirble32.exe dirble/dirble_wordlist.txt
+	zip dirble/dirble-x86_64-linux.zip \
+		dirble/dirble \
+		dirble/dirble_wordlist.txt \
+		dirble/extensions/*
+	zip dirble/dirble-i686-linux.zip \
+		dirble/dirble32 \
+		dirble/dirble_wordlist.txt \
+		dirble/extensions/*
+	zip dirble/dirble-x86_64-windows.zip \
+		dirble/dirble.exe \
+		dirble/dirble_wordlist.txt \
+		dirble/extensions/*
+	zip dirble/dirble-i686-windows.zip \
+		dirble/dirble32.exe \
+		dirble/dirble_wordlist.txt \
+		dirble/extensions/*
+	rm -rfv release
 	mv dirble release
 
 x86_64-unknown-linux-gnu : 
