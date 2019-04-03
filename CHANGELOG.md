@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.1 - 2019-04-03
+
+## Added
+* Extra information at the end of the help text
+
+## Changed
+* Optimised calculation of response sizes
+
+## Fixed
+* Bug with indentation when a folder was provided to scan
+* Typo in readme.md
+
 ## 1.0.0 - 2019-04-01
 
 ### Added
