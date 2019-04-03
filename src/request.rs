@@ -24,18 +24,25 @@ extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use crate::content_parse;
 
-pub struct Collector(pub Vec<u8>);
+pub struct Collector
+{
+    pub contents: Vec<u8>,
+    pub content_len: usize
+}
 
 impl Collector {
     fn clear_buffer(&mut self) {
-        self.0 = Vec::new();
+        self.contents = Vec::new();
+        self.content_len = 0;
     }
 }
 
 impl Handler for Collector {
     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
-        self.0.extend_from_slice(data);
-        Ok(data.len())
+        self.contents.extend_from_slice(data);
+        let data_len = data.len();
+        self.content_len += data_len;
+        Ok(data_len)
     }
 }
 
@@ -44,7 +51,7 @@ impl Handler for Collector {
 pub struct RequestResponse {
     pub url: String,
     pub code: u32,
-    pub content_len: u32,
+    pub content_len: usize,
     pub is_directory: bool,
     pub is_listable: bool,
     pub redirect_url: String,
@@ -122,7 +129,7 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
 
     // Get the contents of the response and set the length in the struct
     let contents = easy.get_ref();
-    req_response.content_len = String::from_utf8_lossy(&contents.0).len() as u32;
+    req_response.content_len = contents.content_len;
 
     Some(req_response)
 }
@@ -199,7 +206,7 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
 pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
 {
     // Create a new curl Easy2 instance and set it to use GET requests
-    let mut easy = Easy2::new(Collector(Vec::new()));
+    let mut easy = Easy2::new(Collector{contents: Vec::new(), content_len: 0});
     easy.get(true).unwrap();
 
     // Set the timeout of the easy
@@ -266,7 +273,7 @@ fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error>
 fn get_content(easy: &mut Easy2<Collector>) -> String
 {
     let contents = easy.get_ref();
-    String::from_utf8_lossy(&contents.0).to_string()
+    String::from_utf8_lossy(&contents.contents).to_string()
 }
 
 // Generate a struct for a response for use when a request hasn't been made
