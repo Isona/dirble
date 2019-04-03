@@ -40,11 +40,16 @@ fn main() {
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
 
     // Push the host URI to the scan queue
+    let mut depth = global_opts.hostname.matches("/").count() as u32;
+    if global_opts.hostname.ends_with("/") {
+        depth -= 1;
+    }
+
     for extension in global_opts.extensions.clone() {
         for start_index in 0..global_opts.wordlist_split {
             scan_queue.push_back(
                 wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension.clone()), wordlist.clone(), 
-                    start_index, global_opts.wordlist_split));
+                    start_index, global_opts.wordlist_split, depth));
         }
     }
     
@@ -86,7 +91,7 @@ fn main() {
                             for start_index in 0..global_opts.wordlist_split {
                                 scan_queue.push_back(
                                     wordlist::UriGenerator::new(message.url.clone(), String::from(extension.clone()), wordlist.clone(), 
-                                        start_index, global_opts.wordlist_split));
+                                        start_index, global_opts.wordlist_split, message.parent_depth));
                             }
                         }
                     }
@@ -138,6 +143,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     let mut easy = request::generate_easy(global_opts.clone());
 
     let mut consecutive_errors = 0;
+    let parent_depth = uri_gen.parent_depth;
 
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
@@ -145,7 +151,7 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
         let req_response = request::make_request(&mut easy, uri.clone());
 
         match req_response{
-            Some(response) => { 
+            Some(mut response) => { 
                 let code = response.code.clone();
 
                 // If the url is a directory, then check if it's listable
@@ -157,15 +163,18 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
 
                     let mut original_response = response_list.remove(0);
                     original_response.found_from_listable = false;
+                    original_response.parent_depth = parent_depth;
                     tx.send(original_response).unwrap();
 
-                    for scraped_response in response_list {
+                    for mut scraped_response in response_list {
+                        scraped_response.parent_depth = parent_depth;
                         tx.send(scraped_response).unwrap();
                     }
 
                 } 
                 // If it isn't a directory then just send the response to the main thread
                 else {
+                    response.parent_depth = parent_depth;
                     tx.send(response).unwrap(); 
                 }
 
@@ -210,6 +219,7 @@ fn generate_end() -> request::RequestResponse {
         is_directory:false,
         is_listable: false,
         redirect_url: String::from(""),
-        found_from_listable: false
+        found_from_listable: false,
+        parent_depth: 0
     }
 }

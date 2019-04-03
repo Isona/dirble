@@ -29,12 +29,13 @@ pub struct UriGenerator {
     suffix: String,
     current_index: usize,
     wordlist: Arc<Vec<String>>,
-    step_size: usize
+    step_size: usize,
+    pub parent_depth: u32
 }
 
 // Generates a new UriGenerator given various options
 impl UriGenerator {
-    pub fn new(mut hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32) -> UriGenerator{
+    pub fn new(mut hostname: String, suffix: String, wordlist: Arc<Vec<String>>, index: u32, step: u32, original_depth:u32) -> UriGenerator{
         // Remove a trailing / characters from the url if there is one
         if hostname.ends_with("/") {
             hostname.pop();
@@ -45,7 +46,8 @@ impl UriGenerator {
             suffix: suffix,
             current_index: index as usize,
             wordlist: wordlist,
-            step_size: step as usize
+            step_size: step as usize,
+            parent_depth: original_depth
         }
     }
 }

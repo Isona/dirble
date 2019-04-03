@@ -48,7 +48,8 @@ pub struct RequestResponse {
     pub is_directory: bool,
     pub is_listable: bool,
     pub redirect_url: String,
-    pub found_from_listable: bool
+    pub found_from_listable: bool,
+    pub parent_depth: u32
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
@@ -71,7 +72,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
                 is_directory:false,
                 is_listable: false,
                 redirect_url: String::from(""),
-                found_from_listable: false
+                found_from_listable: false,
+                parent_depth: 0
             };
             return Some(req_response); 
         }
@@ -93,7 +95,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
         is_directory:false,
         is_listable: false,
         redirect_url: String::from(""),
-        found_from_listable: false
+        found_from_listable: false,
+        parent_depth: 0
     };
 
     // If the response was a redirect, check if it's a directory
@@ -282,6 +285,7 @@ fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool
         is_directory: is_directory,
         is_listable: is_listable,
         redirect_url: String::from(""),
-        found_from_listable: true
+        found_from_listable: true,
+        parent_depth: 0
     }
 }

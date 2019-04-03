@@ -36,7 +36,9 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
         depth -= 1;
     }
 
-    depth -= 3; 
+    depth -= response.parent_depth as i32; 
+    depth -= 1;
+    
     if depth <= 0 {
         return output
     }
