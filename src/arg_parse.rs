@@ -50,9 +50,18 @@ pub fn get_args() -> GlobalOpts
 {
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
-                        .version("1.0")
+                        .version("1.0.1")
                         .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
                         .about("Fast directory scanning and scraping tool")
+                        .after_help("OUTPUT FORMAT:
+    + [url] - File
+    D [url] - Directory
+    L [url] - Listable Directory\n
+EXAMPLE USE:
+    - Run against a website using the default dirble_wordlist.txt from the current directory:
+        dirble [address]\n
+    - Run with a different wordlist and including .php and .html extensions:
+        dirble [address] -w example_wordlist.txt -X .php,.html")
                         .setting(AppSettings::ArgRequiredElseHelp)
                         .arg(Arg::with_name("wordlist")
                             .short("w")
