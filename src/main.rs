@@ -34,7 +34,7 @@ fn main() {
     let global_opts = Arc::new(arg_parse::get_args());
 
     // Get the wordlist file from the arguments and open it
-    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()).unwrap());
+    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()));
 
     // Create a queue for URIs that need to be scanned
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();

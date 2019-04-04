@@ -15,13 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::process::exit;
 use std::{
+    process::exit,
     sync::Arc,
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::prelude::*
 };
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use chardet::{detect, charset2encoding};
+use encoding::{
+    DecoderTrap,
+    label::encoding_from_whatwg_label
+};
+
 
 // Struct for a UriGenerator, it needs the hostname, the suffix to append, a wordlist and an index into that wordlist
 pub struct UriGenerator {
@@ -75,9 +81,34 @@ impl Iterator for UriGenerator {
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file(filename: String) -> io::Result<Vec<String>>
+pub fn lines_from_file(filename: String) -> Vec<String>
 {
-    let file = File::open(filename.clone())
-        .unwrap_or_else(|error| { println!("Opening file \"{}\" failed: {}", filename, error); exit(2) });
-    BufReader::new(file).lines().collect()
+    let mut file = File::open(filename.clone())
+        .unwrap_or_else(|error| { println!("Opening file \"{}\" failed: {}", filename, error); exit(2);});
+    let mut reader: Vec<u8> = Vec::new();
+
+    // Read the raw file in as a vector of bytes
+    file.read_to_end(&mut reader)
+        .expect("Error reading file");
+
+    // Detect the charset of the file
+    let result = detect(&reader);
+    // result.0 Encode
+    // result.1 Confidence
+    // result.2 Language
+
+    // Decode the file into UTF-8 from the guessed encoding
+    let coder = encoding_from_whatwg_label(charset2encoding(&result.0));
+    match coder {
+        Some(coding) => {
+            return coding.decode(&reader, DecoderTrap::Ignore)
+                .expect("Error decoding to UTF-8")
+                .lines()
+                .map(|s| String::from(s))
+                .collect();
+        },
+        None => {
+            panic!("Error detecting file encoding");
+        }
+    }
 }
