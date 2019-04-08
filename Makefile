@@ -9,6 +9,10 @@ targets = x86_64-unknown-linux-gnu \
 #		  ^ Potential bug in cross, openssl does not compile for wasm for some
 #		  reason.
 
+default :
+	cargo build --release
+	@echo Release binary: target/release/dirble
+
 help :
 	echo "Run 'make release' to make all targets"
 	echo "To build for just one platform then run 'make <target>'"
