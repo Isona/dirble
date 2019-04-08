@@ -138,3 +138,19 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
         output_file: output_file
     }
 }
+
+// Prints out start up information
+pub fn startup_text(global_opts: Arc<GlobalOpts>) {
+    println!("Dirble");
+    println!("Developed by Izzy Whistlecroft\n");
+
+    println!("Hosts: {}", global_opts.hostnames.clone().join(" "));
+    println!("Wordlist: {}", global_opts.wordlist_file.clone());
+    if global_opts.extensions.len() == 1 && global_opts.extensions[0] == "" {
+        println!("No Extensions");
+    }
+    else {
+        println!("Extensions: {}", global_opts.extensions.clone()[1..].join(" "));
+    }
+    println!("");
+}

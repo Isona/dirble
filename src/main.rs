@@ -33,6 +33,8 @@ fn main() {
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
 
+    output::startup_text(global_opts.clone());
+
     // Get the wordlist file from the arguments and open it
     let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()));
 

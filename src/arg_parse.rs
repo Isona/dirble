@@ -254,8 +254,6 @@ EXAMPLE USE:
     hostnames.sort();
     hostnames.dedup();
 
-    println!("{:#?}", hostnames);
-
     // Parse the extensions into a vector, then sort it and remove duplicates
     let mut extensions = vec![String::from("")];
     for extension in args.values_of("extensions").unwrap() {
