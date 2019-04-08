@@ -1,14 +1,27 @@
 # Changelog
 
+## 1.1.0 - 2019-04-08
+
+### Added
+* Option to provide multiple hosts to scan via command line
+* Host list support
+* Text at start up
+
+### Changed
+* Swapped -x and -X flags for consistency
+
+### Fixed
+* Support for non utf-8 files
+
 ## 1.0.1 - 2019-04-03
 
-## Added
+### Added
 * Extra information at the end of the help text
 
-## Changed
+### Changed
 * Optimised calculation of response sizes
 
-## Fixed
+### Fixed
 * Bug with indentation when a folder was provided to scan
 * Typo in readme.md
 

@@ -51,7 +51,7 @@ pub fn get_args() -> GlobalOpts
 {
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
-                        .version("1.0.1")
+                        .version("1.1.0")
                         .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
                         .about("Fast directory scanning and scraping tool")
                         .after_help("OUTPUT FORMAT:
