@@ -12,10 +12,16 @@ Run against a website using the default dirble_wordlist.txt from the current dir
 `dirble [address]`
 
 Run with a different wordlist and including .php and .html extensions:
-`dirble [address] -w example_wordlist.txt -X .php,.html`
+`dirble [address] -w example_wordlist.txt -x .php,.html`
 
 With listable directory scraping enabled:
 `dirble [address] --scrape-listable`
+
+Providing a list of extensions and a list of hosts:
+`dirble [address] -X wordlists/web.lst -U hostlist.txt`
+
+Providing multiple hosts to scan via command line:
+`dirble [address] -u [address] -u [address]`
 
 # Building from source
 
@@ -43,7 +49,7 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | Threading                        |    ✅   |   ❌  |     ✅     |     ✅    |
 | Throttle                         |    ✅   |   ✅  |     ✅     |     ❌    |
 | Tune 404 based on size/redirection |    ❌   |   ✅  |     ❌     |     ❌    |
-| URL list                         |    ❌   |   ❌  |     ✅     |     ❌    |
+| URL list                         |    ✅   |   ❌  |     ✅     |     ❌    |
 | User agents                      |    ✅   |   ✅  |     ✅     |     ✅    |
 
 # Performance

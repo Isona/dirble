@@ -62,7 +62,13 @@ EXAMPLE USE:
     - Run against a website using the default dirble_wordlist.txt from the current directory:
         dirble [address]\n
     - Run with a different wordlist and including .php and .html extensions:
-        dirble [address] -w example_wordlist.txt -X .php,.html")
+        dirble [address] -w example_wordlist.txt -X .php,.html\n
+    - With listable directory scraping enabled:
+        dirble [address] --scrape-listable\n
+    - Providing a list of extensions and a list of hosts:
+        dirble [address] -X wordlists/web.lst -U hostlist.txt\n
+    - Providing multiple hosts to scan via command line:
+        dirble [address] -u [address] -u [address]")
                         .setting(AppSettings::ArgRequiredElseHelp)
                         .arg(Arg::with_name("wordlist")
                             .short("w")

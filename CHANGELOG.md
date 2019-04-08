@@ -3,12 +3,15 @@
 ## 1.1.0 - 2019-04-08
 
 ### Added
-* Option to provide multiple hosts to scan via command line
-* Host list support
 * Text at start up
+* Option to provide multiple hosts to scan via command line
+* Support for lists of hosts to scan from a file
+* Ability to provide multiple lists of extensions via command line
+* Support for multiple lists of extensions from file
 
 ### Changed
 * Swapped -x and -X flags for consistency
+* Help text to have more use cases
 
 ### Fixed
 * Support for non utf-8 files
