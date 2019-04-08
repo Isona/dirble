@@ -40,19 +40,21 @@ fn main() {
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
 
     // Push the host URI to the scan queue
-    let mut depth = global_opts.hostname.matches("/").count() as u32;
-    if global_opts.hostname.ends_with("/") {
-        depth -= 1;
-    }
+    for hostname in global_opts.hostnames.clone() {
+        let mut depth = hostname.matches("/").count() as u32;
+        if hostname.ends_with("/") {
+            depth -= 1;
+        }
 
-    for extension in global_opts.extensions.clone() {
-        for start_index in 0..global_opts.wordlist_split {
-            scan_queue.push_back(
-                wordlist::UriGenerator::new(global_opts.hostname.clone(), String::from(extension.clone()), wordlist.clone(), 
-                    start_index, global_opts.wordlist_split, depth));
+        for extension in global_opts.extensions.clone() {
+            for start_index in 0..global_opts.wordlist_split {
+                scan_queue.push_back(
+                    wordlist::UriGenerator::new(hostname.clone(), String::from(extension.clone()), wordlist.clone(), 
+                        start_index, global_opts.wordlist_split, depth));
+            }
         }
     }
-    
+
     // Create a channel for threads to communicate with the parent on
     // This is used to send information about ending threads and information on responses
     let (tx, rx): (Sender<request::RequestResponse>, Receiver<request::RequestResponse>) = mpsc::channel();

@@ -16,11 +16,12 @@
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate clap;
-use clap::{App, Arg, AppSettings};
+use std::process::exit;
+use clap::{App, Arg, AppSettings, ArgGroup};
 use crate::wordlist::lines_from_file;
 
 pub struct GlobalOpts {
-    pub hostname: String,
+    pub hostnames: Vec<String>,
     pub wordlist_file: String,
     pub extensions: Vec<String>,
     pub max_threads: u32,
@@ -71,14 +72,30 @@ EXAMPLE USE:
                             .takes_value(true)
                             .default_value("dirble_wordlist.txt"))
                         .arg(Arg::with_name("host")
-                            .short("t")
-                            .long("target")
                             .value_name("host_uri")
                             .index(1)
                             .help("The URI of the host to scan, optionally supports basic auth with http://user:pass@host:port")
                             .takes_value(true)
-                            .required(true)
                             .validator(starts_with_http))
+                        .arg(Arg::with_name("extra_hosts")
+                            .short("u")
+                            .long("target")
+                            .value_name("host_uri")
+                            .help("Additional hosts to scan")
+                            .takes_value(true)
+                            .multiple(true)
+                            .validator(starts_with_http))
+                        .arg(Arg::with_name("host_file")
+                            .takes_value(true)
+                            .multiple(true)
+                            .short("U")
+                            .long("host-file")
+                            .help("The filename of a file containing a list of hosts to scan - cookies and headers set will be applied\
+                                to all hosts"))
+                        .group(ArgGroup::with_name("hosts")
+                            .required(true)
+                            .multiple(true)
+                            .args(&["host", "host_file", "extra_hosts"]))
                         .arg(Arg::with_name("extensions")
                             .short("X")
                             .value_name("extensions")
@@ -202,6 +219,43 @@ EXAMPLE USE:
                             .takes_value(false))
                         .get_matches();
 
+    
+
+    let mut hostnames:Vec<String> = Vec::new();
+
+    // Get from host arguments
+    if args.is_present("host") {
+        hostnames.push(String::from(args.value_of("host").unwrap()))
+    }
+    if args.is_present("host_file") {
+        for host_file in args.values_of("host_file").unwrap() {
+            let hosts = lines_from_file(String::from(host_file));
+            for hostname in hosts {
+                if hostname.starts_with("https://") || hostname.starts_with("http://") { 
+                    hostnames.push(String::from(hostname));
+                }
+                else {
+                    println!("{} doesn't start with \"http://\" or \"https://\" - skipping", hostname);
+                }
+            }
+
+        }
+    }
+    if args.is_present("extra_hosts") {
+        for hostname in args.values_of("extra_hosts").unwrap() {
+            hostnames.push(String::from(hostname));
+        }
+    }
+
+    if hostnames.len() == 0 {
+        println!("No valid hosts were provided - exiting");
+        exit(2);
+    }
+    hostnames.sort();
+    hostnames.dedup();
+
+    println!("{:#?}", hostnames);
+
     // Parse the extensions into a vector, then sort it and remove duplicates
     let mut extensions = vec![String::from("")];
     for extension in args.values_of("extensions").unwrap() {
@@ -289,7 +343,7 @@ EXAMPLE USE:
 
     // Create the GlobalOpts struct and return it
     GlobalOpts {
-        hostname: String::from(args.value_of("host").unwrap().clone()),
+        hostnames: hostnames,
         wordlist_file: String::from(args.value_of("wordlist").unwrap().clone()),
         extensions: extensions,
         max_threads: args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
