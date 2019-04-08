@@ -97,16 +97,17 @@ EXAMPLE USE:
                             .multiple(true)
                             .args(&["host", "host_file", "extra_hosts"]))
                         .arg(Arg::with_name("extensions")
-                            .short("X")
+                            .short("x")
                             .value_name("extensions")
                             .help("Provides comma separated extensions to extend queries with")
                             .min_values(1)
-                            .default_value("")
+                            .multiple(true)
                             .value_delimiter(","))
                         .arg(Arg::with_name("extension_file")
-                            .short("x")
+                            .short("X")
                             .long("extension-file")
                             .value_name("extension-file")
+                            .multiple(true)
                             .help("The name of a file containing extensions to extend queries with, one per line"))
                         .arg(Arg::with_name("proxy")
                             .long("proxy")
@@ -256,16 +257,19 @@ EXAMPLE USE:
 
     // Parse the extensions into a vector, then sort it and remove duplicates
     let mut extensions = vec![String::from("")];
-    for extension in args.values_of("extensions").unwrap() {
-        extensions.push(String::from(extension));
+    if args.is_present("extensions") {
+        for extension in args.values_of("extensions").unwrap() {
+            extensions.push(String::from(extension));
+        }
     }
 
     // Read in extensions from a file
     if args.is_present("extension_file") {
-        let extensions_file = String::from(args.value_of("extension_file").unwrap());
-        let extensions_from_file = lines_from_file(extensions_file);
-        for extension in extensions_from_file {
-            extensions.push(String::from(extension));
+        for extensions_file in args.values_of("extension_file").unwrap() {
+            let extensions_from_file = lines_from_file(String::from(extensions_file));
+            for extension in extensions_from_file {
+                extensions.push(String::from(extension));
+            }
         }
     }
 
