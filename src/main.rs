@@ -152,10 +152,11 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
     for uri in uri_gen {
-        let req_response = request::make_request(&mut easy, uri.clone());
+        let mut response = request::make_request(&mut easy, uri.clone());
 
-        match req_response{
-            Some(mut response) => { 
+        match response.code {
+            404 => {}
+            _ => { 
                 let code = response.code.clone();
 
                 // If the url is a directory, then check if it's listable
@@ -198,7 +199,6 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
                     }
                 }
             }
-            None => {}
         }
 
         // Sleep if throttle is set
