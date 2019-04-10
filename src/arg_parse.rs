@@ -23,6 +23,7 @@ use crate::wordlist::lines_from_file;
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
     pub wordlist_file: String,
+    pub prefixes: Vec<String>,
     pub extensions: Vec<String>,
     pub max_threads: u32,
     pub proxy_enabled: bool,
@@ -120,6 +121,21 @@ EXAMPLE USE:
                             .short("X")
                             .long("extension-file")
                             .value_name("extension-file")
+                            .multiple(true)
+                            .help("The name of a file containing extensions to extend queries with, one per line")
+                            .display_order(30))
+                        .arg(Arg::with_name("prefixes")
+                            .short("p")
+                            .long("prefixes")
+                            .help("Provides comma separated prefixes to extend queries with")
+                            .min_values(1)
+                            .multiple(true)
+                            .value_delimiter(",")
+                            .display_order(30))
+                        .arg(Arg::with_name("prefix_file")
+                            .short("P")
+                            .long("prefix-file")
+                            .value_name("prefix-file")
                             .multiple(true)
                             .help("The name of a file containing extensions to extend queries with, one per line")
                             .display_order(30))
@@ -307,6 +323,25 @@ EXAMPLE USE:
     hostnames.sort();
     hostnames.dedup();
 
+    // Parse the prefixes into a vector
+    let mut prefixes = vec![String::from("")];
+    if args.is_present("prefixes") {
+        for prefix in args.values_of("prefixes").unwrap() {
+            prefixes.push(String::from(prefix));
+        }
+    }
+    if args.is_present("prefix_file") {
+        for prefixes_file in args.values_of("prefix_file").unwrap() {
+            let prefixes_from_file = lines_from_file(String::from(prefixes_file));
+            for prefix in prefixes_from_file {
+                prefixes.push(String::from(prefix));
+            }
+        }
+    }
+    
+    prefixes.sort();
+    prefixes.dedup();
+
     // Parse the extensions into a vector, then sort it and remove duplicates
     let mut extensions = vec![String::from("")];
     if args.is_present("extensions") {
@@ -418,6 +453,7 @@ EXAMPLE USE:
     GlobalOpts {
         hostnames: hostnames,
         wordlist_file: String::from(args.value_of("wordlist").unwrap().clone()),
+        prefixes: prefixes,
         extensions: extensions,
         max_threads: args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled: proxy_enabled,

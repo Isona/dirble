@@ -146,6 +146,14 @@ pub fn startup_text(global_opts: Arc<GlobalOpts>) {
 
     println!("Hosts: {}", global_opts.hostnames.clone().join(" "));
     println!("Wordlist: {}", global_opts.wordlist_file.clone());
+
+    if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
+        println!("No Prefixes");
+    }
+    else {
+        println!("Prefixes: {}", global_opts.prefixes.clone()[1..].join(" "));
+    }
+
     if global_opts.extensions.len() == 1 && global_opts.extensions[0] == "" {
         println!("No Extensions");
     }
