@@ -136,7 +136,8 @@ fn main() {
     output::print_report(response_list, global_opts.clone(), file_handles);
 }
 
-fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
+fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, 
+    uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
 
     let hostname = uri_gen.hostname.clone();
 
@@ -154,50 +155,45 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     for uri in uri_gen {
         let mut response = request::make_request(&mut easy, uri.clone());
 
-        match response.code {
-            404 => {}
-            _ => { 
-                let code = response.code.clone();
+        let code = response.code.clone();
 
-                // If the url is a directory, then check if it's listable
-                // This may also scrape listable directories if the parameter is set
-                // Then return each discovered item to the main thread
-                if response.is_directory {
-                    let mut response_list = request::listable_check(&mut easy, response.url, 
-                        global_opts.disable_recursion, global_opts.scrape_listable);
+        // If the url is a directory, then check if it's listable
+        // This may also scrape listable directories if the parameter is set
+        // Then return each discovered item to the main thread
+        if response.is_directory {
+            let mut response_list = request::listable_check(&mut easy, response.url, 
+                global_opts.disable_recursion, global_opts.scrape_listable);
 
-                    let mut original_response = response_list.remove(0);
-                    original_response.found_from_listable = false;
-                    original_response.parent_depth = parent_depth;
-                    tx.send(original_response).unwrap();
+            let mut original_response = response_list.remove(0);
+            original_response.found_from_listable = false;
+            original_response.parent_depth = parent_depth;
+            send_response(&tx, &global_opts, original_response);
 
-                    for mut scraped_response in response_list {
-                        scraped_response.parent_depth = parent_depth;
-                        tx.send(scraped_response).unwrap();
-                    }
+            for mut scraped_response in response_list {
+                scraped_response.parent_depth = parent_depth;
+                send_response(&tx, &global_opts, scraped_response);
+            }
 
-                } 
-                // If it isn't a directory then just send the response to the main thread
-                else {
-                    response.parent_depth = parent_depth;
-                    tx.send(response).unwrap(); 
+        } 
+        // If it isn't a directory then just send the response to the main thread
+        else {
+            response.parent_depth = parent_depth;
+            send_response(&tx, &global_opts, response); 
+        }
+
+        // Detect consecutive errors and stop the thread if the count is exceeded
+        if global_opts.max_errors != 0 {
+            if code == 0 {
+                consecutive_errors += 1;
+                if consecutive_errors >= global_opts.max_errors {
+                    println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
+
+                    tx.send(generate_end()).unwrap();
+                    break;
                 }
-
-                // Detect consecutive errors and stop the thread if the count is exceeded
-                if global_opts.max_errors != 0 {
-                    if code == 0 {
-                        consecutive_errors += 1;
-                        if consecutive_errors >= global_opts.max_errors {
-                            println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
-
-                            tx.send(generate_end()).unwrap();
-                            break;
-                        }
-                    }
-                    else {
-                        consecutive_errors = 0;
-                    }
-                }
+            }
+            else {
+                consecutive_errors = 0;
             }
         }
 
@@ -214,6 +210,27 @@ fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, uri_gen: wordlist::U
     // Send a message to the main thread so it knows the thread is done
     tx.send(generate_end()).unwrap();
 }
+
+// Sends the given RequestResponse to the main thread
+// dependent on whitelist/blacklist settings and response code
+fn send_response(tx: &mpsc::Sender<request::RequestResponse>, 
+    global_opts: &arg_parse::GlobalOpts, response: request::RequestResponse) {
+
+    if response.is_directory {
+        tx.send(response).unwrap();
+        return
+    }
+
+    let contains_code = global_opts.code_list.contains(&response.code);
+
+    if (!global_opts.whitelist && !contains_code) ||
+            (global_opts.whitelist && contains_code)
+    {
+        tx.send(response).unwrap();
+    }
+
+}
+
 
 fn generate_end() -> request::RequestResponse {
     request::RequestResponse {

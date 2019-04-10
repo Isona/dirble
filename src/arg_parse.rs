@@ -44,7 +44,9 @@ pub struct GlobalOpts {
     pub scan_listable: bool,
     pub cookies: Option<String>,
     pub headers: Option<Vec<String>>,
-    pub scrape_listable: bool
+    pub scrape_listable: bool,
+    pub whitelist: bool,
+    pub code_list: Vec<u32>
 }
 
 pub fn get_args() -> GlobalOpts
@@ -232,6 +234,25 @@ EXAMPLE USE:
                             .help("Don't output information during the scan, only output the report at the end")
                             .takes_value(false)
                             .display_order(100))
+                        .arg(Arg::with_name("code_whitelist")
+                            .long("code-whitelist")
+                            .short("W")
+                            .help("Provide a comma separated list of response codes to show in output")
+                            .min_values(1)
+                            .multiple(true)
+                            .value_delimiter(",")
+                            .validator(positive_int_check)
+                            .display_order(110))
+                        .arg(Arg::with_name("code_blacklist")
+                            .long("code-blacklist")
+                            .short("B")
+                            .help("Provide a comma separated list of response codes to not show in output")
+                            .min_values(1)
+                            .multiple(true)
+                            .value_delimiter(",")
+                            .conflicts_with("code_whitelist")
+                            .validator(positive_int_check)
+                            .display_order(110))
                         .arg(Arg::with_name("ignore_cert")
                             .long("ignore-cert")
                             .short("k")
@@ -374,6 +395,25 @@ EXAMPLE USE:
         headers = Some(temp_headers);
     }
 
+    let mut whitelist = false;
+    let mut code_list:Vec<u32> = Vec::new();
+    
+    if args.is_present("code_whitelist") {
+        whitelist = true;
+        for code in args.values_of("code_whitelist").unwrap() {
+            code_list.push(code.parse::<u32>().unwrap());
+        }
+    }
+    else if args.is_present("code_blacklist") {
+        whitelist = false;
+        for code in args.values_of("code_blacklist").unwrap() {
+            code_list.push(code.parse::<u32>().unwrap());
+        }
+    }
+    else {
+        code_list.push(404);
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames: hostnames,
@@ -399,7 +439,9 @@ EXAMPLE USE:
         scan_listable: args.is_present("scan_listable"),
         cookies: cookies,
         headers: headers,
-        scrape_listable:args.is_present("scrape_listable")
+        scrape_listable:args.is_present("scrape_listable"),
+        whitelist: whitelist,
+        code_list: code_list
     }
 }
 
