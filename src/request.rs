@@ -62,7 +62,7 @@ pub struct RequestResponse {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
-pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<RequestResponse>{
+pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse{
 
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
@@ -82,17 +82,12 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
                 found_from_listable: false,
                 parent_depth: 0
             };
-            return Some(req_response); 
+            return req_response; 
         }
     }
 
     // Get the response code
     let code = easy.response_code().unwrap();
-    
-    // If the code was a 404, return none
-    if code == 404 {
-        return None;
-    }
 
     // Declare the RequestResponse for the current request
     let mut req_response = RequestResponse {
@@ -131,7 +126,7 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> Option<Requ
     let contents = easy.get_ref();
     req_response.content_len = contents.content_len;
 
-    Some(req_response)
+    req_response
 }
 
 pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable_recursion: bool, scrape_listable: bool) -> Vec<RequestResponse> {
@@ -140,32 +135,32 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
     if !dir_url.ends_with("/") {
         dir_url = dir_url + "/";
     }
-    let response = make_request(easy, dir_url.clone());
+    let mut response = make_request(easy, dir_url.clone());
     let content = get_content(easy).to_lowercase();
     let mut output_list:Vec<RequestResponse> = Vec::new();
 
-    match response {
-        // If a response was returned then check if the directory is listable or not
-        Some(mut resp) => {
+    match response.code {
+        // If a found response was returned then check if the directory is listable or not
+        200 => {
             let listable = content.contains("parent directory") || content.contains("up to ") 
                 || content.contains("directory listing for");
 
             if listable{
-                resp.is_listable = true;
-                resp.is_directory = true;
-                output_list.push(resp);
+                response.is_listable = true;
+                response.is_directory = true;
+                output_list.push(response);
             }
             else{
-                resp.is_listable = false;
-                resp.is_directory = true;
+                response.is_listable = false;
+                response.is_directory = true;
                 
-                output_list.push(resp);
+                output_list.push(response);
                 return output_list
             }
         }
-        // If no response was returned then create a struct
+        // If the code returned was not a 200 then create a struct
         // indicating that this is a folder, then return it
-        None => {
+        _ => {
             output_list.push(fabricate_request_response(
                 original_url, true, false));
             return output_list
