@@ -48,15 +48,17 @@ fn main() {
             depth -= 1;
         }
 
-        for extension in global_opts.extensions.clone() {
-            for start_index in 0..global_opts.wordlist_split {
-                scan_queue.push_back(
-                    wordlist::UriGenerator::new(hostname.clone(), String::from(extension.clone()), wordlist.clone(), 
-                        start_index, global_opts.wordlist_split, depth));
+        for prefix in global_opts.prefixes.clone() {
+            for extension in global_opts.extensions.clone() {
+                for start_index in 0..global_opts.wordlist_split {
+                    scan_queue.push_back(
+                        wordlist::UriGenerator::new(hostname.clone(), String::from(prefix.clone()),
+                            String::from(extension.clone()), wordlist.clone(), 
+                            start_index, global_opts.wordlist_split, depth));
+                }
             }
         }
     }
-
     // Create a channel for threads to communicate with the parent on
     // This is used to send information about ending threads and information on responses
     let (tx, rx): (Sender<request::RequestResponse>, Receiver<request::RequestResponse>) = mpsc::channel();
@@ -91,11 +93,14 @@ fn main() {
                         }
                     }
                     if message.is_directory && (!message.is_listable || global_opts.scan_listable) && !global_opts.disable_recursion {
-                        for extension in global_opts.extensions.clone() {
-                            for start_index in 0..global_opts.wordlist_split {
-                                scan_queue.push_back(
-                                    wordlist::UriGenerator::new(message.url.clone(), String::from(extension.clone()), wordlist.clone(), 
-                                        start_index, global_opts.wordlist_split, message.parent_depth));
+                        for prefix in global_opts.prefixes.clone() {
+                            for extension in global_opts.extensions.clone() {
+                                for start_index in 0..global_opts.wordlist_split {
+                                    scan_queue.push_back(
+                                        wordlist::UriGenerator::new(message.url.clone(), String::from(prefix.clone()),
+                                            String::from(extension.clone()), wordlist.clone(), 
+                                            start_index, global_opts.wordlist_split, message.parent_depth));
+                                }
                             }
                         }
                     }
