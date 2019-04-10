@@ -22,7 +22,7 @@ use crate::wordlist::lines_from_file;
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
-    pub wordlist_file: String,
+    pub wordlist_files: Vec<String>,
     pub prefixes: Vec<String>,
     pub extensions: Vec<String>,
     pub max_threads: u32,
@@ -107,6 +107,7 @@ EXAMPLE USE:
                             .value_name("wordlist")
                             .help("Sets which wordlist to use")
                             .takes_value(true)
+                            .multiple(true)
                             .default_value("dirble_wordlist.txt")
                             .display_order(20))
                         .arg(Arg::with_name("extensions")
@@ -324,6 +325,13 @@ EXAMPLE USE:
     hostnames.sort();
     hostnames.dedup();
 
+    // Parse wordlist file names into a vector
+    let mut wordlists:Vec<String> = Vec::new();
+
+    for wordlist_file in args.values_of("wordlist").unwrap() {
+        wordlists.push(String::from(wordlist_file));
+    }
+
     // Parse the prefixes into a vector
     let mut prefixes = vec![String::from("")];
     if args.is_present("prefixes") {
@@ -453,7 +461,7 @@ EXAMPLE USE:
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames: hostnames,
-        wordlist_file: String::from(args.value_of("wordlist").unwrap().clone()),
+        wordlist_files: wordlists,
         prefixes: prefixes,
         extensions: extensions,
         max_threads: args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),

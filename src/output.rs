@@ -145,7 +145,7 @@ pub fn startup_text(global_opts: Arc<GlobalOpts>) {
     println!("Developed by Izzy Whistlecroft\n");
 
     println!("Hosts: {}", global_opts.hostnames.clone().join(" "));
-    println!("Wordlist: {}", global_opts.wordlist_file.clone());
+    println!("Wordlists: {}", global_opts.wordlist_files.clone().join(" "));
 
     if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
         println!("No Prefixes");

@@ -36,7 +36,14 @@ fn main() {
     output::startup_text(global_opts.clone());
 
     // Get the wordlist file from the arguments and open it
-    let wordlist = Arc::new(wordlist::lines_from_file(global_opts.wordlist_file.clone()));
+    let mut wordlist:Vec<String> = Vec::new();
+    for wordlist_file in global_opts.wordlist_files.clone() {
+        wordlist.append(&mut wordlist::lines_from_file(wordlist_file));
+    }
+    wordlist.sort();
+    wordlist.dedup();
+    
+    let wordlist = Arc::new(wordlist);
 
     // Create a queue for URIs that need to be scanned
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
