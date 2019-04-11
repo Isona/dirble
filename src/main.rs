@@ -49,14 +49,14 @@ fn main() {
     let mut scan_queue: VecDeque<wordlist::UriGenerator> = VecDeque::new();
 
     // Push the host URI to the scan queue
-    for hostname in global_opts.hostnames.clone() {
+    for hostname in &global_opts.hostnames {
         let mut depth = hostname.matches("/").count() as u32;
         if hostname.ends_with("/") {
             depth -= 1;
         }
 
-        for prefix in global_opts.prefixes.clone() {
-            for extension in global_opts.extensions.clone() {
+        for prefix in &global_opts.prefixes {
+            for extension in &global_opts.extensions {
                 for start_index in 0..global_opts.wordlist_split {
                     scan_queue.push_back(
                         wordlist::UriGenerator::new(hostname.clone(), String::from(prefix.clone()),
@@ -100,8 +100,8 @@ fn main() {
                         }
                     }
                     if message.is_directory && (!message.is_listable || global_opts.scan_listable) && !global_opts.disable_recursion {
-                        for prefix in global_opts.prefixes.clone() {
-                            for extension in global_opts.extensions.clone() {
+                        for prefix in &global_opts.prefixes {
+                            for extension in &global_opts.extensions {
                                 for start_index in 0..global_opts.wordlist_split {
                                     scan_queue.push_back(
                                         wordlist::UriGenerator::new(message.url.clone(), String::from(prefix.clone()),
