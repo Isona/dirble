@@ -78,4 +78,30 @@ pub fn output_suffix(response: &RequestResponse) -> String {
     }
 }
 
+#[inline]
+pub fn output_json(response: &RequestResponse) -> String {
+    let is_directory = match response.is_directory{
+        true => "true",
+        false => "false"
+    };
+    let found_from_listable = match response.found_from_listable {
+        true => "true",
+        false => "false"
+    };
+    format!("{{\
+        \"url\": \"{}\", \
+        \"code\": {}, \
+        \"size\": {}, \
+        \"is_directory\": {},
+        \"found_from_listable\": {},
+        \"redirect_url\": \"{}\"\
+        }}",
+        response.url,
+        response.code,
+        response.content_len,
+        is_directory,
+        found_from_listable,
+        response.redirect_url)
+}
+
 
