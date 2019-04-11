@@ -81,7 +81,7 @@ pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
 
     match response.code {
         301 | 302 => {
-            format!("(CODE: {}|SIZE:{:#?}|DEST:{})", 
+            format!("(CODE:{}|SIZE:{:#?}|DEST:{})", 
                 code_string, response.content_len, response.redirect_url)
         }
         _ => {
