@@ -19,6 +19,7 @@ extern crate clap;
 use std::process::exit;
 use clap::{App, Arg, AppSettings, ArgGroup};
 use crate::wordlist::lines_from_file;
+use atty::Stream;
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
@@ -47,7 +48,8 @@ pub struct GlobalOpts {
     pub headers: Option<Vec<String>>,
     pub scrape_listable: bool,
     pub whitelist: bool,
-    pub code_list: Vec<u32>
+    pub code_list: Vec<u32>,
+    pub is_terminal: bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -486,7 +488,8 @@ EXAMPLE USE:
         headers: headers,
         scrape_listable:args.is_present("scrape_listable"),
         whitelist: whitelist,
-        code_list: code_list
+        code_list: code_list,
+        is_terminal: atty::is(Stream::Stdout)
     }
 }
 

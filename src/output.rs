@@ -53,39 +53,42 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>,
 pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts>, file_handles: FileHandles) {
     let responses = sort_responses(responses);
 
-    if !global_opts.silent || global_opts.verbose {
+    if (!global_opts.silent || global_opts.verbose) && global_opts.is_terminal {
         println!("\n");
     }
 
-    let mut file_handle = file_handles.output_file;
     let report_string = String::from("Dirble Scan Report: \n");
-    println!("{}", report_string);
-    file_handle = write_file(file_handle, report_string);
 
-    for response in responses {
-        match print_response(&response, global_opts.clone(), true, true) {
-            Some(line) => { 
+    // If stdout is a terminal then write a report to it
+    if global_opts.is_terminal
+    {
+        println!("{}", report_string);
+        for response in &responses {
+            if let Some(line) = print_response(&response, global_opts.clone(), true, false) {
                 println!("{}", line);
+            }
+        }
+    }
+    
+    
+    // If it was provided, write to a normally formatted output file
+    if let Some(mut handle) = file_handles.output_file {
+        write_file(&mut handle, report_string);
+
+        for response in &responses {
+            if let Some(line) = print_response(&response, global_opts.clone(), true, true) {
                 let file_line = format!("{}\n", line);
-                file_handle = write_file(file_handle, file_line);
-            },
-            None => {}
+                write_file(&mut handle, file_line);
+            }
         }
     }
 }
 
-// If a file was provided to save normally formatted output, this will write a string to it
-fn write_file(mut file_writer: Option<LineWriter<File>>, line: String) -> Option<LineWriter<File>>
-{
-    let file_writer = file_writer.take();
-    match file_writer {
-        Some(mut writer) => { 
-            let write_line = line.as_bytes();
-            writer.write_all(write_line).unwrap();
-            Some(writer)
-        },
-        None => { None }
-    }
+// Write a string to the provided LineWriter
+#[inline]
+fn write_file(file_writer: &mut LineWriter<File>, line: String) {
+    let write_line = line.as_bytes();
+    file_writer.write_all(write_line).unwrap();
 }
 
 // Sorts responses so that files in a directory come first, followed by the subdirs
@@ -141,6 +144,8 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
 
 // Prints out start up information
 pub fn startup_text(global_opts: Arc<GlobalOpts>) {
+    if !global_opts.is_terminal { return }
+
     println!("Dirble");
     println!("Developed by Izzy Whistlecroft\n");
 
