@@ -88,18 +88,24 @@ pub fn output_json(response: &RequestResponse) -> String {
         true => "true",
         false => "false"
     };
+    let is_listable = match response.is_listable {
+        true => "true",
+        false => "false"
+    };
     format!("{{\
         \"url\": \"{}\", \
         \"code\": {}, \
         \"size\": {}, \
-        \"is_directory\": {},
-        \"found_from_listable\": {},
+        \"is_directory\": {}, \
+        \"is_listable\": {}, \
+        \"found_from_listable\": {}, \
         \"redirect_url\": \"{}\"\
         }}",
         response.url,
         response.code,
         response.content_len,
         is_directory,
+        is_listable,
         found_from_listable,
         response.redirect_url)
 }
