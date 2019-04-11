@@ -219,38 +219,28 @@ pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
     }
 
     // Set the user agent
-    match &global_opts.user_agent {
-        Some(user_agent) => { easy.useragent(&user_agent.clone()).unwrap(); },
-        None => {}
+    if let Some(user_agent) = &global_opts.user_agent {
+        easy.useragent(&user_agent.clone()).unwrap();
     }
 
     // Set http basic auth options
-    match &global_opts.username {
-        Some(username) => {
-            easy.username(&username.clone()).unwrap();
-            easy.password(&global_opts.password.clone().unwrap()).unwrap();
-        },
-        None => {}
+    if let Some(username) = &global_opts.username {
+        easy.username(&username.clone()).unwrap();
+        easy.password(&global_opts.password.clone().unwrap()).unwrap();
     }
 
     // Set cookies
-    match &global_opts.cookies {
-        Some(cookies) => {
-            easy.cookie(cookies).unwrap();
-        },
-        None => {}
+    if let Some(cookies) = &global_opts.cookies {
+        easy.cookie(cookies).unwrap();
     }
 
     // Set headers
-    match &global_opts.headers {
-        Some(headers) => {
-            let mut header_list = curl::easy::List::new();
-            for header in headers {
-                header_list.append(header).unwrap();
-            }
-            easy.http_headers(header_list).unwrap();
-        },
-        None => {}
+    if let Some(headers) =  &global_opts.headers {
+        let mut header_list = curl::easy::List::new();
+        for header in headers {
+            header_list.append(header).unwrap();
+        }
+        easy.http_headers(header_list).unwrap();
     }
 
     easy
