@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 - 2019-04-11
+
+### Added
+* Coloured status codes in terminal output
+* No-color option
+* Disable end report printing if output is not a terminal
+* Support for loading multiple wordlists
+* Prefix support
+* Whitelisting and blacklisting of response codes to display
+
+### Changed
+* Threading options now have short options
+* Reordered help text
+
+
 ## 1.1.0 - 2019-04-08
 
 ### Added

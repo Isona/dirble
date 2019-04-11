@@ -36,19 +36,18 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 
 |                                  | Dirble | Dirb | Dirsearch | Gobuster |
 |----------------------------------|:------:|:----:|:---------:|:--------:|
-| .ht* file filtering              |    ✅   |   ❌  |     ❌     |     ❌    |
 | Cookies                          |    ✅   |   ✅  |     ✅     |     ❌    |
 | Custom headers                   |    ✅   |   ✅  |     ✅     |     ❌    |
-| Exclude status codes             |    ❌   |   ✅  |     ✅     |     ❌    |
 | Extensions                       |    ✅   |   ✅  |     ✅     |     ✅    |
 | HTTP basic auth                  |    ✅   |   ✅  |     ❌     |     ✅    |
 | Listable directory optimisation  |    ✅   |   ✅  |     ❌     |     ❌    |
 | Listable directory scraping      |    ✅   |   ❌  |     ❌     |     ❌    |
 | Output file                      |    ✅   |   ✅  |     ✅     |     ✅    |
-| Positive status codes            |    ❌   |   ❌  |     ❌     |     ✅    |
 | Proxy                            |    ✅   |   ✅  |     ✅     |     ✅    |
 | Recursion                        |    ✅   |   ✅  |     ✅     |     ❌    |
 | Speed                            |    ✅   |   ✅  |     ❌     |     ✅    |
+| Status code blacklisting         |    ✅   |   ✅  |     ✅     |     ❌    |
+| Status code whitelisting         |    ✅   |   ❌  |     ❌     |     ✅    |
 | Threading                        |    ✅   |   ❌  |     ✅     |     ✅    |
 | Throttle                         |    ✅   |   ✅  |     ✅     |     ❌    |
 | Tune 404 based on size/redirection |    ❌   |   ✅  |     ❌     |     ❌    |
