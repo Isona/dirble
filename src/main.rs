@@ -94,7 +94,8 @@ fn main() {
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
                     if !global_opts.silent {
-                        match output::print_response(&message, global_opts.clone(), false, false) {
+                        match output::print_response(&message, global_opts.clone(),
+                            false, false, global_opts.is_terminal && !global_opts.no_color) {
                             Some(output) => { println!("{}", output) },
                             None => {}
                         }

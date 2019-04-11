@@ -49,7 +49,8 @@ pub struct GlobalOpts {
     pub scrape_listable: bool,
     pub whitelist: bool,
     pub code_list: Vec<u32>,
-    pub is_terminal: bool
+    pub is_terminal: bool,
+    pub no_color:bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -290,6 +291,10 @@ EXAMPLE USE:
                             .help("The number of consecutive errors a thread can have before it exits, set to 0 to disable")
                             .validator(int_check)
                             .default_value("5"))
+                        .arg(Arg::with_name("no_color")
+                            .long("no-color")
+                            .alias("no-colour")
+                            .help("Disable coloring of terminal output"))
                         .get_matches();
 
     
@@ -489,7 +494,8 @@ EXAMPLE USE:
         scrape_listable:args.is_present("scrape_listable"),
         whitelist: whitelist,
         code_list: code_list,
-        is_terminal: atty::is(Stream::Stdout)
+        is_terminal: atty::is(Stream::Stdout),
+        no_color: args.is_present("no_color")
     }
 }
 

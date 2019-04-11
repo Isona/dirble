@@ -31,7 +31,7 @@ pub struct FileHandles {
 }
 
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
-    print_newlines: bool, indentation: bool) -> Option<String> {
+    print_newlines: bool, indentation: bool, colour: bool) -> Option<String> {
     if response.code == 403 && !global_opts.show_htaccess && response.url.contains("/.ht") 
     {
         return None 
@@ -44,7 +44,7 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>,
 
     output += &output_format::output_url(&response);
 
-    output += &output_format::output_suffix(&response);
+    output += &output_format::output_suffix(&response, colour);
 
     Some(output)
 }
@@ -64,7 +64,8 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
     {
         println!("{}", report_string);
         for response in &responses {
-            if let Some(line) = print_response(&response, global_opts.clone(), true, false) {
+            if let Some(line) = print_response(&response, global_opts.clone(), 
+                true, false, !global_opts.no_color) {
                 println!("{}", line);
             }
         }
@@ -76,7 +77,8 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
         write_file(&mut handle, report_string);
 
         for response in &responses {
-            if let Some(line) = print_response(&response, global_opts.clone(), true, true) {
+            if let Some(line) = print_response(&response, global_opts.clone()
+                , true, true, false) {
                 let file_line = format!("{}\n", line);
                 write_file(&mut handle, file_line);
             }
