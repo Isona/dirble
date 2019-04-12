@@ -71,7 +71,8 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
     // If it's empty then return a RequestResponse struct
     match perform(&mut easy) {
         Ok(_v) => {}
-        Err(_e) => {
+        Err(e) => {
+            println!("Curl error after requesting {} : {}", url, e);
             let req_response = RequestResponse {
                 url: url.clone(),
                 code: 0,
