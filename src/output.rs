@@ -28,7 +28,8 @@ use std::io::{LineWriter, Write};
 // Will be extended in future with handles for different formats
 pub struct FileHandles {
     pub output_file: Option<LineWriter<File>>,
-    pub json_file: Option<LineWriter<File>>
+    pub json_file: Option<LineWriter<File>>,
+    pub xml_file: Option<LineWriter<File>>
 }
 
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
@@ -95,6 +96,15 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
         let final_line = format!("{}]", output_format::output_json(&responses[responses.len()-1]));
         write_file(&mut handle, final_line);
     }
+
+    if let Some(mut handle) = file_handles.xml_file {
+        write_file(&mut handle, String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"));
+        write_file(&mut handle, String::from("<dirble_scan>\n"));
+        for response in &responses {
+            write_file(&mut handle, output_format::output_xml(response));
+        }
+        write_file(&mut handle, String::from("</dirble_scan>"));
+    }
 }
 
 // Write a string to the provided LineWriter
@@ -144,9 +154,15 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
         json_file = generate_handle(filename);
     }
 
+    let mut xml_file = None;
+    if let Some(filename) = &global_opts.xml_file {
+        xml_file = generate_handle(filename);
+    }
+
     FileHandles {
         output_file: output_file,
-        json_file: json_file
+        json_file: json_file,
+        xml_file: xml_file
     }
 }
 

@@ -39,6 +39,7 @@ pub struct GlobalOpts {
     pub password: Option<String>,
     pub output_file: Option<String>,
     pub json_file: Option<String>,
+    pub xml_file: Option<String>,
     pub verbose: bool,
     pub silent: bool,
     pub timeout: u32,
@@ -156,6 +157,12 @@ EXAMPLE USE:
                             .long("json-file")
                             .visible_alias("oJ")
                             .help("Sets a file to write JSON output to")
+                            .takes_value(true)
+                            .display_order(40))
+                        .arg(Arg::with_name("xml_file")
+                            .long("xml-file")
+                            .visible_alias("oX")
+                            .help("Sets a file to write XML output to")
                             .takes_value(true)
                             .display_order(40))
                         .arg(Arg::with_name("proxy")
@@ -438,6 +445,11 @@ EXAMPLE USE:
         json_file = Some(String::from(args.value_of("json_file").unwrap()));
     }
 
+    let mut xml_file = None;
+    if args.is_present("xml_file") {
+        xml_file = Some(String::from(args.value_of("xml_file").unwrap()));
+    }
+
     // Read provided cookie values into a vector
     let mut cookies = None;
     if args.is_present("cookie") {
@@ -497,6 +509,7 @@ EXAMPLE USE:
         password: password,
         output_file: output_file,
         json_file: json_file,
+        xml_file: xml_file,
         verbose: args.is_present("verbose"),
         silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),

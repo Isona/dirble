@@ -91,8 +91,27 @@ pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
 }
 
 #[inline]
+pub fn output_xml(response: &RequestResponse) -> String {
+    format!("<file url=\"{}\">
+    <status_code>{}</status_code>
+    <size>{}</size>
+    <is_directory>{}</is_directory>
+    <is_listable>{}</is_listable>
+    <found_from_listable>{}</found_from_listable>
+    <redirect_url>{}</redirect_url>
+</file>\n", 
+    response.url,
+    response.code,
+    response.content_len,
+    response.is_directory,
+    response.is_listable,
+    response.found_from_listable,
+    response.redirect_url)
+}
+
+#[inline]
 pub fn output_json(response: &RequestResponse) -> String {
-    
+
     format!("{{\
         \"url\": \"{}\", \
         \"code\": {}, \
