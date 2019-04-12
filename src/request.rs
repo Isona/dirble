@@ -48,6 +48,7 @@ impl Handler for Collector {
 
 // Struct which contains information about a response
 // This is sent back to the main thread
+#[derive(Clone)]
 pub struct RequestResponse {
     pub url: String,
     pub code: u32,

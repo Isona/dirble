@@ -25,7 +25,8 @@ use crate::arg_parse;
 use crate::request;
 use crate::wordlist;
 
-pub fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>, 
+pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>, 
+    output_tx: mpsc::Sender<request::RequestResponse>,
     uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
 
     let hostname = uri_gen.hostname.clone();
@@ -56,18 +57,18 @@ pub fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>,
             let mut original_response = response_list.remove(0);
             original_response.found_from_listable = false;
             original_response.parent_depth = parent_depth;
-            send_response(&tx, &global_opts, original_response);
+            send_response(&dir_tx, &output_tx, &global_opts, original_response);
 
             for mut scraped_response in response_list {
                 scraped_response.parent_depth = parent_depth;
-                send_response(&tx, &global_opts, scraped_response);
+                send_response(&dir_tx, &output_tx, &global_opts, scraped_response);
             }
 
         } 
         // If it isn't a directory then just send the response to the main thread
         else {
             response.parent_depth = parent_depth;
-            send_response(&tx, &global_opts, response); 
+            send_response(&dir_tx, &output_tx, &global_opts, response); 
         }
 
         // Detect consecutive errors and stop the thread if the count is exceeded
@@ -77,7 +78,7 @@ pub fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>,
                 if consecutive_errors >= global_opts.max_errors {
                     println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
 
-                    tx.send(generate_end()).unwrap();
+                    dir_tx.send(generate_end()).unwrap();
                     break;
                 }
             }
@@ -97,16 +98,18 @@ pub fn thread_spawn(tx: mpsc::Sender<request::RequestResponse>,
     }
 
     // Send a message to the main thread so it knows the thread is done
-    tx.send(generate_end()).unwrap();
+    dir_tx.send(generate_end()).unwrap();
 }
 
 // Sends the given RequestResponse to the main thread
 // dependent on whitelist/blacklist settings and response code
-fn send_response(tx: &mpsc::Sender<request::RequestResponse>, 
+fn send_response(dir_tx: &mpsc::Sender<request::RequestResponse>, 
+    output_tx: &mpsc::Sender<request::RequestResponse>,
     global_opts: &arg_parse::GlobalOpts, response: request::RequestResponse) {
 
     if response.is_directory {
-        tx.send(response).unwrap();
+        dir_tx.send(response.clone()).unwrap();
+        output_tx.send(response).unwrap();
         return
     }
 
@@ -115,7 +118,7 @@ fn send_response(tx: &mpsc::Sender<request::RequestResponse>,
     if (!global_opts.whitelist && !contains_code) ||
             (global_opts.whitelist && contains_code)
     {
-        tx.send(response).unwrap();
+        output_tx.send(response).unwrap();
     }
 
 }
