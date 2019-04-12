@@ -27,7 +27,8 @@ use std::io::{LineWriter, Write};
 // Struct giving access to each current file handle
 // Will be extended in future with handles for different formats
 pub struct FileHandles {
-    pub output_file: Option<LineWriter<File>>
+    pub output_file: Option<LineWriter<File>>,
+    pub json_file: Option<LineWriter<File>>
 }
 
 pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
@@ -84,6 +85,13 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
             }
         }
     }
+
+    if let Some(mut handle) = file_handles.json_file {
+        for response in &responses {
+            let line = format!("{}\n", output_format::output_json(response));
+            write_file(&mut handle, line);
+        }
+    }
 }
 
 // Write a string to the provided LineWriter
@@ -124,23 +132,31 @@ pub fn directory_name(response:&RequestResponse) -> String
 pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
     let mut output_file = None;
 
-    match &global_opts.output_file {
-        Some(name) => {
-            let path = Path::new(&name);
-            let display = path.display();
-            output_file = match File::create(&path) {
-                Err(why) => panic!("couldn't create {}: {}",
-                                   display,
-                                   why.description()),
-                Ok(file) => Some(LineWriter::new(file)),
-            };
+    if let Some(filename) = &global_opts.output_file {
+        output_file = generate_handle(filename);
+    }
 
-        },
-        None => {}
-    };
+    let mut json_file = None;
+    if let Some(filename) = &global_opts.json_file {
+        json_file = generate_handle(filename);
+    }
 
     FileHandles {
-        output_file: output_file
+        output_file: output_file,
+        json_file: json_file
+    }
+}
+
+#[inline]
+fn generate_handle(filename: &String) -> Option<LineWriter<File>>
+{
+    let path = Path::new(&filename);
+    let display = path.display();
+    match File::create(&path) {
+        Err(why) => panic!("couldn't create {}: {}",
+                           display,
+                           why.description()),
+        Ok(file) => Some(LineWriter::new(file)),
     }
 }
 
