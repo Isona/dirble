@@ -4,7 +4,7 @@ Dirble is a website directory scanning tool for Windows and Linux. It's designed
 
 # How to Use
 
-Download one of the precompiled binaries for your system, then run it from a terminal. By default Dirble looks for a dirble_wordlist.txt in the directory it is run from.
+Download one of the precompiled binaries for your system, then run it from a terminal. By default Dirble looks for dirble_wordlist.txt in the directory containing the executable.
 
 # Example Uses
 
