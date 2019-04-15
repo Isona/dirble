@@ -138,7 +138,7 @@ fn check_output_suffix() {
 }
 
 #[test]
-fn check_json_format() {
+fn check_output_json() {
     // This doesn't use the generate_request_response function because
     // the defaults may change but the expected JSON output is
     // hardcoded.
