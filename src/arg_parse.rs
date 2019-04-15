@@ -355,7 +355,8 @@ EXAMPLE USE:
         }
     }
     else {
-        let mut exe_path = current_exe().unwrap();
+        let mut exe_path = current_exe()
+            .unwrap_or_else(|error| { println!("Getting directory of exe failed: {}", error); exit(2);});
         exe_path.set_file_name("dirble_wordlist.txt");
         wordlists.push(String::from(exe_path.to_str().unwrap()));
     }
