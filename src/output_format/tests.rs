@@ -83,6 +83,16 @@ fn check_output_letter () {
 }
 
 #[test]
+fn check_output_url() {
+    // output_url simply returns the url, but with a space at the end
+    let req_response = generate_request_response();
+    assert_eq!(
+        super::output_url(&req_response),
+        format!("{} ", req_response.url),
+        "Output URL formatted incorrectly");
+}
+
+#[test]
 fn check_json_format() {
     // This doesn't use the generate_request_response function because
     // the defaults may change but the expected JSON output is
