@@ -35,7 +35,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
         println!("Scanning {}", hostname);
     }
 
-    let mut easy = request::generate_easy(global_opts.clone());
+    let mut easy = request::generate_easy(&global_opts);
 
     let mut consecutive_errors = 0;
     let parent_depth = uri_gen.parent_depth;

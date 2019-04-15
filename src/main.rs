@@ -30,6 +30,7 @@ mod content_parse;
 mod output_format;
 mod request_thread;
 mod output_thread;
+mod target_validation_thread;
 
 fn main() {
     // Read the arguments in using the arg_parse module

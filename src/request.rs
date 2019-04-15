@@ -199,7 +199,7 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
 }
 
 // Creates an easy2 instance based on the parameters provided by the user
-pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
+pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
 {
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector{contents: Vec::new(), content_len: 0});
