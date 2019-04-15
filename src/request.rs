@@ -162,8 +162,9 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
         // If the code returned was not a 200 then create a struct
         // indicating that this is a folder, then return it
         _ => {
-            output_list.push(fabricate_request_response(
-                original_url, true, false));
+            response.is_directory = true;
+            response.is_listable = false;
+            output_list.push(response);
             return output_list
         }
     }
