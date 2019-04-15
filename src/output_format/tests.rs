@@ -93,6 +93,51 @@ fn check_output_url() {
 }
 
 #[test]
+fn check_output_suffix() {
+    // output_suffix takes a RR and returns a string of the format
+    // (CODE:{}|SIZE{}), where the code is coloured appropriately.
+    let mut req_response = generate_request_response();
+    req_response.content_len = 456;
+    req_response.code = 201;
+    assert_eq!(
+        super::output_suffix(&req_response, true),
+        "(CODE:\u{1b}[32m201\u{1b}[0m|SIZE:456)",
+        "Output suffix for code 201 invalid");
+
+    req_response.code = 304;
+    assert_eq!(
+        super::output_suffix(&req_response, true),
+        "(CODE:\u{1b}[36m304\u{1b}[0m|SIZE:456)",
+        "Output suffix for code 304 invalid");
+
+    // Test that the redirect URL is included
+    req_response.code = 301;
+    req_response.redirect_url = "https://nccgroup.com".into();
+    assert_eq!(
+        super::output_suffix(&req_response, true),
+        "(CODE:\u{1b}[36m301\u{1b}[0m|SIZE:456|DEST:https://nccgroup.com)",
+        "Output suffix for code 301 invalid");
+
+    req_response.code = 451;
+    assert_eq!(
+        super::output_suffix(&req_response, true),
+        "(CODE:\u{1b}[31m451\u{1b}[0m|SIZE:456)",
+        "Output suffix for code 451 invalid");
+
+    req_response.code = 503;
+    assert_eq!(
+        super::output_suffix(&req_response, true),
+        "(CODE:\u{1b}[33m503\u{1b}[0m|SIZE:456)",
+        "Output suffix for code 503 invalid");
+
+    // Check that turning off colours also works
+    assert_eq!(
+        super::output_suffix(&req_response, false),
+        "(CODE:503|SIZE:456)",
+        "Disabling colours hasn't worked properly");
+}
+
+#[test]
 fn check_json_format() {
     // This doesn't use the generate_request_response function because
     // the defaults may change but the expected JSON output is
