@@ -1,3 +1,7 @@
+// NOTE: Do NOT autoindent this entire file, as the XML format checker
+// relies on the indented string having the correct number of leading
+// spaces.
+
 #[test]
 fn check_output_indentation() {
     //   super::output_indentation produces a number of spaces based on
@@ -135,6 +139,35 @@ fn check_output_suffix() {
         super::output_suffix(&req_response, false),
         "(CODE:503|SIZE:456)",
         "Disabling colours hasn't worked properly");
+}
+
+#[test]
+fn check_output_xml() {
+    // Same as check_output_json below, but with hardcoded XML output.
+    let req_response = super::RequestResponse {
+        url: "http://example.com".into(),
+        code: 204,
+        content_len: 345,
+        is_directory: false,
+        is_listable: false,
+        found_from_listable: true,
+        redirect_url: "https://example.org".into(),
+        parent_depth: 2
+    };
+    // DO NOT change the indentation here, it matches the indentation
+    // produced by the XML formatter.
+    assert_eq!(
+        super::output_xml(&req_response),
+        "<file url=\"http://example.com\">
+    <status_code>204</status_code>
+    <size>345</size>
+    <is_directory>false</is_directory>
+    <is_listable>false</is_listable>
+    <found_from_listable>true</found_from_listable>
+    <redirect_url>https://example.org</redirect_url>
+</file>
+",
+        "XML format invalid");
 }
 
 #[test]
