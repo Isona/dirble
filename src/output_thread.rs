@@ -22,7 +22,7 @@ use std::{
 use crate::request;
 use crate::output;
 
-pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>, tx: mpsc::Sender<request::RequestResponse>,
+pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
     global_opts: Arc<arg_parse::GlobalOpts>, file_handles: output::FileHandles)
 {
     let mut response_list: Vec<request::RequestResponse> = Vec::new();
@@ -44,20 +44,5 @@ pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>, tx: mpsc::Sen
     }
 
     output::print_report(response_list, global_opts.clone(), file_handles);
-    tx.send(generate_end()).unwrap();
 
-}
-
-
-fn generate_end() -> request::RequestResponse {
-    request::RequestResponse {
-        url: String::from("REPORT DONE"),
-        code: 0,
-        content_len: 0,
-        is_directory:false,
-        is_listable: false,
-        redirect_url: String::from(""),
-        found_from_listable: false,
-        parent_depth: 0
-    }
 }

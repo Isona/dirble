@@ -79,8 +79,7 @@ fn main() {
     let file_handles = output::create_files(global_opts.clone());
     let output_global_opts = global_opts.clone();
 
-    let main_tx_clone = main_tx.clone();
-    thread::spawn(|| output_thread::output_thread(output_rx, main_tx_clone, output_global_opts, file_handles));    
+    let output_thread = thread::spawn(|| output_thread::output_thread(output_rx, output_global_opts, file_handles));    
 
     // Loop of checking for messages from the threads,
     // spawning new threads on items in the scan queue
@@ -145,7 +144,8 @@ fn main() {
 
     // loop to check that report printing has ended
     output_tx.send(generate_end()).unwrap();
-    main_rx.recv();
+    output_thread.join().unwrap();
+
 
 }
 
