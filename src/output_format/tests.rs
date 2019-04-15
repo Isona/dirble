@@ -48,6 +48,9 @@ fn check_output_indentation() {
 
 #[test]
 fn check_json_format() {
+    // This doesn't use the generate_request_response function because
+    // the defaults may change but the expected JSON output is
+    // hardcoded.
     let req_response = super::RequestResponse {
         url: "http://example.com".into(),
         code: 200,
