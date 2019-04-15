@@ -47,6 +47,42 @@ fn check_output_indentation() {
 }
 
 #[test]
+fn check_output_letter () {
+    // Check that:
+    // * directory && listable -> L
+    // * directory && !listable -> D
+    // * found from listable -> ~
+    // * otherwise -> +
+    // (all with trailing space)
+    let mut req_response = generate_request_response();
+    req_response.is_directory = true;
+    req_response.is_listable = true;
+    assert_eq!(
+        super::output_letter(&req_response),
+        "L ",
+        "Listable directory prefix incorrect");
+
+    req_response.is_listable = false;
+    assert_eq!(
+        super::output_letter(&req_response),
+        "D ",
+        "Directory prefix incorrect");
+
+    req_response.is_directory = false;
+    req_response.found_from_listable = true;
+    assert_eq!(
+        super::output_letter(&req_response),
+        "~ ",
+        "Found from listable prefix incorrect");
+
+    req_response.found_from_listable = false;
+    assert_eq!(
+        super::output_letter(&req_response),
+        "+ ",
+        "Regular file prefix incorrect");
+}
+
+#[test]
 fn check_json_format() {
     // This doesn't use the generate_request_response function because
     // the defaults may change but the expected JSON output is
