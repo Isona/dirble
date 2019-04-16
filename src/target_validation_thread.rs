@@ -149,7 +149,7 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
 
 // Based on https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html
 // Generates a string of alphanumeric characters of the given length
-fn rand_string(length: u32) -> String {
+fn rand_string(length: usize) -> String {
     thread_rng().sample_iter(&Alphanumeric)
-        .take(10).collect()
+        .take(length).collect()
 }
