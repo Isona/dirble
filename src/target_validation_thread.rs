@@ -37,6 +37,13 @@ impl DirectoryInfo {
             validator   
         }
     }
+
+    pub fn generate_end() -> DirectoryInfo {
+        DirectoryInfo {
+            url:String::from("END"),
+            validator:TargetValidator::new(404)
+        }
+    }
 }
 
 // Struct containing information to determine if a response
@@ -67,6 +74,10 @@ pub fn target_validation_thread(rx: mpsc::Receiver<request::RequestResponse>, ma
         if let Ok(response) = rx.try_recv() {
             // If the main thread is trying to exit then stop
             if response.url == "END" {
+                main_tx.send(DirectoryInfo::generate_end()).unwrap();
+                continue;
+            }
+            else if response.url == "MAIN ENDING" {
                 break;
             }
             else {
