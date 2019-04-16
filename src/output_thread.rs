@@ -29,7 +29,7 @@ pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
 
     loop {
         if let Ok(response) = rx.try_recv() {
-            if response.url == "REPORT" {
+            if response.url == "MAIN ENDING" {
                 break; 
             }
             if !global_opts.silent {

@@ -153,7 +153,7 @@ fn main() {
 
 fn generate_end() -> request::RequestResponse {
     request::RequestResponse {
-        url: String::from("REPORT"),
+        url: String::from("MAIN ENDING"),
         code: 0,
         content_len: 0,
         is_directory:false,
