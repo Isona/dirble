@@ -27,27 +27,31 @@ use rand::distributions::Alphanumeric;
 // Struct for passing information back to the main thread
 pub struct DirectoryInfo {
     pub url:String,
-    pub validator:TargetValidator
+    pub validator:TargetValidator,
+    pub parent_depth: u32
 }
 
 impl DirectoryInfo {
-    pub fn new(url: String, validator: TargetValidator) -> DirectoryInfo {
+    pub fn new(url: String, validator: TargetValidator, parent_depth:u32) -> DirectoryInfo {
         DirectoryInfo {
             url,
-            validator   
+            validator,
+            parent_depth
         }
     }
 
     pub fn generate_end() -> DirectoryInfo {
         DirectoryInfo {
             url:String::from("END"),
-            validator:TargetValidator::new(404)
+            validator:TargetValidator::new(404),
+            parent_depth: 0
         }
     }
 }
 
 // Struct containing information to determine if a response
 // was not found for a directory
+#[derive(Clone)]
 pub struct TargetValidator {
     response_code:u32
 }
@@ -61,12 +65,12 @@ impl TargetValidator {
 
      // Function used to compare the validator to a RequestResponse,
      // Returns true if the given request matches the not found definition
-     pub fn is_not_found(&self, response: request::RequestResponse) -> bool {
+     pub fn is_not_found(&self, response: &request::RequestResponse) -> bool {
         self.response_code == response.code
      }
 }
 
-pub fn target_validation_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: mpsc::Sender<DirectoryInfo>,
+pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: mpsc::Sender<Option<DirectoryInfo>>,
     global_opts:Arc<arg_parse::GlobalOpts>)
 {
     loop {
@@ -74,7 +78,7 @@ pub fn target_validation_thread(rx: mpsc::Receiver<request::RequestResponse>, ma
         if let Ok(response) = rx.try_recv() {
             // If the main thread is trying to exit then stop
             if response.url == "END" {
-                main_tx.send(DirectoryInfo::generate_end()).unwrap();
+                main_tx.send(Some(DirectoryInfo::generate_end())).unwrap();
                 continue;
             }
             else if response.url == "MAIN ENDING" {
@@ -97,8 +101,8 @@ pub fn target_validation_thread(rx: mpsc::Receiver<request::RequestResponse>, ma
 
                 // If there is a validator then wrap it in a DirectoryInfo and send to main
                 if let Some(validator) = validator_option {
-                    let directory_info = DirectoryInfo::new(response.url, validator);
-                    main_tx.send(directory_info).unwrap();
+                    let directory_info = DirectoryInfo::new(response.url, validator, response.parent_depth);
+                    main_tx.send(Some(directory_info)).unwrap();
                 }
                 else if global_opts.verbose {
                     println!("{} errored too often during validation, skipping scanning", response.url);

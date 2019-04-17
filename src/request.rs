@@ -264,7 +264,7 @@ fn get_content(easy: &mut Easy2<Collector>) -> String
 
 // Generate a struct for a response for use when a request hasn't been made
 // Used when items were discovered via scraping
-fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
+pub fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
 {
     let mut new_url = url.clone();
     if new_url.ends_with("/") {

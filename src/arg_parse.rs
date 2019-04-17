@@ -486,9 +486,6 @@ EXAMPLE USE:
             code_list.push(code.parse::<u32>().unwrap());
         }
     }
-    else {
-        code_list.push(404);
-    }
 
     // Create the GlobalOpts struct and return it
     GlobalOpts {

@@ -24,6 +24,7 @@ extern crate curl;
 use crate::arg_parse;
 use crate::request;
 use crate::wordlist;
+use crate::validator_thread;
 
 pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>, 
     output_tx: mpsc::Sender<request::RequestResponse>,
@@ -39,6 +40,8 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
 
     let mut consecutive_errors = 0;
     let parent_depth = uri_gen.parent_depth;
+
+    let validator = uri_gen.validator.clone();
 
     // For each item in the wordlist, call the request function on it
     // Then if there is a response send it to main
@@ -57,18 +60,18 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
             let mut original_response = response_list.remove(0);
             original_response.found_from_listable = false;
             original_response.parent_depth = parent_depth;
-            send_response(&dir_tx, &output_tx, &global_opts, original_response);
+            send_response(&dir_tx, &output_tx, &global_opts, original_response, &validator);
 
             for mut scraped_response in response_list {
                 scraped_response.parent_depth = parent_depth;
-                send_response(&dir_tx, &output_tx, &global_opts, scraped_response);
+                send_response(&dir_tx, &output_tx, &global_opts, scraped_response, &validator);
             }
 
         } 
         // If it isn't a directory then just send the response to the main thread
         else {
             response.parent_depth = parent_depth;
-            send_response(&dir_tx, &output_tx, &global_opts, response); 
+            send_response(&dir_tx, &output_tx, &global_opts, response, &validator); 
         }
 
         // Detect consecutive errors and stop the thread if the count is exceeded
@@ -105,7 +108,8 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
 // dependent on whitelist/blacklist settings and response code
 fn send_response(dir_tx: &mpsc::Sender<request::RequestResponse>, 
     output_tx: &mpsc::Sender<request::RequestResponse>,
-    global_opts: &arg_parse::GlobalOpts, response: request::RequestResponse) {
+    global_opts: &arg_parse::GlobalOpts, response: request::RequestResponse,
+    validator: &validator_thread::TargetValidator) {
 
     if response.is_directory {
         dir_tx.send(response.clone()).unwrap();
@@ -115,7 +119,7 @@ fn send_response(dir_tx: &mpsc::Sender<request::RequestResponse>,
 
     let contains_code = global_opts.code_list.contains(&response.code);
 
-    if (!global_opts.whitelist && !contains_code) ||
+    if (!global_opts.whitelist && !contains_code && !validator.is_not_found(&response)) ||
             (global_opts.whitelist && contains_code)
     {
         output_tx.send(response).unwrap();

@@ -27,6 +27,7 @@ use encoding::{
     DecoderTrap,
     label::encoding_from_whatwg_label
 };
+use crate::validator_thread::TargetValidator;
 
 
 // Struct for a UriGenerator, it needs the hostname, the suffix to append, a wordlist and an index into that wordlist
@@ -37,26 +38,29 @@ pub struct UriGenerator {
     current_index: usize,
     wordlist: Arc<Vec<String>>,
     step_size: usize,
-    pub parent_depth: u32
+    pub parent_depth: u32,
+    pub validator:TargetValidator
 }
 
 // Generates a new UriGenerator given various options
 impl UriGenerator {
     pub fn new(mut hostname: String, prefix: String, suffix: String, 
-        wordlist: Arc<Vec<String>>, index: u32, step: u32, original_depth:u32) -> UriGenerator{
+        wordlist: Arc<Vec<String>>, index: u32, step: u32, parent_depth:u32,
+        validator:TargetValidator) -> UriGenerator{
         // Remove a trailing / characters from the url if there is one
         if hostname.ends_with("/") {
             hostname.pop();
         }
         
         UriGenerator { 
-            hostname: hostname,
-            prefix: prefix,
-            suffix: suffix,
+            hostname,
+            prefix,
+            suffix,
             current_index: index as usize,
-            wordlist: wordlist,
+            wordlist,
             step_size: step as usize,
-            parent_depth: original_depth
+            parent_depth,
+            validator
         }
     }
 }
