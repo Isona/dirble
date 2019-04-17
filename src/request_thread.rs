@@ -80,8 +80,6 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
                 consecutive_errors += 1;
                 if consecutive_errors >= global_opts.max_errors {
                     println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
-
-                    dir_tx.send(generate_end()).unwrap();
                     break;
                 }
             }
