@@ -104,8 +104,9 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                     let directory_info = DirectoryInfo::new(response.url, validator, response.parent_depth);
                     main_tx.send(Some(directory_info)).unwrap();
                 }
-                else if global_opts.verbose {
+                else {
                     println!("{} errored too often during validation, skipping scanning", response.url);
+                    main_tx.send(None).unwrap();
                 }
             }
         }
