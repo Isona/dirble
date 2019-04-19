@@ -48,6 +48,7 @@ impl Handler for Collector {
 
 // Struct which contains information about a response
 // This is sent back to the main thread
+#[derive(Clone)]
 pub struct RequestResponse {
     pub url: String,
     pub code: u32,
@@ -200,7 +201,7 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, disable
 }
 
 // Creates an easy2 instance based on the parameters provided by the user
-pub fn generate_easy(global_opts: Arc<GlobalOpts>) -> Easy2<Collector>
+pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
 {
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector{contents: Vec::new(), content_len: 0});
@@ -265,7 +266,7 @@ fn get_content(easy: &mut Easy2<Collector>) -> String
 
 // Generate a struct for a response for use when a request hasn't been made
 // Used when items were discovered via scraping
-fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
+pub fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
 {
     let mut new_url = url.clone();
     if new_url.ends_with("/") {

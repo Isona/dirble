@@ -53,7 +53,8 @@ pub struct GlobalOpts {
     pub whitelist: bool,
     pub code_list: Vec<u32>,
     pub is_terminal: bool,
-    pub no_color:bool
+    pub no_color:bool,
+    pub disable_validator:bool
 }
 
 pub fn get_args() -> GlobalOpts
@@ -272,7 +273,8 @@ EXAMPLE USE:
                         .arg(Arg::with_name("code_whitelist")
                             .long("code-whitelist")
                             .short("W")
-                            .help("Provide a comma separated list of response codes to show in output")
+                            .help("Provide a comma separated list of response codes to show in output, \
+                                    also disables detection of not found codes")
                             .min_values(1)
                             .multiple(true)
                             .value_delimiter(",")
@@ -287,6 +289,11 @@ EXAMPLE USE:
                             .value_delimiter(",")
                             .conflicts_with("code_whitelist")
                             .validator(positive_int_check)
+                            .display_order(110))
+                        .arg(Arg::with_name("disable_validator")
+                            .long("disable-validator")
+                            .help("Disable automatic detection of not found codes")
+                            .takes_value(false)
                             .display_order(110))
                         .arg(Arg::with_name("ignore_cert")
                             .long("ignore-cert")
@@ -494,9 +501,6 @@ EXAMPLE USE:
             code_list.push(code.parse::<u32>().unwrap());
         }
     }
-    else {
-        code_list.push(404);
-    }
 
     // Create the GlobalOpts struct and return it
     GlobalOpts {
@@ -530,7 +534,8 @@ EXAMPLE USE:
         whitelist: whitelist,
         code_list: code_list,
         is_terminal: atty::is(Stream::Stdout),
-        no_color: args.is_present("no_color")
+        no_color: args.is_present("no_color"),
+        disable_validator: args.is_present("disable_validator")
     }
 }
 

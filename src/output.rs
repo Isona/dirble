@@ -67,7 +67,7 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
         println!("{}", report_string);
         for response in &responses {
             if let Some(line) = print_response(&response, global_opts.clone(), 
-                true, false, !global_opts.no_color) {
+                true, true, !global_opts.no_color) {
                 println!("{}", line);
             }
         }
@@ -80,7 +80,7 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
 
         for response in &responses {
             if let Some(line) = print_response(&response, global_opts.clone()
-                , true, true, false) {
+                , true, false, false) {
                 let file_line = format!("{}\n", line);
                 write_file(&mut handle, file_line);
             }
