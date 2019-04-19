@@ -43,7 +43,7 @@ impl DirectoryInfo {
     pub fn generate_end() -> DirectoryInfo {
         DirectoryInfo {
             url:String::from("END"),
-            validator:TargetValidator::new(404),
+            validator:TargetValidator::new(0, None),
             parent_depth: 0
         }
     }
@@ -53,20 +53,29 @@ impl DirectoryInfo {
 // was not found for a directory
 #[derive(Clone)]
 pub struct TargetValidator {
-    response_code:u32
+    response_code:u32,
+    response_len:Option<usize>
 }
 
 impl TargetValidator {
-     pub fn new(response_code: u32) -> TargetValidator{
+     pub fn new(response_code: u32, response_len: Option<usize>) -> TargetValidator{
         TargetValidator {
-            response_code
+            response_code,
+            response_len
         }
      }
 
      // Function used to compare the validator to a RequestResponse,
      // Returns true if the given request matches the not found definition
      pub fn is_not_found(&self, response: &request::RequestResponse) -> bool {
-        self.response_code == response.code
+        if !(self.response_code == response.code) {
+            return false
+        }
+
+        match self.response_len {
+            Some(size) => size == response.content_len,
+            None => true,
+        }
      }
 }
 
@@ -141,7 +150,7 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
 fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<TargetValidator> {
 
     if responses.len() < 3 {
-        TargetValidator::new(404);
+        TargetValidator::new(404, None);
     }
 
     let mut code = 404;
@@ -154,11 +163,22 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
     }
 
     if code == 0 {
-        None
+        return None
     }
-    else {
-        Some(TargetValidator::new(code))
+    else if code == 404 {
+        return Some(TargetValidator::new(code, None))        
     }
+
+    let mut response_size = None;
+    if responses[0].content_len == responses[1].content_len
+        || responses[0].content_len == responses[2].content_len {
+        response_size = Some(responses[0].content_len);
+    }
+    else if responses[1].content_len == responses[2].content_len {
+        response_size = Some(responses[1].content_len);
+    }
+
+    Some(TargetValidator::new(code, response_size))
 
 
 }
