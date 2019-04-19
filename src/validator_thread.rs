@@ -40,6 +40,7 @@ impl DirectoryInfo {
         }
     }
 
+    // Used to inform the main thread that a request thread ended
     pub fn generate_end() -> DirectoryInfo {
         DirectoryInfo {
             url:String::from("END"),
@@ -68,16 +69,21 @@ impl TargetValidator {
      // Function used to compare the validator to a RequestResponse,
      // Returns true if the given request matches the not found definition
      pub fn is_not_found(&self, response: &request::RequestResponse) -> bool {
+        // If the responses codes don't match then it is "found"
         if !(self.response_code == response.code) {
             return false
         }
 
+        // If there is a length in the validator then check against that,
+        // otherwise it is "not found"
         match self.response_len {
             Some(size) => size == response.content_len,
             None => true,
         }
      }
 
+     // Return a string summary of this validator's definition
+     // of a not found response
      pub fn summary_text(&self)  -> String {
         let mut output = format!("(CODE:{}", self.response_code);
         
@@ -132,6 +138,8 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                     let directory_info = DirectoryInfo::new(response.url, Some(validator), response.parent_depth);
                     main_tx.send(Some(directory_info)).unwrap();
                 }
+                // If there isn't a validator then send a none back to main
+                // This will be ignored but is necessary during validation of initial directories
                 else {
                     println!("{} errored too often during validation, skipping scanning", response.url);
                     main_tx.send(None).unwrap();
@@ -150,15 +158,10 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
         base_url += "/";
     }
 
-    let url1 = format!("{}{}", base_url, rand_string(10));
-    response_vector.push(request::make_request(easy, url1));
-
-
-    let url2 = format!("{}{}", base_url, rand_string(20));
-    response_vector.push(request::make_request(easy, url2));
-
-    let url3 = format!("{}{}", base_url, rand_string(30));
-    response_vector.push(request::make_request(easy, url3));
+    for i in 1..3 {
+        let url = format!("{}{}", base_url, rand_string(10*i));
+        response_vector.push(request::make_request(easy, url));
+    }
 
     response_vector
 
