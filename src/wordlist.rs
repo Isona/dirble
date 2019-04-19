@@ -39,14 +39,14 @@ pub struct UriGenerator {
     wordlist: Arc<Vec<String>>,
     step_size: usize,
     pub parent_depth: u32,
-    pub validator:TargetValidator
+    pub validator:Option<TargetValidator>
 }
 
 // Generates a new UriGenerator given various options
 impl UriGenerator {
     pub fn new(mut hostname: String, prefix: String, suffix: String, 
         wordlist: Arc<Vec<String>>, index: u32, step: u32, parent_depth:u32,
-        validator:TargetValidator) -> UriGenerator{
+        validator:Option<TargetValidator>) -> UriGenerator{
         // Remove a trailing / characters from the url if there is one
         if hostname.ends_with("/") {
             hostname.pop();

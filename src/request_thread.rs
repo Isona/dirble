@@ -107,7 +107,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
 fn send_response(dir_tx: &mpsc::Sender<request::RequestResponse>, 
     output_tx: &mpsc::Sender<request::RequestResponse>,
     global_opts: &arg_parse::GlobalOpts, response: request::RequestResponse,
-    validator: &validator_thread::TargetValidator) {
+    validator_opt: &Option<validator_thread::TargetValidator>) {
 
     if response.is_directory {
         dir_tx.send(response.clone()).unwrap();
@@ -117,12 +117,19 @@ fn send_response(dir_tx: &mpsc::Sender<request::RequestResponse>,
 
     let contains_code = global_opts.code_list.contains(&response.code);
 
-    if (!global_opts.whitelist && !contains_code && !validator.is_not_found(&response)) ||
-            (global_opts.whitelist && contains_code)
-    {
-        output_tx.send(response).unwrap();
+    if global_opts.whitelist && contains_code {
+        output_tx.send(response).unwrap();   
     }
-
+    else if !global_opts.whitelist && !contains_code {
+        match validator_opt {
+            Some(validator) => {
+                if !validator.is_not_found(&response) {
+                    output_tx.send(response).unwrap();      
+                }
+            },
+            None => output_tx.send(response).unwrap()
+        }
+    }
 }
 
 

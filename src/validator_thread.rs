@@ -27,12 +27,12 @@ use rand::distributions::Alphanumeric;
 // Struct for passing information back to the main thread
 pub struct DirectoryInfo {
     pub url:String,
-    pub validator:TargetValidator,
+    pub validator:Option<TargetValidator>,
     pub parent_depth: u32
 }
 
 impl DirectoryInfo {
-    pub fn new(url: String, validator: TargetValidator, parent_depth:u32) -> DirectoryInfo {
+    pub fn new(url: String, validator: Option<TargetValidator>, parent_depth:u32) -> DirectoryInfo {
         DirectoryInfo {
             url,
             validator,
@@ -43,7 +43,7 @@ impl DirectoryInfo {
     pub fn generate_end() -> DirectoryInfo {
         DirectoryInfo {
             url:String::from("END"),
-            validator:TargetValidator::new(0, None),
+            validator:None,
             parent_depth: 0
         }
     }
@@ -110,6 +110,15 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                     continue;
                 }
 
+                // If validation is disabled or if whitelisting is enabled
+                // return a validator of None
+                // The validator is unused if whitelisting is enabled
+                if global_opts.disable_validator || global_opts.whitelist {
+                    let directory_info = DirectoryInfo::new(response.url, None, response.parent_depth);
+                    main_tx.send(Some(directory_info)).unwrap();  
+                    continue;
+                }
+
                 // Generate an easy and make 3 random requests to the folder
                 let mut easy = request::generate_easy(&global_opts);
                 let responses = make_requests(response.url.clone(), &mut easy);
@@ -120,7 +129,7 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                 // If there is a validator then wrap it in a DirectoryInfo and send to main
                 if let Some(validator) = validator_option {
                     println!("Detected nonexistent paths for {} are {}", &response.url, validator.summary_text());
-                    let directory_info = DirectoryInfo::new(response.url, validator, response.parent_depth);
+                    let directory_info = DirectoryInfo::new(response.url, Some(validator), response.parent_depth);
                     main_tx.send(Some(directory_info)).unwrap();
                 }
                 else {
