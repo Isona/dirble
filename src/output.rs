@@ -87,14 +87,16 @@ pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts
         }
     }
 
-    if let Some(mut handle) = file_handles.json_file {
-        write_file(&mut handle, String::from("["));
-        for response in &responses[0..responses.len()-1] {
-            let line = format!("{},\n", output_format::output_json(response));
-            write_file(&mut handle, line);
+    if responses.len() > 0 {
+        if let Some(mut handle) = file_handles.json_file {
+            write_file(&mut handle, String::from("["));
+            for response in &responses[0..responses.len()-1] {
+                let line = format!("{},\n", output_format::output_json(response));
+                write_file(&mut handle, line);
+            }
+            let final_line = format!("{}]", output_format::output_json(&responses[responses.len()-1]));
+            write_file(&mut handle, final_line);
         }
-        let final_line = format!("{}]", output_format::output_json(&responses[responses.len()-1]));
-        write_file(&mut handle, final_line);
     }
 
     if let Some(mut handle) = file_handles.xml_file {
