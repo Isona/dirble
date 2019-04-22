@@ -121,7 +121,7 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
             req_response.is_directory = true;
         }
 
-        req_response.redirect_url = dir_url.to_string();
+        req_response.redirect_url = redir_dest.to_string();
     }
 
     // Get the contents of the response and set the length in the struct
