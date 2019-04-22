@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.3.0 - 2019-04-22
+
+### Added
+* Option to save output as XML
+* Option to save output as JSON
+* XML schema
+* Flag to output all file formats
+* Target validator thread
+* Per directory not found response tuning using status code/size
+* Option to disable not found response tuning
+
+### Changed
+* Output is now handled by an output thread rather than the main thread
+* Better error output when libcurl returns an error from a request
+* Look for default wordlist in executable directory instead of working directory
+
+### Fixed
+* Bug involving redirect URLs being output being incorrect
+* Panic when writing to json file when there were no results
+* Threads reporting they're done twice when they end from errors
+* Directories being output as code:0|size:0
+
+
 ## 1.2.0 - 2019-04-11
 
 ### Added
@@ -42,6 +65,7 @@
 ### Fixed
 * Bug with indentation when a folder was provided to scan
 * Typo in readme.md
+
 
 ## 1.0.0 - 2019-04-01
 
