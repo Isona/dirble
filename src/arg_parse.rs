@@ -166,6 +166,12 @@ EXAMPLE USE:
                             .help("Sets a file to write XML output to")
                             .takes_value(true)
                             .display_order(40))
+                        .arg(Arg::with_name("output_all")
+                            .long("output-all")
+                            .visible_alias("oA")
+                            .help("Stores all output types respectively as .txt, .json and .xml")
+                            .takes_value(true)
+                            .display_order(41))
                         .arg(Arg::with_name("proxy")
                             .long("proxy")
                             .value_name("proxy")
@@ -453,16 +459,25 @@ EXAMPLE USE:
     if args.is_present("output_file") {
         output_file = Some(String::from(args.value_of("output_file").unwrap()));
     }
+    else if args.is_present("output_all") {
+        output_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".txt"));
+    }
 
     // Read the name of the json file if provided
     let mut json_file = None;
     if args.is_present("json_file") {
         json_file = Some(String::from(args.value_of("json_file").unwrap()));
     }
+    else if args.is_present("output_all") {
+        json_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".json"));
+    }
 
     let mut xml_file = None;
     if args.is_present("xml_file") {
         xml_file = Some(String::from(args.value_of("xml_file").unwrap()));
+    }
+    else if args.is_present("output_all") {
+        xml_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".xml"));
     }
 
     // Read provided cookie values into a vector
