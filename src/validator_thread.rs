@@ -172,7 +172,7 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
 fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<TargetValidator> {
 
     if responses.len() < 3 {
-        TargetValidator::new(404, None);
+        return Some(TargetValidator::new(404, None))
     }
 
     let mut code = 404;
