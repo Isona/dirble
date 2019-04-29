@@ -32,6 +32,10 @@ To build on your current platform, ensure cargo is installed and then run `cargo
 
 To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy makefile. `make release` will build for all four targets using `cross`. This depends on having cross and docker installed (`cargo install cross`).
 
+To build on OpenIndiana, first make sure that GCC and the OpenSSL libraries are installed with `pkg install rustc gcc-6 library/security/openssl`. For some reason the build process invoked by Cargo can't find the OpenSSL library files, so we have to set the environment variables to specify the locations. Additionally, it appends an unnecessary /lib to the lib directory we specify, which can be worked around by soft linking lib into the real lib directory: `ln -s /lib/openssl/default/ /lib/openssl/default/lib`. The full command line for Cargo is then: `OPENSSL_DIR=/lib/openssl/default OPENSSL_INCLUDE_DIR=/usr/include/openssl cargo build --release`.
+
+Building on other Illumos or BSD systems should (in theory) be similar to OI.
+
 # Features
 
 |                                  | Dirble | Dirb | Dirsearch | Gobuster |
