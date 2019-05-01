@@ -18,7 +18,7 @@
 extern crate clap;
 use std::process::exit;
 use std::env::current_exe;
-use clap::{App, Arg, AppSettings, ArgGroup};
+use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
 
@@ -61,7 +61,7 @@ pub fn get_args() -> GlobalOpts
 {
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
-                        .version("1.3.0")
+                        .version(crate_version!())
                         .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
                         .about("Fast directory scanning and scraping tool")
                         .after_help("OUTPUT FORMAT:
