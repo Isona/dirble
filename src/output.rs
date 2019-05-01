@@ -189,7 +189,7 @@ pub fn startup_text(global_opts: Arc<GlobalOpts>) {
     println!("Dirble {}", crate_version!());
     println!("Developed by Izzy Whistlecroft\n");
 
-    println!("Hosts: {}", global_opts.hostnames.clone().join(" "));
+    println!("Targets: {}", global_opts.hostnames.clone().join(" "));
     println!("Wordlists: {}", global_opts.wordlist_files.clone().join(" "));
 
     if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
