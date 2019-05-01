@@ -75,13 +75,13 @@ EXAMPLE USE:
         dirble [address] -w example_wordlist.txt -x .php,.html\n
     - With listable directory scraping enabled:
         dirble [address] --scrape-listable\n
-    - Providing a list of extensions and a list of hosts:
-        dirble [address] -X wordlists/web.lst -U hostlist.txt\n
+    - Providing a list of extensions and a list of URIs:
+        dirble [address] -X wordlists/web.lst -U uri-list.txt\n
     - Providing multiple hosts to scan via command line:
         dirble [address] -u [address] -u [address]")
                         .setting(AppSettings::ArgRequiredElseHelp)
                         .arg(Arg::with_name("host")
-                            .value_name("host_uri")
+                            .value_name("uri")
                             .index(1)
                             .help("The URI of the host to scan, optionally supports basic auth with http://user:pass@host:port")
                             .takes_value(true)
@@ -92,7 +92,7 @@ EXAMPLE USE:
                             .long("uri")
                             .visible_alias("url")
                             .alias("host")
-                            .value_name("host_uri")
+                            .value_name("uri")
                             .help("Additional hosts to scan")
                             .takes_value(true)
                             .multiple(true)
@@ -102,9 +102,12 @@ EXAMPLE USE:
                             .takes_value(true)
                             .multiple(true)
                             .short("U")
-                            .long("host-file")
-                            .help("The filename of a file containing a list of hosts to scan - cookies and headers set will be applied \
-                                to all hosts")
+                            .long("uri-file")
+                            .visible_alias("url-file")
+                            .alias("host-file")
+                            .value_name("uri-file")
+                            .help("The filename of a file containing a list of URIs to scan - cookies and headers set will be applied \
+                                to all URIs")
                             .display_order(10))
                         .group(ArgGroup::with_name("hosts")
                             .required(true)

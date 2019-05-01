@@ -4,6 +4,7 @@
 
 ### Changed
 * The --host argument has been changed to --uri and --url
+* The --host-file argument has been changed to --uri-file and --url-file
 * Version number added to startup text
 * Startup text now uses "Targets" instead of "Hosts"
 * Version number is now pulled from cargo.toml
