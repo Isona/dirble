@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 - 2019-05-01
+
+### Changed
+* The --host argument has been changed to --uri and --url
+* Version number added to startup text
+* Startup text now uses "Targets" instead of "Hosts"
+* Version number is now pulled from cargo.toml
+
+### Fixed
+* Panic when there were errors during target validation
+
 ## 1.3.0 - 2019-04-22
 
 ### Added
