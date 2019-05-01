@@ -23,6 +23,7 @@ use crate::arg_parse::GlobalOpts;
 use crate::output_format;
 use std::error::Error;
 use std::io::{LineWriter, Write};
+use clap::crate_version;
 
 // Struct giving access to each current file handle
 // Will be extended in future with handles for different formats
@@ -185,7 +186,7 @@ fn generate_handle(filename: &String) -> Option<LineWriter<File>>
 pub fn startup_text(global_opts: Arc<GlobalOpts>) {
     if !global_opts.is_terminal { return }
 
-    println!("Dirble");
+    println!("Dirble {}", crate_version!());
     println!("Developed by Izzy Whistlecroft\n");
 
     println!("Hosts: {}", global_opts.hostnames.clone().join(" "));
