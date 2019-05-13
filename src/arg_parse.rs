@@ -55,6 +55,8 @@ pub struct GlobalOpts {
     pub no_color:bool,
     pub disable_validator:bool,
     pub http_verb:HttpVerb
+    pub response_min_length: u32,
+    pub response_max_length: u32
 }
 
 arg_enum!{
@@ -342,6 +344,18 @@ EXAMPLE USE:
                             .long("no-color")
                             .alias("no-colour")
                             .help("Disable coloring of terminal output"))
+                        .arg(Arg::with_name("reponse_min_length")
+                             .long("min-length")
+                             .help("Hide results shorter than min-length bytes")
+                             .validator(positive_int_check)
+                             .takes_value(true)
+                             .default_value("0"))
+                        .arg(Arg::with_name("reponse_max_length")
+                             .long("max-length")
+                             .help("Hide results longer than max-length bytes")
+                             .validator(positive_int_check)
+                             .takes_value(true)
+                             .default_value("0"))
                         .get_matches();
 
     
@@ -572,6 +586,8 @@ EXAMPLE USE:
         no_color: args.is_present("no_color"),
         disable_validator: args.is_present("disable_validator"),
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap()
+        response_min_length: args.value_of("response_min_length").unwrap().parse::<u32>().unwrap(),
+        response_max_length: args.value_of("response_max_length").unwrap().parse::<u32>().unwrap()
     }
 }
 
