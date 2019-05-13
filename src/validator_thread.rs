@@ -158,7 +158,7 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
         base_url += "/";
     }
 
-    for i in 1..3 {
+    for i in 1..=3 {
         let url = format!("{}{}", base_url, rand_string(10*i));
         response_vector.push(request::make_request(easy, url));
     }
