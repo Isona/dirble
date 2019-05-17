@@ -55,14 +55,16 @@ impl DirectoryInfo {
 #[derive(Clone)]
 pub struct TargetValidator {
     response_code:u32,
-    response_len:Option<usize>
+    response_len:Option<i32>,
+    diff_response_len:Option<i32>
 }
 
 impl TargetValidator {
-     pub fn new(response_code: u32, response_len: Option<usize>) -> TargetValidator{
+     pub fn new(response_code: u32, response_len: Option<i32>, diff_response_len: Option<i32>) -> TargetValidator{
         TargetValidator {
             response_code,
-            response_len
+            response_len,
+            diff_response_len
         }
      }
 
@@ -70,15 +72,22 @@ impl TargetValidator {
      // Returns true if the given request matches the not found definition
      pub fn is_not_found(&self, response: &request::RequestResponse) -> bool {
         // If the responses codes don't match then it is "found"
-        if !(self.response_code == response.code) {
+        if self.response_code != response.code {
             return false
         }
 
         // If there is a length in the validator then check against that,
         // otherwise it is "not found"
-        match self.response_len {
-            Some(size) => size == response.content_len,
-            None => true,
+        if let Some(size) = self.response_len {
+            return size == response.content_len as i32
+        }
+
+        match self.diff_response_len {
+            Some(size) => {
+                let diff = (response.content_len as i32 - response.url.len() as i32).abs();
+                return size == diff;
+            }
+            None => { return true; }
         }
      }
 
@@ -90,6 +99,11 @@ impl TargetValidator {
         if let Some(length) = self.response_len {
             output += &format!("|SIZE:{}", length);
         }
+
+        if let Some(length) = self.diff_response_len {
+            output += &format!("|DIFF_SIZE:{}", length);
+        }
+
         output + ")"
      }
 }
@@ -172,7 +186,7 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
 fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<TargetValidator> {
 
     if responses.len() < 3 {
-        return Some(TargetValidator::new(404, None))
+        return Some(TargetValidator::new(404, None, None))
     }
 
     let mut code = 404;
@@ -188,19 +202,34 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
         return None
     }
     else if code == 404 {
-        return Some(TargetValidator::new(code, None))        
+        return Some(TargetValidator::new(code, None, None))        
     }
 
     let mut response_size = None;
     if responses[0].content_len == responses[1].content_len
         || responses[0].content_len == responses[2].content_len {
-        response_size = Some(responses[0].content_len);
+        response_size = Some(responses[0].content_len as i32);
     }
     else if responses[1].content_len == responses[2].content_len {
-        response_size = Some(responses[1].content_len);
+        response_size = Some(responses[1].content_len as i32);
     }
 
-    Some(TargetValidator::new(code, response_size))
+    let mut diff_response_size = None;
+    if response_size == None {
+        let diff_0 = ((responses[0].content_len as i32) - responses[0].url.len() as i32).abs();
+        let diff_1 = ((responses[1].content_len as i32) - responses[1].url.len() as i32).abs();
+        let diff_2 = ((responses[2].content_len as i32) - responses[2].url.len() as i32).abs();
+
+        if diff_0 == diff_1
+            || diff_0 == diff_2 {
+            diff_response_size = Some(diff_0);
+        }
+        else if diff_1 == diff_2 {
+            diff_response_size = Some(diff_1);
+        }
+    }
+
+    Some(TargetValidator::new(code, response_size, diff_response_size))
 
 
 }
