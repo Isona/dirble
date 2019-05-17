@@ -14,7 +14,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
-
 extern crate clap;
 use std::process::exit;
 use std::env::current_exe;
@@ -54,7 +53,16 @@ pub struct GlobalOpts {
     pub code_list: Vec<u32>,
     pub is_terminal: bool,
     pub no_color:bool,
-    pub disable_validator:bool
+    pub disable_validator:bool,
+    pub http_verb:HttpVerb
+}
+
+arg_enum!{
+    pub enum HttpVerb {
+        Get,
+        Head,
+        Post
+    }
 }
 
 pub fn get_args() -> GlobalOpts
@@ -113,6 +121,13 @@ EXAMPLE USE:
                             .required(true)
                             .multiple(true)
                             .args(&["host", "host_file", "extra_hosts"]))
+                        .arg(Arg::with_name("http_verb")
+                            .takes_value(true)
+                            .long("verb")
+                            .possible_values(&HttpVerb::variants())
+                            .default_value("Get")
+                            .help("Specify which HTTP verb to use")
+                            .display_order(11))
                         .arg(Arg::with_name("wordlist")
                             .short("w")
                             .long("wordlist")
@@ -555,7 +570,8 @@ EXAMPLE USE:
         code_list,
         is_terminal: atty::is(Stream::Stdout),
         no_color: args.is_present("no_color"),
-        disable_validator: args.is_present("disable_validator")
+        disable_validator: args.is_present("disable_validator"),
+        http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap()
     }
 }
 

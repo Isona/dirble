@@ -18,7 +18,7 @@
 use curl::Error;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::arg_parse::GlobalOpts;
+use crate::arg_parse::{GlobalOpts, HttpVerb};
 use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
@@ -63,7 +63,7 @@ pub struct RequestResponse {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
-pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse{
+pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse {
 
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
@@ -205,7 +205,12 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
 {
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector{contents: Vec::new(), content_len: 0});
-    easy.get(true).unwrap();
+
+    match &global_opts.http_verb {
+        HttpVerb::Get => { easy.get(true).unwrap(); },
+        HttpVerb::Head => { easy.nobody(true).unwrap(); },
+        HttpVerb::Post => { easy.post(true).unwrap(); }
+    }
 
     // Set the timeout of the easy
     easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
