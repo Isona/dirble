@@ -9,6 +9,12 @@ targets = x86_64-unknown-linux-gnu \
 #		  ^ Potential bug in cross, openssl does not compile for wasm for some
 #		  reason.
 
+# Get the version string out of the Cargo.toml by taking the second field
+# (delimited by double quotes) of the 'version = "x.y.z"' line
+version=$(shell awk -F'"' '/version/ {print $$2}' Cargo.toml)
+date=$(shell date +%Y%m%d)
+filename="dirble-${version}-${date}"
+
 default :
 	cargo build --release
 	@echo Release binary: target/release/dirble
@@ -29,19 +35,19 @@ release : $(targets) dirble_wordlist.txt
 	cp target/i686-unknown-linux-gnu/release/dirble dirble/dirble32
 	cp target/x86_64-pc-windows-gnu/release/dirble.exe dirble/dirble.exe
 	cp target/i686-pc-windows-gnu/release/dirble.exe dirble/dirble32.exe
-	zip dirble/dirble-x86_64-linux.zip \
+	zip dirble/${filename}-x86_64-linux.zip \
 		dirble/dirble \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
-	zip dirble/dirble-i686-linux.zip \
+	zip dirble/${filename}-i686-linux.zip \
 		dirble/dirble32 \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
-	zip dirble/dirble-x86_64-windows.zip \
+	zip dirble/${filename}-x86_64-windows.zip \
 		dirble/dirble.exe \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
-	zip dirble/dirble-i686-windows.zip \
+	zip dirble/${filename}-i686-windows.zip \
 		dirble/dirble32.exe \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
@@ -54,11 +60,11 @@ mac : x86_64-apple-darwin i686-apple-darwin dirble_wordlist.txt
 	cp wordlists/* dirble/extensions
 	cp target/x86_64-apple-darwin/release/dirble dirble/dirble
 	cp target/i686-apple-darwin/release/dirble dirble/dirble32
-	zip dirble/dirble-x86_64-apple-darwin.zip \
+	zip dirble/${filename}-x86_64-apple-darwin.zip \
 		dirble/dirble \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
-	zip dirble/dirble-i686-apple-darwin.zip \
+	zip dirble/${filename}-i686-apple-darwin.zip \
 		dirble/dirble32 \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
