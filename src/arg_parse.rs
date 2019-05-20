@@ -587,7 +587,9 @@ EXAMPLE USE:
         disable_validator: args.is_present("disable_validator"),
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
         response_min_length: args.value_of("response_min_length").unwrap().parse::<u32>().unwrap(),
-        response_max_length: args.value_of("response_max_length").unwrap().parse::<u32>().unwrap_or(std::u32::MAX)
+        response_max_length: match args.value_of("response_max_length").unwrap() {
+            "MAX" => std::u32::MAX,
+            _ => args.value_of("response.max_length").unwrap().parse::<u32>().unwrap()}
     }
 }
 
