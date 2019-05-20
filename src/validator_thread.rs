@@ -28,11 +28,12 @@ use rand::distributions::Alphanumeric;
 pub struct DirectoryInfo {
     pub url:String,
     pub validator:Option<TargetValidator>,
-    pub parent_depth: u32
+    pub parent_depth: u32,
 }
 
 impl DirectoryInfo {
-    pub fn new(url: String, validator: Option<TargetValidator>, parent_depth:u32) -> DirectoryInfo {
+    pub fn new(url: String, validator: Option<TargetValidator>, 
+                parent_depth:u32) -> DirectoryInfo {
         DirectoryInfo {
             url,
             validator,
@@ -57,16 +58,20 @@ pub struct TargetValidator {
     response_code:u32,
     response_len:Option<i32>,
     diff_response_len:Option<i32>,
-    redirect_url:Option<String>
+    redirect_url:Option<String>,
+    pub validator_alert: Option<ValidatorAlert>
 }
 
 impl TargetValidator {
-     pub fn new(response_code: u32, response_len: Option<i32>, diff_response_len: Option<i32>, redirect_url: Option<String>) -> TargetValidator{
+     pub fn new(response_code: u32, response_len: Option<i32>, 
+                diff_response_len: Option<i32>, redirect_url: Option<String>,
+                validator_alert: Option<ValidatorAlert>) -> TargetValidator{
         TargetValidator {
             response_code,
             response_len,
             diff_response_len,
-            redirect_url
+            redirect_url,
+            validator_alert
         }
      }
 
@@ -118,9 +123,36 @@ impl TargetValidator {
         output + ")"
      }
 
-     pub fn get_redirect_url(&self) -> Option<String> {
-        self.redirect_url.clone()
+
+     // Used to determine if things which may be undesirable to
+     // scan should be scanned, checked against options provided by user
+     // Returns true if the folder should be scanned
+     pub fn scan_folder(&self, scan_opts: &arg_parse::ScanOpts) -> bool {
+         if let Some(validator_alert) = &self.validator_alert {
+             match validator_alert {
+                 ValidatorAlert::Code401 => { 
+                     return scan_opts.scan_401
+                 }
+                 ValidatorAlert::Code403 => {
+                     return scan_opts.scan_403
+                 }
+                 ValidatorAlert::RedirectToHTTPS => { 
+                     return true 
+                 }
+             }
+         }
+         else {
+             return true
+         }
+
      }
+}
+
+#[derive(Clone)]
+pub enum ValidatorAlert {
+    Code401,
+    Code403,
+    RedirectToHTTPS
 }
 
 pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: mpsc::Sender<Option<DirectoryInfo>>,
@@ -220,8 +252,10 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
 fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<TargetValidator> {
 
     if responses.len() < 3 {
-        return Some(TargetValidator::new(404, None, None, None))
+        return Some(TargetValidator::new(404, None, None, None, None))
     }
+
+    let mut validator_alert = None;
 
     let mut code = 404;
     if responses[0].code == responses[1].code 
@@ -236,9 +270,6 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
         0 => {
             return None;
         }
-        404 => {
-            return Some(TargetValidator::new(code, None, None, None));
-        }
         301 | 302 => {
             let mut redirect_url = None;
             if responses[0].redirect_url == responses[1].redirect_url
@@ -249,7 +280,16 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
                 redirect_url = Some(responses[1].redirect_url.clone());
             }
 
-            return Some(TargetValidator::new(code, None, None, redirect_url))
+            return Some(TargetValidator::new(code, None, None, redirect_url, None))
+        }
+        401 => {
+            validator_alert = Some(ValidatorAlert::Code401);
+        }
+        403 => {
+            validator_alert = Some(ValidatorAlert::Code403);
+        }
+        404 => {
+            return Some(TargetValidator::new(code, None, None, None, None));
         }
         _ => {}
     }
@@ -278,7 +318,7 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
         }
     }
 
-    Some(TargetValidator::new(code, response_size, diff_response_size, None))
+    Some(TargetValidator::new(code, response_size, diff_response_size, None, validator_alert))
 
 
 }

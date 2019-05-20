@@ -54,7 +54,13 @@ pub struct GlobalOpts {
     pub is_terminal: bool,
     pub no_color:bool,
     pub disable_validator:bool,
-    pub http_verb:HttpVerb
+    pub http_verb:HttpVerb,
+    pub scan_opts: ScanOpts
+}
+
+pub struct ScanOpts {
+    pub scan_401: bool,
+    pub scan_403: bool
 }
 
 arg_enum!{
@@ -327,6 +333,14 @@ EXAMPLE USE:
                             .help("Disable automatic detection of not found codes")
                             .takes_value(false)
                             .display_order(110))
+                        .arg(Arg::with_name("scan_401")
+                            .long("scan-401")
+                            .help("Scan folders even if they return 401 - Unauthorized frequently")
+                            .display_order(120))
+                        .arg(Arg::with_name("scan_403")
+                            .long("scan-403")
+                            .help("Scan folders if they return 403 - Forbidden frequently")
+                            .display_order(120))
                         .arg(Arg::with_name("ignore_cert")
                             .long("ignore-cert")
                             .short("k")
@@ -553,6 +567,15 @@ EXAMPLE USE:
         max_recursion_depth = Some(string_recursion_depth.parse::<i32>().unwrap());
     }
 
+    let mut scan_opts = ScanOpts{scan_401:false, scan_403:false};
+    if args.is_present("scan_401") || (whitelist && code_list.contains(&401)) {
+        scan_opts.scan_401 = true;
+    }
+
+    if args.is_present("scan_403") || (whitelist && code_list.contains(&403)) {
+        scan_opts.scan_403 = true;
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames,
@@ -587,7 +610,8 @@ EXAMPLE USE:
         is_terminal: atty::is(Stream::Stdout),
         no_color: args.is_present("no_color"),
         disable_validator: args.is_present("disable_validator"),
-        http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap()
+        http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
+        scan_opts
     }
 }
 

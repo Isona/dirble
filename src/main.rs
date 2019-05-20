@@ -171,10 +171,7 @@ fn main() {
     to_validate_tx.send(generate_end()).unwrap();
     output_thread.join().unwrap();
     validator_thread.join().unwrap();
-
-
 }
-
 
 fn generate_end() -> request::RequestResponse {
     request::RequestResponse {
