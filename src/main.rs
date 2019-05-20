@@ -83,20 +83,8 @@ fn main() {
         match response {
             None => continue,
             Some(dir_info) => {
-                let mut depth = dir_info.url.matches("/").count() as u32;
-                if dir_info.url.ends_with("/") {
-                    depth -= 1;
-                }
-                for prefix in &global_opts.prefixes {
-                    for extension in &global_opts.extensions {
-                        for start_index in 0..global_opts.wordlist_split {
-                            scan_queue.push_back(
-                                wordlist::UriGenerator::new(dir_info.url.clone(), String::from(prefix.clone()),
-                                    String::from(extension.clone()), wordlist.clone(), 
-                                    start_index, global_opts.wordlist_split, depth, dir_info.validator.clone()));
-                        }
-                    }
-                }
+                add_dir_to_scan_queue(&mut scan_queue, &global_opts,
+                                      &dir_info, &wordlist); 
             }
         }
 
@@ -107,7 +95,7 @@ fn main() {
     let file_handles = output::create_files(global_opts.clone());
     let output_global_opts = global_opts.clone();
 
-    let output_thread = thread::spawn(|| output_thread::output_thread(output_rx, output_global_opts, file_handles));    
+    let output_thread = thread::spawn(|| output_thread::output_thread(output_rx, output_global_opts, file_handles));
 
     // Loop of checking for messages from the threads,
     // spawning new threads on items in the scan queue
@@ -127,16 +115,7 @@ fn main() {
                 // If a thread sent anything else, then call the print_response function to deal with output
                 // If the response was a directory, create generators with each extension and add it to the scan queue
                 else { 
-                    for prefix in &global_opts.prefixes {
-                        for extension in &global_opts.extensions {
-                            for start_index in 0..global_opts.wordlist_split {
-                                scan_queue.push_back(
-                                    wordlist::UriGenerator::new(dir_info.url.clone(), String::from(prefix.clone()),
-                                        String::from(extension.clone()), wordlist.clone(), 
-                                        start_index, global_opts.wordlist_split, dir_info.parent_depth, dir_info.validator.clone()));
-                            }
-                        }
-                    }
+                   add_dir_to_scan_queue(&mut scan_queue, &global_opts, &dir_info, &wordlist); 
                 }
             }
         };
@@ -171,6 +150,32 @@ fn main() {
     to_validate_tx.send(generate_end()).unwrap();
     output_thread.join().unwrap();
     validator_thread.join().unwrap();
+}
+
+#[inline]
+fn add_dir_to_scan_queue(scan_queue: &mut VecDeque<wordlist::UriGenerator>,
+                    global_opts: &Arc<arg_parse::GlobalOpts>, 
+                    dir_info: &validator_thread::DirectoryInfo,
+                    wordlist: &Arc<Vec<String>>) {
+    for prefix in &global_opts.prefixes {
+        for extension in &global_opts.extensions {
+            for start_index in 0..global_opts.wordlist_split {
+                scan_queue.push_back(
+                    wordlist::UriGenerator::new(
+                        dir_info.url.clone(),
+                        String::from(prefix.clone()),
+                        String::from(extension.clone()),
+                        wordlist.clone(),
+                        start_index,
+                        global_opts.wordlist_split,
+                        dir_info.parent_depth,
+                        dir_info.validator.clone()
+                    )
+                );
+            }
+        }
+    }
+
 }
 
 fn generate_end() -> request::RequestResponse {
