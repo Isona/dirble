@@ -53,6 +53,7 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 | Tune not found based on size/redirection |    ✅   |   ✅  |     ❌     |     ❌    |
 | URL list                         |    ✅   |   ❌  |     ✅     |     ❌    |
 | User agents                      |    ✅   |   ✅  |     ✅     |     ✅    |
+| Use different HTTP Verbs to scan |    ✅   |   ❌  |     ✅     |     ❌    |
 
 # Performance
 
