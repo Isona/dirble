@@ -56,15 +56,17 @@ impl DirectoryInfo {
 pub struct TargetValidator {
     response_code:u32,
     response_len:Option<i32>,
-    diff_response_len:Option<i32>
+    diff_response_len:Option<i32>,
+    redirect_url:Option<String>
 }
 
 impl TargetValidator {
-     pub fn new(response_code: u32, response_len: Option<i32>, diff_response_len: Option<i32>) -> TargetValidator{
+     pub fn new(response_code: u32, response_len: Option<i32>, diff_response_len: Option<i32>, redirect_url: Option<String>) -> TargetValidator{
         TargetValidator {
             response_code,
             response_len,
-            diff_response_len
+            diff_response_len,
+            redirect_url
         }
      }
 
@@ -76,10 +78,15 @@ impl TargetValidator {
             return false
         }
 
+        // If there's a redirect url set then check that
+        if let Some(redirect_url) = &self.redirect_url {
+            return redirect_url == &response.redirect_url;
+        }
+
         // If there is a length in the validator then check against that,
         // otherwise it is "not found"
         if let Some(size) = self.response_len {
-            return size == response.content_len as i32
+            return size == response.content_len as i32;
         }
 
         match self.diff_response_len {
@@ -95,6 +102,10 @@ impl TargetValidator {
      // of a not found response
      pub fn summary_text(&self)  -> String {
         let mut output = format!("(CODE:{}", self.response_code);
+
+        if let Some(redirect_url) = &self.redirect_url {
+            output += &format!("|DEST:{}", redirect_url);
+        }
         
         if let Some(length) = self.response_len {
             output += &format!("|SIZE:{}", length);
@@ -105,6 +116,10 @@ impl TargetValidator {
         }
 
         output + ")"
+     }
+
+     pub fn get_redirect_url(&self) -> Option<String> {
+        self.redirect_url.clone()
      }
 }
 
@@ -186,28 +201,43 @@ fn make_requests(mut base_url:String, easy: &mut Easy2<request::Collector>) -> V
 fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<TargetValidator> {
 
     if responses.len() < 3 {
-        return Some(TargetValidator::new(404, None, None))
+        return Some(TargetValidator::new(404, None, None, None))
     }
 
     let mut code = 404;
     if responses[0].code == responses[1].code 
-        || responses[0].code == responses[2].code {
+            || responses[0].code == responses[2].code {
         code = responses[0].code;
     }
     else if responses[1].code == responses[2].code {
         code = responses[1].code;
     }
 
-    if code == 0 {
-        return None
-    }
-    else if code == 404 {
-        return Some(TargetValidator::new(code, None, None))        
+    match code {
+        0 => {
+            return None;
+        }
+        404 => {
+            return Some(TargetValidator::new(code, None, None, None));
+        }
+        301 | 302 => {
+            let mut redirect_url = None;
+            if responses[0].redirect_url == responses[1].redirect_url
+                    || responses[0].redirect_url == responses[2].redirect_url {
+                redirect_url = Some(responses[0].redirect_url.clone());
+            }
+            else if responses[1].redirect_url == responses[2].redirect_url {
+                redirect_url = Some(responses[1].redirect_url.clone());
+            }
+
+            return Some(TargetValidator::new(code, None, None, redirect_url))
+        }
+        _ => {}
     }
 
     let mut response_size = None;
     if responses[0].content_len == responses[1].content_len
-        || responses[0].content_len == responses[2].content_len {
+            || responses[0].content_len == responses[2].content_len {
         response_size = Some(responses[0].content_len as i32);
     }
     else if responses[1].content_len == responses[2].content_len {
@@ -229,7 +259,7 @@ fn determine_not_found(responses:Vec<request::RequestResponse>) -> Option<Target
         }
     }
 
-    Some(TargetValidator::new(code, response_size, diff_response_size))
+    Some(TargetValidator::new(code, response_size, diff_response_size, None))
 
 
 }
