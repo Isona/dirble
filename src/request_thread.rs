@@ -55,7 +55,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
         // Then return each discovered item to the main thread
         if response.is_directory {
             let mut response_list = request::listable_check(&mut easy, response.url, 
-                global_opts.disable_recursion, global_opts.scrape_listable);
+                global_opts.max_recursion_depth, response.parent_depth as i32, global_opts.scrape_listable);
 
             let mut original_response = response_list.remove(0);
             original_response.found_from_listable = false;

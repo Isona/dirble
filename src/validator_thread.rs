@@ -145,6 +145,25 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                     continue;
                 }
 
+                // If there is a max recursion depth set the check that
+                if let Some(max_recursion_depth) = global_opts.max_recursion_depth {
+                    // Calculate the depth
+                    let mut depth = response.url.matches("/").count() as i32;
+
+                    if response.url.ends_with("/") {
+                        depth -= 1;
+                    }
+
+                    depth -= response.parent_depth as i32;
+
+                    // If the depth exceeds the max_recursion_depth
+                    // Skip scanning this directory
+                    if depth > max_recursion_depth {
+                        continue;
+                    }
+                }
+                //println!("Parent depth: {}, current depth: {}", response.parent_depth, depth);
+
                 // If validation is disabled or if whitelisting is enabled
                 // return a validator of None
                 // The validator is unused if whitelisting is enabled

@@ -63,7 +63,12 @@ fn main() {
 
 
     for hostname in &global_opts.hostnames {
-        let request = request::fabricate_request_response(hostname.clone(), true, false);
+        let mut request = request::fabricate_request_response(hostname.clone(), true, false);
+        let mut depth = hostname.matches("/").count() as u32;
+        if hostname.ends_with("/") {
+            depth -= 1;
+        }
+        request.parent_depth = depth;
         to_validate_tx.send(request).unwrap();
     }
 

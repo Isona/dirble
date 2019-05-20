@@ -33,7 +33,7 @@ pub struct GlobalOpts {
     pub ignore_cert: bool,
     pub show_htaccess: bool,
     pub throttle: u32,
-    pub disable_recursion: bool,
+    pub max_recursion_depth: Option<i32>,
     pub user_agent: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
@@ -253,6 +253,12 @@ EXAMPLE USE:
                             .short("r")
                             .help("Disable discovered subdirectory scanning")
                             .display_order(80))
+                        .arg(Arg::with_name("max_recursion_depth")
+                            .long("max-recursion-depth")
+                            .takes_value(true)
+                            .help("Sets the maximum directory depth to recurse to, 0 will disable recursion")
+                            .display_order(80)
+                            .validator(int_check))
                         .arg(Arg::with_name("scan_listable")
                             .long("scan-listable")
                             .short("l")
@@ -537,6 +543,16 @@ EXAMPLE USE:
         }
     }
 
+    let mut max_recursion_depth = None;
+    if args.is_present("disable_recursion") {
+        max_recursion_depth = Some(0);
+
+    }
+    else if args.is_present("max_recursion_depth") {
+        let string_recursion_depth = args.value_of("max_recursion_depth").unwrap();
+        max_recursion_depth = Some(string_recursion_depth.parse::<i32>().unwrap());
+    }
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames,
@@ -550,7 +566,7 @@ EXAMPLE USE:
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
         throttle: throttle,
-        disable_recursion: args.is_present("disable_recursion"),
+        max_recursion_depth,
         user_agent,
         username,
         password,
