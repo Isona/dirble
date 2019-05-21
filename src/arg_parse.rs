@@ -504,45 +504,6 @@ set to 0 to disable")
         wordlists.push(String::from(exe_path.to_str().unwrap()));
     }
 
-    // Parse the prefixes into a vector
-    let mut prefixes = vec![String::from("")];
-    if args.is_present("prefixes") {
-        for prefix in args.values_of("prefixes").unwrap() {
-            prefixes.push(String::from(prefix));
-        }
-    }
-    if args.is_present("prefix_file") {
-        for prefixes_file in args.values_of("prefix_file").unwrap() {
-            let prefixes_from_file = lines_from_file(String::from(prefixes_file));
-            for prefix in prefixes_from_file {
-                prefixes.push(String::from(prefix));
-            }
-        }
-    }
-    
-    prefixes.sort();
-    prefixes.dedup();
-
-    // Parse the extensions into a vector, then sort it and remove duplicates
-    let mut extensions = vec![String::from("")];
-    if args.is_present("extensions") {
-        for extension in args.values_of("extensions").unwrap() {
-            extensions.push(String::from(extension));
-        }
-    }
-
-    // Read in extensions from a file
-    if args.is_present("extension_file") {
-        for extensions_file in args.values_of("extension_file").unwrap() {
-            let extensions_from_file = lines_from_file(String::from(extensions_file));
-            for extension in extensions_from_file {
-                extensions.push(String::from(extension));
-            }
-        }
-    }
-
-    extensions.sort();
-    extensions.dedup();
 
     // Check for proxy related flags
     let proxy_enabled;
@@ -628,8 +589,8 @@ set to 0 to disable")
     GlobalOpts {
         hostnames,
         wordlist_files: wordlists,
-        prefixes,
-        extensions,
+        prefixes: load_modifiers(&args, "prefixes"),
+        extensions: load_modifiers(&args, "extensions"),
         max_threads:
             args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled,
@@ -716,6 +677,44 @@ fn filename_from_args(args: &clap::ArgMatches, filetype: &str)
         else {
             None
         }
+}
+
+#[inline]
+fn load_modifiers(args: &clap::ArgMatches, mod_type: &str)
+    -> Vec<String> {
+        let singular_arg;
+        let file_arg;
+        match mod_type {
+            "prefixes" => {
+                singular_arg = "prefixes";
+                file_arg = "prefix_file";
+            },
+            "extensions" => {
+                singular_arg = "extensions";
+                file_arg = "extension_file";
+            },
+            _ => panic!()
+        }
+        let file_arg = String::from(file_arg);
+
+        let mut modifiers = vec![String::from("")];
+        if args.is_present(&singular_arg) {
+            for modifier in args.values_of(singular_arg).unwrap() {
+                modifiers.push(String::from(modifier));
+            }
+        }
+        if args.is_present(&file_arg) {
+            for filename in args.values_of(file_arg).unwrap() {
+                for modifier in lines_from_file(String::from(filename)) {
+                    modifiers.push(String::from(modifier));
+                }
+            }
+        }
+
+        modifiers.sort();
+        modifiers.dedup();
+
+        modifiers
 }
 
 // Validator for the provided host name, ensures that the value begins with http:// or https://
