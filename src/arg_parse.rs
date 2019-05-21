@@ -545,24 +545,28 @@ set to 0 to disable")
     extensions.dedup();
 
     // Check for proxy related flags
-    let mut proxy_enabled = false;
-    let mut proxy = "";
+    let proxy_enabled;
+    let proxy_address;
     if args.is_present("proxy") {
         proxy_enabled = true;
-        proxy = args.value_of("proxy").unwrap();
-        if proxy == "http://localhost:8080" {
+        proxy_address = args.value_of("proxy").unwrap();
+        if proxy_address == "http://localhost:8080" {
             println!("You could use the --burp flag instead of the --proxy flag!");
         }
     }
     else if args.is_present("burp") {
         proxy_enabled = true;
-        proxy = "http://localhost:8080";
+        proxy_address = "http://localhost:8080";
     }
     else if args.is_present("no_proxy") {
         proxy_enabled = true;
-        proxy = "";
+        proxy_address = "";
     }
-    let proxy = String::from(proxy);
+    else {
+        proxy_enabled = false;
+        proxy_address = "";
+    }
+    let proxy_address = String::from(proxy_address);
 
     // Read the name of the output file if provided
     let mut output_file = None;
@@ -655,7 +659,7 @@ set to 0 to disable")
         max_threads:
             args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled,
-        proxy_address: proxy,
+        proxy_address,
         proxy_auth_enabled: false,   
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
