@@ -28,3 +28,33 @@ fn argparse_length_range_contains() {
     // Number too big
     assert!(!range.contains(6));
 }
+
+#[test]
+fn argparse_length_ranges_contain() {
+    // Empty range
+    let ranges: crate::arg_parse::LengthRanges = Default::default();
+    assert!(!ranges.contain(4));
+
+    // Non-overlapping ranges
+    let ranges = crate::arg_parse::LengthRanges {
+        ranges: vec![
+            crate::arg_parse::LengthRange {
+                start: 4,
+                end: Some(10),
+            },
+            crate::arg_parse::LengthRange {
+                start: 15,
+                end: Some(18),
+            },
+        ]};
+    // too small
+    assert!(!ranges.contain(3));
+    // in first range
+    assert!(ranges.contain(4));
+    // in between
+    assert!(!ranges.contain(11));
+    //in second range
+    assert!(ranges.contain(18));
+    // too large
+    assert!(!ranges.contain(19));
+}

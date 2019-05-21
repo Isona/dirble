@@ -56,7 +56,7 @@ pub struct GlobalOpts {
     pub http_verb:HttpVerb,
     pub scan_opts: ScanOpts,
     pub log_level: LevelFilter,
-    pub length_blacklist: Option<Vec<LengthRange>>,
+    pub length_blacklist: LengthRanges,
 }
 
 #[derive(Debug)]
@@ -71,6 +71,29 @@ impl LengthRange {
             return self.start <= test && test <= end;
         } else {
             return test == self.start;
+        }
+    }
+}
+
+pub struct LengthRanges {
+    pub ranges: Vec<LengthRange>,
+}
+
+impl LengthRanges {
+    pub fn contain(&self, test: u32) -> bool {
+        for range in &self.ranges {
+            if range.contains(test) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl Default for LengthRanges {
+    fn default() -> Self {
+        Self {
+            ranges: Vec::new(),
         }
     }
 }
@@ -675,8 +698,8 @@ set to 0 to disable")
         scan_opts,
         log_level,
         length_blacklist: if args.is_present("length_blacklist") {
-            Some(length_blacklist_parse(args.values_of("length_blacklist").unwrap()))
-        } else { None },
+            length_blacklist_parse(args.values_of("length_blacklist").unwrap())
+        } else { Default::default() },
     }
 }
 
@@ -794,7 +817,7 @@ fn int_check(value: String) -> Result<(), String> {
     return Err(String::from("The number given must be an integer."))
 }
 
-fn length_blacklist_parse(blacklist_inputs: clap::Values) -> Vec<LengthRange> {
+fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
     let mut length_vector: Vec<LengthRange> = Vec::with_capacity(
         blacklist_inputs.len());
 
@@ -818,5 +841,7 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> Vec<LengthRange> {
         length_vector.push(
             LengthRange { start, end });
     }
-    length_vector
+    LengthRanges{
+        ranges: length_vector,
+    }
 }
