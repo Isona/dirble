@@ -564,12 +564,6 @@ set to 0 to disable")
     }
     let proxy = String::from(proxy);
 
-    // Reads in how long each thread should wait after each request
-    let mut throttle = 0;
-    if args.is_present("throttle") {
-        throttle = args.value_of("throttle").unwrap().parse::<u32>().unwrap();
-    }
-
     // Read user agent from arguments
     let mut user_agent = None;
     if args.is_present("user_agent") {
@@ -678,7 +672,10 @@ set to 0 to disable")
         proxy_auth_enabled: false,   
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
-        throttle: throttle,
+        throttle:
+            if args.is_present("throttle") {
+                args.value_of("throttle").unwrap().parse::<u32>().unwrap()
+            } else { 0 },
         max_recursion_depth,
         user_agent,
         username,
