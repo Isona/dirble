@@ -65,6 +65,16 @@ pub struct LengthRange {
     pub end: Option<u32>,
 }
 
+impl LengthRange {
+    pub fn contains(&self, test: u32) -> bool {
+        if let Some(end) = self.end {
+            return self.start <= test && test <= end;
+        } else {
+            return test == self.start;
+        }
+    }
+}
+
 pub struct ScanOpts {
     pub scan_401: bool,
     pub scan_403: bool
