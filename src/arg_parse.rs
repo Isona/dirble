@@ -568,32 +568,6 @@ set to 0 to disable")
     }
     let proxy_address = String::from(proxy_address);
 
-    // Read the name of the output file if provided
-    let mut output_file = None;
-    if args.is_present("output_file") {
-        output_file = Some(String::from(args.value_of("output_file").unwrap()));
-    }
-    else if args.is_present("output_all") {
-        output_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".txt"));
-    }
-
-    // Read the name of the json file if provided
-    let mut json_file = None;
-    if args.is_present("json_file") {
-        json_file = Some(String::from(args.value_of("json_file").unwrap()));
-    }
-    else if args.is_present("output_all") {
-        json_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".json"));
-    }
-
-    let mut xml_file = None;
-    if args.is_present("xml_file") {
-        xml_file = Some(String::from(args.value_of("xml_file").unwrap()));
-    }
-    else if args.is_present("output_all") {
-        xml_file = Some(format!("{}{}", args.value_of("output_all").unwrap(), ".xml"));
-    }
-
     // Read provided cookie values into a vector
     let mut cookies = None;
     if args.is_present("cookie") {
@@ -682,9 +656,9 @@ set to 0 to disable")
             if args.is_present("password") {
                 Some(String::from(args.value_of("password").unwrap()))
             } else { None },
-        output_file,
-        json_file,
-        xml_file,
+        output_file: filename_from_args(&args, "txt"),
+        json_file: filename_from_args(&args, "json"),
+        xml_file: filename_from_args(&args, "xml"),
         verbose: args.is_present("verbose"),
         silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
@@ -704,6 +678,44 @@ set to 0 to disable")
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
         scan_opts
     }
+}
+
+#[inline]
+fn filename_from_args(args: &clap::ArgMatches, filetype: &str)
+    -> Option<String> {
+        let extension;
+        match filetype {
+            "txt" => {
+                extension = "txt";
+                if args.is_present("output_file") {
+                    return Some(
+                        String::from(args.value_of("output_file").unwrap()))
+                }
+            }
+            "json" => {
+                extension = "json";
+                if args.is_present("json_file") {
+                    return Some(
+                        String::from(args.value_of("json_file").unwrap()))
+                }
+            }
+            "xml" => {
+                extension = "xml";
+                if args.is_present("xml_file") {
+                    return Some(
+                        String::from(args.value_of("xml_file").unwrap()))
+                }
+            }
+            _ => panic!()
+        }
+        if args.is_present("output_all") {
+            return Some(format!("{}.{}",
+                         args.value_of("output_all").unwrap(),
+                         extension))
+        }
+        else {
+            None
+        }
 }
 
 // Validator for the provided host name, ensures that the value begins with http:// or https://
