@@ -564,14 +564,6 @@ set to 0 to disable")
     }
     let proxy = String::from(proxy);
 
-    // Get http basic auth related arguments
-    let mut username = None;
-    let mut password = None;
-    if args.is_present("username") {
-        username = Some(String::from(args.value_of("username").unwrap()));
-        password = Some(String::from(args.value_of("password").unwrap()));
-    }
-
     // Read the name of the output file if provided
     let mut output_file = None;
     if args.is_present("output_file") {
@@ -675,8 +667,16 @@ set to 0 to disable")
             if args.is_present("user_agent") {
                 Some(String::from(args.value_of("user_agent").unwrap()))
             } else { None },
-        username,
-        password,
+        username:
+            // Dependency between username and password is handled by Clap
+            if args.is_present("username") {
+                Some(String::from(args.value_of("username").unwrap()))
+            } else { None },
+        password:
+            // Dependency between username and password is handled by Clap
+            if args.is_present("password") {
+                Some(String::from(args.value_of("password").unwrap()))
+            } else { None },
         output_file,
         json_file,
         xml_file,
