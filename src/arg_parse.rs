@@ -564,12 +564,6 @@ set to 0 to disable")
     }
     let proxy = String::from(proxy);
 
-    // Read user agent from arguments
-    let mut user_agent = None;
-    if args.is_present("user_agent") {
-        user_agent = Some(String::from(args.value_of("user_agent").unwrap()));
-    }
-
     // Get http basic auth related arguments
     let mut username = None;
     let mut password = None;
@@ -677,7 +671,10 @@ set to 0 to disable")
                 args.value_of("throttle").unwrap().parse::<u32>().unwrap()
             } else { 0 },
         max_recursion_depth,
-        user_agent,
+        user_agent:
+            if args.is_present("user_agent") {
+                Some(String::from(args.value_of("user_agent").unwrap()))
+            } else { None },
         username,
         password,
         output_file,
