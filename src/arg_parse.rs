@@ -56,6 +56,13 @@ pub struct GlobalOpts {
     pub http_verb:HttpVerb,
     pub scan_opts: ScanOpts,
     pub log_level: LevelFilter,
+    pub length_blacklist: Option<Vec<LengthRange>>,
+}
+
+#[derive(Debug)]
+pub struct LengthRange {
+    pub start: u32,
+    pub end: Option<u32>,
 }
 
 pub struct ScanOpts {
@@ -452,6 +459,14 @@ set to 0 to disable")
              .help("Disable coloring of terminal output")
              .long("no-color")
              .next_line_help(true))
+        .arg(Arg::with_name("length_blacklist")
+             .help(
+"Specify length ranges to hide, e.g. --hide-lengths 348,500-700")
+             .long("hide-lengths")
+             .min_values(1)
+             .multiple(true)
+             .takes_value(true)
+             .value_delimiter(","))
         .get_matches();
 
     
@@ -649,6 +664,9 @@ set to 0 to disable")
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
         scan_opts,
         log_level,
+        length_blacklist: if args.is_present("length_blacklist") {
+            Some(length_blacklist_parse(args.values_of("length_blacklist").unwrap()))
+        } else { None },
     }
 }
 
@@ -764,4 +782,31 @@ fn int_check(value: String) -> Result<(), String> {
         Err(_) => {},
     };
     return Err(String::from("The number given must be an integer."))
+}
+
+fn length_blacklist_parse(blacklist_inputs: clap::Values) -> Vec<LengthRange> {
+    let mut length_vector: Vec<LengthRange> = Vec::with_capacity(
+        blacklist_inputs.len());
+
+    for length in blacklist_inputs {
+        let start;
+        let end;
+
+        if length.contains("-") {
+            let components: Vec<&str> = length.split("-").collect();
+            assert!(components.len() == 2,
+                "A range must be two positive integers separated by a hyphen");
+            start = components[0].parse::<u32>().unwrap();
+            end = Some(components[1].parse::<u32>().unwrap());
+            assert!(start < end.unwrap(),
+                "The start of a range must be smaller than the end");
+        } else {
+            // Length is just one number
+            start = length.parse::<u32>().unwrap();
+            end = None;
+        }
+        length_vector.push(
+            LengthRange { start, end });
+    }
+    length_vector
 }
