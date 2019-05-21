@@ -652,7 +652,8 @@ set to 0 to disable")
         wordlist_files: wordlists,
         prefixes,
         extensions,
-        max_threads: args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
+        max_threads:
+            args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled,
         proxy_address: proxy,
         proxy_auth_enabled: false,   
@@ -683,12 +684,14 @@ set to 0 to disable")
         verbose: args.is_present("verbose"),
         silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
-        max_errors: args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
-        wordlist_split: args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
+        max_errors:
+            args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
+        wordlist_split:
+            args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
         scan_listable: args.is_present("scan_listable"),
         cookies,
         headers,
-        scrape_listable:args.is_present("scrape_listable"),
+        scrape_listable: args.is_present("scrape_listable"),
         whitelist,
         code_list,
         is_terminal: atty::is(Stream::Stdout),
