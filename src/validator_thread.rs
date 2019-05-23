@@ -17,6 +17,7 @@
 
 use crate::request;
 use std::sync::{Arc, mpsc::self};
+use std::fmt;
 use crate::arg_parse;
 use curl::easy::Easy2;
 extern crate rand;
@@ -129,23 +130,34 @@ impl TargetValidator {
      // Returns true if the folder should be scanned
      pub fn scan_folder(&self, scan_opts: &arg_parse::ScanOpts) -> bool {
          if let Some(validator_alert) = &self.validator_alert {
-             match validator_alert {
-                 ValidatorAlert::Code401 => { 
-                     return scan_opts.scan_401
-                 }
-                 ValidatorAlert::Code403 => {
-                     return scan_opts.scan_403
-                 }
-                 ValidatorAlert::RedirectToHTTPS => { 
-                     return true 
-                 }
-             }
-         }
-         else {
-             return true
-         }
+            match validator_alert {
+                ValidatorAlert::Code401 => { 
+                    return scan_opts.scan_401
+                }
+                ValidatorAlert::Code403 => {
+                    return scan_opts.scan_403
+                }
+                // Placeholder branch for future use
+                ValidatorAlert::RedirectToHTTPS => { 
+                    return true 
+                }
+            }
+        }
+        else {
+            return true
+        }
+    }
 
-     }
+    pub fn print_alert(&self) -> String {
+        if let Some(validator_alert) = &self.validator_alert {
+            format!(": {}", validator_alert)
+        }
+        // This branch should never happen because this function should
+        // only be used if scan_folder returned false
+        else {
+            format!("")
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -153,6 +165,30 @@ pub enum ValidatorAlert {
     Code401,
     Code403,
     RedirectToHTTPS
+}
+
+impl fmt::Display for ValidatorAlert {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ValidatorAlert::Code401 =>{
+                write!(f, 
+                    "\n    Scanning of directories returning 401 is disabled.\n    \
+                    Use the --scan-401 flag to scan this directory,\n    \
+                    or provide a valid session token or credentials.")
+            },
+            ValidatorAlert::Code403 => {
+                write!(f, 
+                    "\n    Scanning of directories returning 403 is disabled.\n    \
+                    Use the --scan-403 flag to scan this directory,\n    \
+                    or provide valid session token or credentials.")
+            },
+            // Placeholder branch
+            ValidatorAlert::RedirectToHTTPS => {
+                write!(f, 
+                    "The directory redirected to HTTPS")
+            }
+        }
+    }
 }
 
 pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: mpsc::Sender<Option<DirectoryInfo>>,

@@ -83,8 +83,22 @@ fn main() {
         match response {
             None => continue,
             Some(dir_info) => {
-                add_dir_to_scan_queue(&mut scan_queue, &global_opts,
-                                      &dir_info, &wordlist); 
+                match &dir_info.validator {
+                    Some(validator) => {
+                        if validator.scan_folder(&global_opts.scan_opts) {
+                            add_dir_to_scan_queue(&mut scan_queue, &global_opts,
+                                                  &dir_info, &wordlist); 
+                        }
+                        else {
+                            println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                        }
+                    }
+                    // If there is no validator, then scan the folder
+                    None => {
+                        add_dir_to_scan_queue(&mut scan_queue, &global_opts,
+                                              &dir_info, &wordlist); 
+                    }
+                }
             }
         }
 
@@ -112,10 +126,24 @@ fn main() {
                 if dir_info.url == "END" {
                     threads_in_use -= 1; }
 
-                // If a thread sent anything else, then call the print_response function to deal with output
-                // If the response was a directory, create generators with each extension and add it to the scan queue
+                // Check the validator to see if the directory should be scanned
                 else { 
-                   add_dir_to_scan_queue(&mut scan_queue, &global_opts, &dir_info, &wordlist); 
+                    match &dir_info.validator {
+                        Some(validator) => {
+                            if validator.scan_folder(&global_opts.scan_opts){
+                                add_dir_to_scan_queue(&mut scan_queue, &global_opts,
+                                                      &dir_info, &wordlist);
+                            }
+                            else {
+                                println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                            }
+                        }
+                        // If there is no validator, then scan the folder
+                        None => {
+                            add_dir_to_scan_queue(&mut scan_queue, &global_opts,
+                                                 &dir_info, &wordlist);
+                        }
+                    }
                 }
             }
         };
@@ -154,9 +182,9 @@ fn main() {
 
 #[inline]
 fn add_dir_to_scan_queue(scan_queue: &mut VecDeque<wordlist::UriGenerator>,
-                    global_opts: &Arc<arg_parse::GlobalOpts>, 
-                    dir_info: &validator_thread::DirectoryInfo,
-                    wordlist: &Arc<Vec<String>>) {
+                         global_opts: &Arc<arg_parse::GlobalOpts>, 
+                         dir_info: &validator_thread::DirectoryInfo,
+                         wordlist: &Arc<Vec<String>>) {
     for prefix in &global_opts.prefixes {
         for extension in &global_opts.extensions {
             for start_index in 0..global_opts.wordlist_split {
@@ -175,7 +203,6 @@ fn add_dir_to_scan_queue(scan_queue: &mut VecDeque<wordlist::UriGenerator>,
             }
         }
     }
-
 }
 
 fn generate_end() -> request::RequestResponse {
