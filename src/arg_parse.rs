@@ -498,6 +498,7 @@ set to 0 to disable")
              .long("hide-lengths")
              .min_values(1)
              .multiple(true)
+             .next_line_help(true)
              .takes_value(true)
              .value_delimiter(","))
         .get_matches();
