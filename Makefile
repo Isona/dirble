@@ -57,18 +57,13 @@ release : $(targets) dirble_wordlist.txt
 	rm -rfv release
 	mv dirble release
 
-mac : x86_64-apple-darwin i686-apple-darwin dirble_wordlist.txt
+mac : x86_64-apple-darwin dirble_wordlist.txt
 	mkdir -p dirble/extensions
 	cp dirble_wordlist.txt dirble/
 	cp wordlists/* dirble/extensions
 	cp target/x86_64-apple-darwin/release/dirble dirble/dirble
-	cp target/i686-apple-darwin/release/dirble dirble/dirble32
 	zip dirble/${filename}-x86_64-apple-darwin.zip \
 		dirble/dirble \
-		dirble/dirble_wordlist.txt \
-		dirble/extensions/*
-	zip dirble/${filename}-i686-apple-darwin.zip \
-		dirble/dirble32 \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
 	rm -rfv release
@@ -88,9 +83,6 @@ i686-pc-windows-gnu :
 
 x86_64-apple-darwin :
 	cargo build $(cargo_flags) --target x86_64-apple-darwin
-
-i686-apple-darwin :
-	cargo build $(cargo_flags) --target i686-apple-darwin
 
 #wasm32-unknown-emscripten :
 #	cross build --release --target wasm32-unknown-emscripten
