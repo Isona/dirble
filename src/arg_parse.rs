@@ -434,8 +434,7 @@ also disables detection of not found codes")
         .arg(Arg::with_name("timeout")
              .default_value("5")
              .help(
-"Maximum time to wait for a response before giving up, given in seconds
-") // Newline is needed to force the [default: 5] onto the next line
+"Maximum time to wait for a response before giving up, given in seconds\n")
              .long("timeout")
              .next_line_help(true)
              .validator(positive_int_check))
