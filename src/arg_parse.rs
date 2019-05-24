@@ -17,7 +17,7 @@
 extern crate clap;
 use std::process::exit;
 use std::env::current_exe;
-use clap::{App, Arg, AppSettings, ArgGroup};
+use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
 
@@ -78,7 +78,7 @@ pub fn get_args() -> GlobalOpts
     // Makefile, only use the release number.
     let version_string =
         if cfg!(feature = "release_version_string") {
-            env!("VERGEN_SEMVER")
+            crate_version!()
         }
         else {
             concat!(
