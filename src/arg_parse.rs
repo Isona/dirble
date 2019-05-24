@@ -829,9 +829,10 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
         if length.contains("-") {
             let components: Vec<&str> = length.split("-").collect();
             assert!(components.len() == 2,
-                "A range must be two positive integers separated by a hyphen");
+                "Ranges must be in the form `150-300`");
             start = components[0].parse::<u32>().unwrap();
-            end = Some(components[1].parse::<u32>().unwrap());
+            end = Some(components[1].parse::<u32>().expect(
+                "Ranges must be in the form `150-300`"));
             assert!(start < end.unwrap(),
                 "The start of a range must be smaller than the end");
         } else {
