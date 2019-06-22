@@ -17,6 +17,7 @@
 
 use crate::request::RequestResponse;
 use colored::*;
+use serde_json;
 
 #[cfg(test)]
 mod tests;
@@ -114,21 +115,5 @@ pub fn output_xml(response: &RequestResponse) -> String {
 
 #[inline]
 pub fn output_json(response: &RequestResponse) -> String {
-
-    format!("{{\
-        \"url\": \"{}\", \
-        \"code\": {}, \
-        \"size\": {}, \
-        \"is_directory\": {}, \
-        \"is_listable\": {}, \
-        \"found_from_listable\": {}, \
-        \"redirect_url\": \"{}\"\
-        }}",
-        response.url,
-        response.code,
-        response.content_len,
-        response.is_directory,
-        response.is_listable,
-        response.found_from_listable,
-        response.redirect_url)
+    serde_json::to_string(response).unwrap()
 }

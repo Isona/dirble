@@ -23,6 +23,8 @@ use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use crate::content_parse;
+//use serde::ser::{Serialize, Serializer, SerializeStruct};
+use serde::{Serialize, Deserialize};
 
 pub struct Collector
 {
@@ -48,15 +50,17 @@ impl Handler for Collector {
 
 // Struct which contains information about a response
 // This is sent back to the main thread
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct RequestResponse {
     pub url: String,
     pub code: u32,
+#[serde(rename = "size")]
     pub content_len: usize,
     pub is_directory: bool,
     pub is_listable: bool,
     pub redirect_url: String,
     pub found_from_listable: bool,
+#[serde(skip)]
     pub parent_depth: u32
 }
 
