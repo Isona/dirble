@@ -23,6 +23,7 @@ use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use crate::content_parse;
+use log::trace;
 
 pub struct Collector
 {
@@ -65,6 +66,7 @@ pub struct RequestResponse {
 // then it will return a RequestResponse struct
 pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse {
 
+    trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
 
