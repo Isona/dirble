@@ -54,8 +54,8 @@ fn main() {
             simplelog::Config {
                 time: Some(Level::Debug),
                 level: Some(Level::Error),
-                target: Some(Level::Trace),
-                location: Some(Level::Trace),
+                target: None,
+                location: None,
                 time_format: Some("%T"),
             }
         ).unwrap()
