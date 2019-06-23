@@ -20,6 +20,7 @@ use std::env::current_exe;
 use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
+use simplelog::LevelFilter;
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
@@ -40,8 +41,6 @@ pub struct GlobalOpts {
     pub output_file: Option<String>,
     pub json_file: Option<String>,
     pub xml_file: Option<String>,
-    pub verbose: bool,
-    pub silent: bool,
     pub timeout: u32,
     pub max_errors: u32,
     pub wordlist_split: u32,
@@ -55,7 +54,8 @@ pub struct GlobalOpts {
     pub no_color:bool,
     pub disable_validator:bool,
     pub http_verb:HttpVerb,
-    pub scan_opts: ScanOpts
+    pub scan_opts: ScanOpts,
+    pub log_level: LevelFilter,
 }
 
 pub struct ScanOpts {
@@ -364,8 +364,9 @@ no value must end in a semicolon")
         .arg(Arg::with_name("verbose")
              .display_order(100)
              .help(
-"Print information when a thread starts and finishes scanning")
+"Increase the verbosity level. Use twice for even more")
              .long("verbose")
+             .multiple(true)
              .next_line_help(true)
              .short("v")
              .takes_value(false))
@@ -373,7 +374,7 @@ no value must end in a semicolon")
              .display_order(100)
              .help(
 "Don't output information during the scan, only output the report at
-the end")
+the end. Overrides Verbose.")
              .long("silent")
              .next_line_help(true)
              .short("S")
@@ -584,6 +585,18 @@ set to 0 to disable")
         scan_opts.scan_403 = true;
     }
 
+    // Configure the logging level. The silent flag overrides any
+    // verbose flags in use.
+    let log_level = if args.is_present("silent") {
+        LevelFilter::Warn
+    } else {
+        match args.occurrences_of("verbose") {
+            0 => LevelFilter::Info,
+            1 => LevelFilter::Debug,
+            2 | _ => LevelFilter::Trace,
+        }
+    };
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames,
@@ -619,8 +632,6 @@ set to 0 to disable")
         output_file: filename_from_args(&args, "txt"),
         json_file: filename_from_args(&args, "json"),
         xml_file: filename_from_args(&args, "xml"),
-        verbose: args.is_present("verbose"),
-        silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
         max_errors:
             args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
@@ -636,7 +647,8 @@ set to 0 to disable")
         no_color: args.is_present("no_color"),
         disable_validator: args.is_present("disable_validator"),
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
-        scan_opts
+        scan_opts,
+        log_level,
     }
 }
 

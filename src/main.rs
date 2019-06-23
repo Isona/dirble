@@ -21,7 +21,7 @@ use std::{
     thread,
     time::Duration,
 };
-use simplelog::{LevelFilter, TermLogger};
+use simplelog::TermLogger;
 use log::Level;
 #[allow(unused)] use log::{
     trace,
@@ -50,7 +50,7 @@ fn main() {
     // Prepare the logging handler
     simplelog::CombinedLogger::init(vec![
         TermLogger::new(
-            LevelFilter::Info,
+            global_opts.log_level,
             simplelog::Config {
                 time: Some(Level::Debug),
                 level: Some(Level::Error),

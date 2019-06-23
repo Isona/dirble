@@ -25,7 +25,10 @@ extern crate rand;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 
-use log::info;
+use log::{
+    info,
+    warn,
+};
 
 // Struct for passing information back to the main thread
 pub struct DirectoryInfo {
@@ -259,7 +262,7 @@ pub fn validator_thread(rx: mpsc::Receiver<request::RequestResponse>, main_tx: m
                 // If there isn't a validator then send a none back to main
                 // This will be ignored but is necessary during validation of initial directories
                 else {
-                    println!("{} errored too often during validation, skipping scanning", response.url);
+                    warn!("{} errored too often during validation, skipping scanning", response.url);
                     main_tx.send(None).unwrap();
                 }
             }
