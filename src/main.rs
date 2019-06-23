@@ -21,7 +21,8 @@ use std::{
     thread,
     time::Duration,
 };
-use simplelog::TermLogger;
+use simplelog::{LevelFilter, TermLogger};
+use log::Level;
 #[allow(unused)] use log::{
     trace,
     debug,
@@ -43,13 +44,22 @@ mod output_thread;
 mod validator_thread;
 
 fn main() {
-    // Prepare the logging handler
-    simplelog::CombinedLogger::init(vec![
-        TermLogger::new(simplelog::LevelFilter::Info, simplelog::Config::default()).unwrap()
-    ]).unwrap();
-
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
+
+    // Prepare the logging handler
+    simplelog::CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Info,
+            simplelog::Config {
+                time: Some(Level::Debug),
+                level: Some(Level::Error),
+                target: Some(Level::Trace),
+                location: Some(Level::Trace),
+                time_format: Some("%T"),
+            }
+        ).unwrap()
+    ]).unwrap();
 
     output::startup_text(global_opts.clone());
 

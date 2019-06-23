@@ -20,7 +20,6 @@ use std::env::current_exe;
 use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
-use log::{info, error};
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
@@ -470,7 +469,7 @@ set to 0 to disable")
                     hostnames.push(String::from(hostname));
                 }
                 else {
-                    error!("{} doesn't start with \"http://\" or \"https://\" - skipping", hostname);
+                    println!("{} doesn't start with \"http://\" or \"https://\" - skipping", hostname);
                 }
             }
 
@@ -483,7 +482,7 @@ set to 0 to disable")
     }
 
     if hostnames.len() == 0 {
-        error!("No valid hosts were provided - exiting");
+        println!("No valid hosts were provided - exiting");
         exit(2);
     }
     hostnames.sort();
@@ -499,7 +498,7 @@ set to 0 to disable")
     }
     else {
         let mut exe_path = current_exe()
-            .unwrap_or_else(|error| { error!("Getting directory of exe failed: {}", error); exit(2);});
+            .unwrap_or_else(|error| { println!("Getting directory of exe failed: {}", error); exit(2);});
         exe_path.set_file_name("dirble_wordlist.txt");
         wordlists.push(String::from(exe_path.to_str().unwrap()));
     }
@@ -512,7 +511,7 @@ set to 0 to disable")
         proxy_enabled = true;
         proxy_address = args.value_of("proxy").unwrap();
         if proxy_address == "http://localhost:8080" {
-            info!("You could use the --burp flag instead of the --proxy flag!");
+            println!("You could use the --burp flag instead of the --proxy flag!");
         }
     }
     else if args.is_present("burp") {
