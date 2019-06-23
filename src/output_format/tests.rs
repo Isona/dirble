@@ -178,15 +178,15 @@ fn check_output_xml() {
     // produced by the XML formatter.
     assert_eq!(
         super::output_xml(&req_response),
-        "<file url=\"http://example.com\">
-    <status_code>204</status_code>
-    <size>345</size>
-    <is_directory>false</is_directory>
-    <is_listable>false</is_listable>
-    <found_from_listable>true</found_from_listable>
-    <redirect_url>https://example.org</redirect_url>
-</file>
-",
+        "<path \
+            url=\"http://example.com\" \
+            code=\"204\" \
+            content_len=\"345\" \
+            is_directory=\"false\" \
+            is_listable=\"false\" \
+            redirect_url=\"https://example.org\" \
+            found_from_listable=\"true\"\
+        />\n",
         "XML format invalid");
 }
 
