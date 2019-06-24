@@ -83,7 +83,7 @@ fn check_output_letter () {
     req_response.is_listable = true;
     assert_eq!(
         super::output_letter(&req_response),
-        "L ",
+        "\u{1b}[1mL \u{1b}[0m",
         "Listable directory prefix incorrect");
 
     req_response.is_listable = false;
