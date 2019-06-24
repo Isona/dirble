@@ -58,7 +58,7 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
 
 #[inline]
 pub fn output_letter(response: &RequestResponse) -> String {
-    if response.is_directory && response.is_listable { String::from("L ") }
+    if response.is_directory && response.is_listable { "L ".bold().to_string() }
     else if response.is_directory { String:: from("D ") }
     else if response.found_from_listable { String::from("~ ") }
     else { String::from("+ ") }
