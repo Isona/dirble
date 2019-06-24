@@ -42,6 +42,7 @@ mod output_format;
 mod request_thread;
 mod output_thread;
 mod validator_thread;
+#[cfg(test)] mod tests;
 
 fn main() {
     // Read the arguments in using the arg_parse module
