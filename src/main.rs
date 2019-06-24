@@ -241,7 +241,7 @@ fn add_dir_to_scan_queue(
         (global_opts.max_threads - 2) {
             // If there's enough headroom to boost the split then do so
             wordlist_split = (global_opts.max_threads - 2) / num_hosts;
-            println!(
+            info!(
                 "Increasing wordlist-split for initial scan of {} to {}",
                 dir_info.url,
                 wordlist_split);
