@@ -1,22 +1,25 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
-<xs:schema xmlns:xs = "http://www.w3.org/2001/XMLSchema">
-   <xs:element name = "dirble_scan">
-      <xs:complexType>
-          <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element name="file">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name = "status_code" type = "xs:int" />
-                        <xs:element name = "size" type = "xs:string" />
-                        <xs:element name = "is_directory" type = "xs:boolean" />
-                        <xs:element name = "is_listable" type = "xs:boolean" />
-                        <xs:element name = "found_from_listable" type = "xs:boolean" />
-                        <xs:element name = "redirect_url" type = "xs:string" />
-                    </xs:sequence>
-                    <xs:attribute name="url" type="xs:string" use="required" />
-                </xs:complexType>
-             </xs:element>
-         </xs:choice>
-      </xs:complexType>
-   </xs:element>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="dirble_scan">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="path" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+            <xs:simpleContent>
+              <xs:extension base="xs:string">
+                <xs:attribute type="xs:anyURI" name="url" />
+                <xs:attribute type="xs:int" name="code" />
+                <xs:attribute type="xs:int" name="content_len"/>
+                <xs:attribute type="xs:string" name="is_directory"/>
+                <xs:attribute type="xs:string" name="is_listable"/>
+                <xs:attribute type="xs:string" name="redirect_url"/>
+                <xs:attribute type="xs:string" name="found_from_listable"/>
+              </xs:extension>
+            </xs:simpleContent>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
+
+
