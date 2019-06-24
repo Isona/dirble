@@ -25,6 +25,10 @@ use crate::arg_parse;
 use crate::request;
 use crate::wordlist;
 use crate::validator_thread;
+use log::{
+    debug,
+    warn,
+};
 
 pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>, 
     output_tx: mpsc::Sender<request::RequestResponse>,
@@ -32,9 +36,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
 
     let hostname = uri_gen.hostname.clone();
 
-    if global_opts.verbose {
-        println!("Scanning {}", hostname);
-    }
+    debug!("Scanning {}", hostname);
 
     let mut easy = request::generate_easy(&global_opts);
 
@@ -79,7 +81,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
             if code == 0 {
                 consecutive_errors += 1;
                 if consecutive_errors >= global_opts.max_errors {
-                    println!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
+                    warn!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
                     break;
                 }
             }
@@ -94,9 +96,7 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
         }
     }
 
-    if global_opts.verbose {
-        println!("Finished scanning {}", hostname);
-    }
+    debug!("Finished scanning {}", hostname);
 
     // Send a message to the main thread so it knows the thread is done
     dir_tx.send(generate_end()).unwrap();

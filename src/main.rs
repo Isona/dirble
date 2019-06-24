@@ -21,6 +21,15 @@ use std::{
     thread,
     time::Duration,
 };
+use simplelog::TermLogger;
+use log::Level;
+#[allow(unused)] use log::{
+    trace,
+    debug,
+    info,
+    warn,
+    error,
+};
 #[macro_use]
 extern crate clap;
 extern crate curl;
@@ -37,6 +46,20 @@ mod validator_thread;
 fn main() {
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
+
+    // Prepare the logging handler
+    simplelog::CombinedLogger::init(vec![
+        TermLogger::new(
+            global_opts.log_level,
+            simplelog::Config {
+                time: Some(Level::Debug),
+                level: Some(Level::Error),
+                target: None,
+                location: None,
+                time_format: Some("%T"),
+            }
+        ).unwrap()
+    ]).unwrap();
 
     output::startup_text(global_opts.clone());
 
@@ -95,7 +118,7 @@ fn main() {
                                 );
                         }
                         else {
-                            println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                            info!("Skipping {}{}", dir_info.url, &validator.print_alert())
                         }
                     }
                     // If there is no validator, then scan the folder
@@ -150,7 +173,7 @@ fn main() {
                                     );
                             }
                             else {
-                                println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                                info!("Skipping {}{}", dir_info.url, &validator.print_alert())
                             }
                         }
                         // If there is no validator, then scan the folder

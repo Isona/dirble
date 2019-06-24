@@ -26,6 +26,7 @@ use crate::content_parse;
 use serde::{Serialize, Deserialize};
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
+use log::trace;
 
 pub struct Collector
 {
@@ -78,6 +79,7 @@ pub struct RequestResponse {
 // then it will return a RequestResponse struct
 pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse {
 
+    trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
 
