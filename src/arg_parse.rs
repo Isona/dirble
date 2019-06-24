@@ -20,6 +20,7 @@ use std::env::current_exe;
 use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
+use simplelog::LevelFilter;
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
@@ -40,8 +41,6 @@ pub struct GlobalOpts {
     pub output_file: Option<String>,
     pub json_file: Option<String>,
     pub xml_file: Option<String>,
-    pub verbose: bool,
-    pub silent: bool,
     pub timeout: u32,
     pub max_errors: u32,
     pub wordlist_split: u32,
@@ -55,7 +54,48 @@ pub struct GlobalOpts {
     pub no_color:bool,
     pub disable_validator:bool,
     pub http_verb:HttpVerb,
-    pub scan_opts: ScanOpts
+    pub scan_opts: ScanOpts,
+    pub log_level: LevelFilter,
+    pub length_blacklist: LengthRanges,
+}
+
+#[derive(Debug)]
+pub struct LengthRange {
+    pub start: u32,
+    pub end: Option<u32>,
+}
+
+impl LengthRange {
+    pub fn contains(&self, test: u32) -> bool {
+        if let Some(end) = self.end {
+            return self.start <= test && test <= end;
+        } else {
+            return test == self.start;
+        }
+    }
+}
+
+pub struct LengthRanges {
+    pub ranges: Vec<LengthRange>,
+}
+
+impl LengthRanges {
+    pub fn contain(&self, test: u32) -> bool {
+        for range in &self.ranges {
+            if range.contains(test) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl Default for LengthRanges {
+    fn default() -> Self {
+        Self {
+            ranges: Vec::new(),
+        }
+    }
 }
 
 pub struct ScanOpts {
@@ -380,8 +420,9 @@ no value must end in a semicolon")
         .arg(Arg::with_name("verbose")
              .display_order(100)
              .help(
-"Print information when a thread starts and finishes scanning")
+"Increase the verbosity level. Use twice for even more")
              .long("verbose")
+             .multiple(true)
              .next_line_help(true)
              .short("v")
              .takes_value(false))
@@ -389,7 +430,7 @@ no value must end in a semicolon")
              .display_order(100)
              .help(
 "Don't output information during the scan, only output the report at
-the end")
+the end. Overrides Verbose.")
              .long("silent")
              .next_line_help(true)
              .short("S")
@@ -467,6 +508,15 @@ set to 0 to disable")
              .help("Disable coloring of terminal output")
              .long("no-color")
              .next_line_help(true))
+        .arg(Arg::with_name("length_blacklist")
+             .help(
+"Specify length ranges to hide, e.g. --hide-lengths 348,500-700")
+             .long("hide-lengths")
+             .min_values(1)
+             .multiple(true)
+             .next_line_help(true)
+             .takes_value(true)
+             .value_delimiter(","))
         .get_matches();
 
     
@@ -600,6 +650,18 @@ set to 0 to disable")
         scan_opts.scan_403 = true;
     }
 
+    // Configure the logging level. The silent flag overrides any
+    // verbose flags in use.
+    let log_level = if args.is_present("silent") {
+        LevelFilter::Warn
+    } else {
+        match args.occurrences_of("verbose") {
+            0 => LevelFilter::Info,
+            1 => LevelFilter::Debug,
+            2 | _ => LevelFilter::Trace,
+        }
+    };
+
     // Create the GlobalOpts struct and return it
     GlobalOpts {
         hostnames,
@@ -635,8 +697,6 @@ set to 0 to disable")
         output_file: filename_from_args(&args, "txt"),
         json_file: filename_from_args(&args, "json"),
         xml_file: filename_from_args(&args, "xml"),
-        verbose: args.is_present("verbose"),
-        silent: args.is_present("silent"),
         timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
         max_errors:
             args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
@@ -652,7 +712,11 @@ set to 0 to disable")
         no_color: args.is_present("no_color"),
         disable_validator: args.is_present("disable_validator"),
         http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
-        scan_opts
+        scan_opts,
+        log_level,
+        length_blacklist: if args.is_present("length_blacklist") {
+            length_blacklist_parse(args.values_of("length_blacklist").unwrap())
+        } else { Default::default() },
     }
 }
 
@@ -768,4 +832,34 @@ fn int_check(value: String) -> Result<(), String> {
         Err(_) => {},
     };
     return Err(String::from("The number given must be an integer."))
+}
+
+fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
+    let mut length_vector: Vec<LengthRange> = Vec::with_capacity(
+        blacklist_inputs.len());
+
+    for length in blacklist_inputs {
+        let start;
+        let end;
+
+        if length.contains("-") {
+            let components: Vec<&str> = length.split("-").collect();
+            assert!(components.len() == 2,
+                "Ranges must be in the form `150-300`");
+            start = components[0].parse::<u32>().unwrap();
+            end = Some(components[1].parse::<u32>().expect(
+                "Ranges must be in the form `150-300`"));
+            assert!(start < end.unwrap(),
+                "The start of a range must be smaller than the end");
+        } else {
+            // Length is just one number
+            start = length.parse::<u32>().unwrap();
+            end = None;
+        }
+        length_vector.push(
+            LengthRange { start, end });
+    }
+    LengthRanges{
+        ranges: length_vector,
+    }
 }

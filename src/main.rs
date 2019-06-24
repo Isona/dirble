@@ -21,6 +21,15 @@ use std::{
     thread,
     time::Duration,
 };
+use simplelog::TermLogger;
+use log::Level;
+#[allow(unused)] use log::{
+    trace,
+    debug,
+    info,
+    warn,
+    error,
+};
 #[macro_use]
 extern crate clap;
 extern crate curl;
@@ -33,10 +42,25 @@ mod output_format;
 mod request_thread;
 mod output_thread;
 mod validator_thread;
+#[cfg(test)] mod tests;
 
 fn main() {
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
+
+    // Prepare the logging handler
+    simplelog::CombinedLogger::init(vec![
+        TermLogger::new(
+            global_opts.log_level,
+            simplelog::Config {
+                time: Some(Level::Debug),
+                level: Some(Level::Error),
+                target: None,
+                location: None,
+                time_format: Some("%T"),
+            }
+        ).unwrap()
+    ]).unwrap();
 
     output::startup_text(global_opts.clone());
 
@@ -86,17 +110,27 @@ fn main() {
                 match &dir_info.validator {
                     Some(validator) => {
                         if validator.scan_folder(&global_opts.scan_opts) {
-                            add_dir_to_scan_queue(&mut scan_queue, &global_opts,
-                                                  &dir_info, &wordlist); 
+                            add_dir_to_scan_queue(
+                                &mut scan_queue,
+                                &global_opts,
+                                &dir_info,
+                                &wordlist,
+                                true,
+                                );
                         }
                         else {
-                            println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                            info!("Skipping {}{}", dir_info.url, &validator.print_alert())
                         }
                     }
                     // If there is no validator, then scan the folder
                     None => {
-                        add_dir_to_scan_queue(&mut scan_queue, &global_opts,
-                                              &dir_info, &wordlist); 
+                        add_dir_to_scan_queue(
+                            &mut scan_queue,
+                            &global_opts,
+                            &dir_info,
+                            &wordlist,
+                            true,
+                            );
                     }
                 }
             }
@@ -131,17 +165,27 @@ fn main() {
                     match &dir_info.validator {
                         Some(validator) => {
                             if validator.scan_folder(&global_opts.scan_opts){
-                                add_dir_to_scan_queue(&mut scan_queue, &global_opts,
-                                                      &dir_info, &wordlist);
+                                add_dir_to_scan_queue(
+                                    &mut scan_queue,
+                                    &global_opts,
+                                    &dir_info,
+                                    &wordlist,
+                                    false,
+                                    );
                             }
                             else {
-                                println!("Skipping {}{}", dir_info.url, &validator.print_alert())
+                                info!("Skipping {}{}", dir_info.url, &validator.print_alert())
                             }
                         }
                         // If there is no validator, then scan the folder
                         None => {
-                            add_dir_to_scan_queue(&mut scan_queue, &global_opts,
-                                                 &dir_info, &wordlist);
+                            add_dir_to_scan_queue(
+                                &mut scan_queue,
+                                &global_opts,
+                                &dir_info,
+                                &wordlist,
+                                false,
+                                );
                         }
                     }
                 }
@@ -181,13 +225,34 @@ fn main() {
 }
 
 #[inline]
-fn add_dir_to_scan_queue(scan_queue: &mut VecDeque<wordlist::UriGenerator>,
-                         global_opts: &Arc<arg_parse::GlobalOpts>, 
-                         dir_info: &validator_thread::DirectoryInfo,
-                         wordlist: &Arc<Vec<String>>) {
+fn add_dir_to_scan_queue(
+    scan_queue: &mut VecDeque<wordlist::UriGenerator>,
+    global_opts: &Arc<arg_parse::GlobalOpts>,
+    dir_info: &validator_thread::DirectoryInfo,
+    wordlist: &Arc<Vec<String>>,
+    first_run: bool) {
+
+    // first_run is true when the initial scans are being initialised
+    // on the base paths. We override the default wordlist_split to
+    // improve performance of the initial discovery phase.
+    let num_hosts = global_opts.hostnames.len() as u32;
+    let wordlist_split;
+    if first_run && (global_opts.wordlist_split * num_hosts) <
+        (global_opts.max_threads - 2) {
+            // If there's enough headroom to boost the split then do so
+            wordlist_split = (global_opts.max_threads - 2) / num_hosts;
+            println!(
+                "Increasing wordlist-split for initial scan of {} to {}",
+                dir_info.url,
+                wordlist_split);
+        }
+    else {
+        wordlist_split = global_opts.wordlist_split;
+    }
+
     for prefix in &global_opts.prefixes {
         for extension in &global_opts.extensions {
-            for start_index in 0..global_opts.wordlist_split {
+            for start_index in 0..wordlist_split {
                 scan_queue.push_back(
                     wordlist::UriGenerator::new(
                         dir_info.url.clone(),
@@ -195,7 +260,7 @@ fn add_dir_to_scan_queue(scan_queue: &mut VecDeque<wordlist::UriGenerator>,
                         String::from(extension.clone()),
                         wordlist.clone(),
                         start_index,
-                        global_opts.wordlist_split,
+                        wordlist_split,
                         dir_info.parent_depth,
                         dir_info.validator.clone()
                     )

@@ -17,6 +17,8 @@
 
 use crate::request::RequestResponse;
 use colored::*;
+use serde_json;
+use simple_xml_serialize::XMLElement;
 
 #[cfg(test)]
 mod tests;
@@ -56,7 +58,7 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
 
 #[inline]
 pub fn output_letter(response: &RequestResponse) -> String {
-    if response.is_directory && response.is_listable { String::from("L ") }
+    if response.is_directory && response.is_listable { "L ".bold().to_string() }
     else if response.is_directory { String:: from("D ") }
     else if response.found_from_listable { String::from("~ ") }
     else { String::from("+ ") }
@@ -95,40 +97,10 @@ pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
 
 #[inline]
 pub fn output_xml(response: &RequestResponse) -> String {
-    format!("<file url=\"{}\">
-    <status_code>{}</status_code>
-    <size>{}</size>
-    <is_directory>{}</is_directory>
-    <is_listable>{}</is_listable>
-    <found_from_listable>{}</found_from_listable>
-    <redirect_url>{}</redirect_url>
-</file>\n", 
-    response.url,
-    response.code,
-    response.content_len,
-    response.is_directory,
-    response.is_listable,
-    response.found_from_listable,
-    response.redirect_url)
+    format!("{}\n", XMLElement::from(response).to_string())
 }
 
 #[inline]
 pub fn output_json(response: &RequestResponse) -> String {
-
-    format!("{{\
-        \"url\": \"{}\", \
-        \"code\": {}, \
-        \"size\": {}, \
-        \"is_directory\": {}, \
-        \"is_listable\": {}, \
-        \"found_from_listable\": {}, \
-        \"redirect_url\": \"{}\"\
-        }}",
-        response.url,
-        response.code,
-        response.content_len,
-        response.is_directory,
-        response.is_listable,
-        response.found_from_listable,
-        response.redirect_url)
+    serde_json::to_string(response).unwrap()
 }

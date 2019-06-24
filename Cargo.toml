@@ -15,6 +15,13 @@ encoding = "0.2.33"
 atty = "0.2.11"
 colored = "1.7"
 rand = "0.6.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_test = "1.0"
+simple_xml_serialize = "0.2.1"
+simple_xml_serialize_macro = "0.2.1"
+log = "0.4.6"
+simplelog = "0.5.0"
 
 [build-dependencies]
 vergen = "3"

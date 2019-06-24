@@ -20,6 +20,8 @@
 // relies on the indented string having the correct number of leading
 // spaces.
 
+use serde_test::{Token, assert_tokens};
+
 #[test]
 fn check_output_indentation() {
     //   super::output_indentation produces a number of spaces based on
@@ -176,15 +178,15 @@ fn check_output_xml() {
     // produced by the XML formatter.
     assert_eq!(
         super::output_xml(&req_response),
-        "<file url=\"http://example.com\">
-    <status_code>204</status_code>
-    <size>345</size>
-    <is_directory>false</is_directory>
-    <is_listable>false</is_listable>
-    <found_from_listable>true</found_from_listable>
-    <redirect_url>https://example.org</redirect_url>
-</file>
-",
+        "<path \
+            url=\"http://example.com\" \
+            code=\"204\" \
+            content_len=\"345\" \
+            is_directory=\"false\" \
+            is_listable=\"false\" \
+            redirect_url=\"https://example.org\" \
+            found_from_listable=\"true\"\
+        />\n",
         "XML format invalid");
 }
 
@@ -199,25 +201,37 @@ fn check_output_json() {
         content_len: 350,
         is_directory: false,
         is_listable: true,
-        found_from_listable: false,
         redirect_url: "https://example.org".into(),
+        found_from_listable: false,
         parent_depth: 0
     };
-    let json = super::output_json(&req_response);
 
-    assert_eq!(
-        json,
-        "{\
-        \"url\": \"http://example.com\", \
-            \"code\": 200, \
-            \"size\": 350, \
-            \"is_directory\": false, \
-            \"is_listable\": true, \
-            \"found_from_listable\": false, \
-            \"redirect_url\": \"https://example.org\"\
-            }\
-            ",
-            "JSON output appears invalid!");
+    assert_tokens(&req_response, &[
+                  Token::Struct{ len: 7, name: "RequestResponse" },
+
+                  Token::String("url"),
+                  Token::String("http://example.com"),
+
+                  Token::String("code"),
+                  Token::U32(200),
+
+                  Token::String("size"),
+                  Token::U64(350),
+
+                  Token::String("is_directory"),
+                  Token::Bool(false),
+
+                  Token::String("is_listable"),
+                  Token::Bool(true),
+
+                  Token::String("redirect_url"),
+                  Token::String("https://example.org"),
+
+                  Token::String("found_from_listable"),
+                  Token::Bool(false),
+
+                  Token::StructEnd,
+    ]);
 }
 
 #[inline]

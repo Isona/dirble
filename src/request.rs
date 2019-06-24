@@ -23,6 +23,10 @@ use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use crate::content_parse;
+use serde::{Serialize, Deserialize};
+use simple_xml_serialize::XMLElement;
+use simple_xml_serialize_macro::xml_element;
+use log::trace;
 
 pub struct Collector
 {
@@ -48,15 +52,25 @@ impl Handler for Collector {
 
 // Struct which contains information about a response
 // This is sent back to the main thread
-#[derive(Clone)]
+#[xml_element("path")]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct RequestResponse {
+#[sxs_type_attr]
     pub url: String,
+#[sxs_type_attr]
     pub code: u32,
+#[sxs_type_attr]
+#[serde(rename = "size")]
     pub content_len: usize,
+#[sxs_type_attr]
     pub is_directory: bool,
+#[sxs_type_attr]
     pub is_listable: bool,
+#[sxs_type_attr]
     pub redirect_url: String,
+#[sxs_type_attr]
     pub found_from_listable: bool,
+#[serde(skip)]
     pub parent_depth: u32
 }
 
@@ -65,6 +79,7 @@ pub struct RequestResponse {
 // then it will return a RequestResponse struct
 pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse {
 
+    trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
 

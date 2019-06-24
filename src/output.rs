@@ -24,6 +24,7 @@ use crate::output_format;
 use std::error::Error;
 use std::io::{LineWriter, Write};
 use clap::crate_version;
+use simplelog::LevelFilter;
 
 // Struct giving access to each current file handle
 // Will be extended in future with handles for different formats
@@ -56,7 +57,7 @@ pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>,
 pub fn print_report(responses: Vec<RequestResponse>, global_opts: Arc<GlobalOpts>, file_handles: FileHandles) {
     let responses = sort_responses(responses);
 
-    if (!global_opts.silent || global_opts.verbose) && global_opts.is_terminal {
+    if global_opts.log_level >= LevelFilter::Info && global_opts.is_terminal {
         println!("\n");
     }
 
