@@ -9,6 +9,9 @@ targets = x86_64-unknown-linux-gnu \
 #		  ^ Potential bug in cross, openssl does not compile for wasm for some
 #		  reason.
 
+cargo_flags = --release \
+			  --features release_version_string
+
 # Get the version string out of the Cargo.toml by taking the second field
 # (delimited by double quotes) of the 'version = "x.y.z"' line
 version=$(shell awk -F'"' '/version/ {print $$2}' Cargo.toml)
@@ -54,40 +57,32 @@ release : $(targets) dirble_wordlist.txt
 	rm -rfv release
 	mv dirble release
 
-mac : x86_64-apple-darwin i686-apple-darwin dirble_wordlist.txt
+mac : x86_64-apple-darwin dirble_wordlist.txt
 	mkdir -p dirble/extensions
 	cp dirble_wordlist.txt dirble/
 	cp wordlists/* dirble/extensions
 	cp target/x86_64-apple-darwin/release/dirble dirble/dirble
-	cp target/i686-apple-darwin/release/dirble dirble/dirble32
 	zip dirble/${filename}-x86_64-apple-darwin.zip \
 		dirble/dirble \
-		dirble/dirble_wordlist.txt \
-		dirble/extensions/*
-	zip dirble/${filename}-i686-apple-darwin.zip \
-		dirble/dirble32 \
 		dirble/dirble_wordlist.txt \
 		dirble/extensions/*
 	rm -rfv release
 	mv dirble release
 
 x86_64-unknown-linux-gnu : 
-	cross build --release --target x86_64-unknown-linux-gnu
+	cross build $(cargo_flags) --target x86_64-unknown-linux-gnu
 
 i686-unknown-linux-gnu :
-	cross build --release --target i686-unknown-linux-gnu
+	cross build $(cargo_flags) --target i686-unknown-linux-gnu
 
 x86_64-pc-windows-gnu :
-	cross build --release --target x86_64-pc-windows-gnu
+	cross build $(cargo_flags) --target x86_64-pc-windows-gnu
 
 i686-pc-windows-gnu :
-	cross build --release --target i686-pc-windows-gnu
+	cross build $(cargo_flags) --target i686-pc-windows-gnu
 
 x86_64-apple-darwin :
-	cargo build --release --target x86_64-apple-darwin
-
-i686-apple-darwin :
-	cargo build --release --target i686-apple-darwin
+	cargo build $(cargo_flags) --target x86_64-apple-darwin
 
 #wasm32-unknown-emscripten :
 #	cross build --release --target wasm32-unknown-emscripten

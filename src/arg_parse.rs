@@ -113,9 +113,25 @@ arg_enum!{
 
 pub fn get_args() -> GlobalOpts
 {
+    // For general compilation, include the current commit hash and
+    // build date in the version string. When building releases via the
+    // Makefile, only use the release number.
+    let version_string =
+        if cfg!(feature = "release_version_string") {
+            crate_version!()
+        }
+        else {
+            concat!(
+                env!("VERGEN_SEMVER"),
+                " (commit ",
+                env!("VERGEN_SHA_SHORT"),
+                ", build ",
+                env!("VERGEN_BUILD_DATE"),
+                ")")
+        };
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
-        .version(crate_version!())
+        .version(version_string)
         .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
         .about("Fast directory scanning and scraping tool")
         .after_help("OUTPUT FORMAT:
