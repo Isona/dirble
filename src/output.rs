@@ -19,11 +19,10 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 use crate::request::RequestResponse;
-use crate::arg_parse::GlobalOpts;
+use crate::arg_parse::{GlobalOpts, get_version_string};
 use crate::output_format;
 use std::error::Error;
 use std::io::{LineWriter, Write};
-use clap::crate_version;
 use simplelog::LevelFilter;
 
 // Struct giving access to each current file handle
@@ -187,7 +186,7 @@ fn generate_handle(filename: &String) -> Option<LineWriter<File>>
 pub fn startup_text(global_opts: Arc<GlobalOpts>) {
     if !global_opts.is_terminal { return }
 
-    println!("Dirble {}", crate_version!());
+    println!("Dirble {}", get_version_string());
     println!("Developed by Izzy Whistlecroft\n");
 
     println!("Targets: {}", global_opts.hostnames.clone().join(" "));

@@ -116,19 +116,7 @@ pub fn get_args() -> GlobalOpts
     // For general compilation, include the current commit hash and
     // build date in the version string. When building releases via the
     // Makefile, only use the release number.
-    let version_string =
-        if cfg!(feature = "release_version_string") {
-            crate_version!()
-        }
-        else {
-            concat!(
-                env!("VERGEN_SEMVER"),
-                " (commit ",
-                env!("VERGEN_SHA_SHORT"),
-                ", build ",
-                env!("VERGEN_BUILD_DATE"),
-                ")")
-        };
+    let version_string = get_version_string();
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
         .version(version_string)
@@ -795,6 +783,22 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str)
         modifiers.dedup();
 
         modifiers
+}
+
+#[inline]
+pub fn get_version_string() -> &'static str {
+    if cfg!(feature = "release_version_string") {
+        return crate_version!()
+    }
+    else {
+        return concat!(
+            env!("VERGEN_SEMVER"),
+            " (commit ",
+            env!("VERGEN_SHA_SHORT"),
+            ", build ",
+            env!("VERGEN_BUILD_DATE"),
+            ")")
+    }
 }
 
 // Validator for the provided host name, ensures that the value begins with http:// or https://
