@@ -420,7 +420,7 @@ no value must end in a semicolon")
         .arg(Arg::with_name("verbose")
              .display_order(100)
              .help(
-"Increase the verbosity level. Use twice for even more")
+"Increase the verbosity level. Use twice for full verbosity.")
              .long("verbose")
              .multiple(true)
              .next_line_help(true)
