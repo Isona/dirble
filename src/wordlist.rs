@@ -89,7 +89,7 @@ impl Iterator for UriGenerator {
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file(filename: String) -> Vec<String>
+pub fn lines_from_file(filename: &String) -> Vec<String>
 {
     let mut file = File::open(filename.clone())
         .unwrap_or_else(|error| { error!("Opening file \"{}\" failed: {}", filename, error); exit(2);});

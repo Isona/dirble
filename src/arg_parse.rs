@@ -16,7 +16,6 @@
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 extern crate clap;
 use std::process::exit;
-use std::env::current_exe;
 use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
@@ -24,7 +23,7 @@ use simplelog::LevelFilter;
 
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
-    pub wordlist_files: Vec<String>,
+    pub wordlist_files: Option<Vec<String>>,
     pub prefixes: Vec<String>,
     pub extensions: Vec<String>,
     pub max_threads: u32,
@@ -518,7 +517,7 @@ set to 0 to disable")
     }
     if args.is_present("host_file") {
         for host_file in args.values_of("host_file").unwrap() {
-            let hosts = lines_from_file(String::from(host_file));
+            let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
                 if hostname.starts_with("https://") || hostname.starts_with("http://") { 
                     hostnames.push(String::from(hostname));
@@ -544,19 +543,19 @@ set to 0 to disable")
     hostnames.dedup();
 
     // Parse wordlist file names into a vector
-    let mut wordlists:Vec<String> = Vec::new();
+    let mut wordlists:Option<Vec<String>>;
 
     if args.is_present("wordlist") {
+        let mut wordlists_vec = Vec::new();
         for wordlist_file in args.values_of("wordlist").unwrap() {
-            wordlists.push(String::from(wordlist_file));
+            wordlists_vec.push(String::from(wordlist_file));
         }
+        wordlists = Some(wordlists_vec);
     }
     else {
-        let mut exe_path = current_exe()
-            .unwrap_or_else(|error| { println!("Getting directory of exe failed: {}", error); exit(2);});
-        exe_path.set_file_name("dirble_wordlist.txt");
-        wordlists.push(String::from(exe_path.to_str().unwrap()));
+        wordlists = None;
     }
+
 
 
     // Check for proxy related flags
@@ -773,7 +772,7 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str)
         }
         if args.is_present(&file_arg) {
             for filename in args.values_of(file_arg).unwrap() {
-                for modifier in lines_from_file(String::from(filename)) {
+                for modifier in lines_from_file(&String::from(filename)) {
                     modifiers.push(String::from(modifier));
                 }
             }
