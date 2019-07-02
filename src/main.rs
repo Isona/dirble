@@ -20,6 +20,8 @@ use std::{
     sync::{Arc, mpsc::{self, Sender, Receiver}},
     thread,
     time::Duration,
+    path::Path,
+    env::current_exe,
 };
 use simplelog::TermLogger;
 use log::Level;
@@ -62,13 +64,60 @@ fn main() {
         ).unwrap()
     ]).unwrap();
 
-    output::startup_text(global_opts.clone());
-
-    // Get the wordlist file from the arguments and open it
+    // Get the wordlist file from the arguments. If it has not been set
+    // then try the default wordlist locations.
     let mut wordlist:Vec<String> = Vec::new();
-    for wordlist_file in global_opts.wordlist_files.clone() {
-        wordlist.append(&mut wordlist::lines_from_file(wordlist_file));
+    let wordlist_string: String;
+    if let Some(wordlist_files) = global_opts.wordlist_files.clone() {
+        // A wordlist has been set in the global opts
+        for wordlist_file in wordlist_files {
+            wordlist.append(&mut wordlist::lines_from_file(&wordlist_file));
+        }
+        wordlist_string = "".into();
     }
+    else {
+        // Otherwise try the directory containing the exe, then
+        // /usr/share/dirble, then /usr/share/wordlists, then finally
+        // /usr/share/wordlists/dirble before giving up.
+        let mut exe_path = current_exe()
+            .unwrap_or_else(|error| {
+                println!("Getting directory of exe failed: {}", error);
+                std::process::exit(2);
+            });
+        exe_path.set_file_name("dirble_wordlist.txt");
+        let usr_share_dirble = Path::new(
+            "/usr/share/dirble/dirble_wordlist.txt");
+        let usr_share_wordlists = Path::new(
+            "/usr/share/wordlists/dirble_wordlist.txt");
+        let usr_share_wordlists_dirble = Path::new(
+            "/usr/share/wordlists/dirble/dirble_wordlist.txt");
+
+        debug!("Checking for wordlist in:\n - {}\n - {}\n - {}\n - {}",
+               exe_path.to_str().unwrap(),
+               usr_share_dirble.to_str().unwrap(),
+               usr_share_wordlists.to_str().unwrap(),
+               usr_share_wordlists_dirble.to_str().unwrap(),
+               );
+        let wordlist_file = if exe_path.exists() {
+            // Prioritise the wordlist in the same directory as the exe
+            String::from(exe_path.to_str().unwrap())
+        }
+        else if usr_share_dirble.exists() {
+            String::from(usr_share_dirble.to_str().unwrap())
+        }
+        else if usr_share_wordlists.exists() {
+            String::from(usr_share_wordlists.to_str().unwrap())
+        }
+        else {
+            error!("Unable to find default wordlist");
+            std::process::exit(1);
+        };
+        wordlist.append(&mut wordlist::lines_from_file(&wordlist_file));
+        wordlist_string = wordlist_file;
+    }
+
+    output::startup_text(global_opts.clone(), &wordlist_string);
+
     wordlist.sort();
     wordlist.dedup();
     

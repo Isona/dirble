@@ -183,14 +183,19 @@ fn generate_handle(filename: &String) -> Option<LineWriter<File>>
 }
 
 // Prints out start up information
-pub fn startup_text(global_opts: Arc<GlobalOpts>) {
+pub fn startup_text(global_opts: Arc<GlobalOpts>, wordlist_file: &String) {
     if !global_opts.is_terminal { return }
 
     println!("Dirble {}", get_version_string());
     println!("Developed by Izzy Whistlecroft\n");
 
     println!("Targets: {}", global_opts.hostnames.clone().join(" "));
-    println!("Wordlists: {}", global_opts.wordlist_files.clone().join(" "));
+    if let Some(globalopts_wordlists) = global_opts.wordlist_files.clone() {
+        println!("Wordlists: {}", globalopts_wordlists.join(" "));
+    }
+    else {
+        println!("Wordlist: {}", wordlist_file);
+    }
 
     if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
         println!("No Prefixes");
