@@ -118,9 +118,20 @@ fn main() {
 
     output::startup_text(global_opts.clone(), &wordlist_string);
 
+    // Remove leading and trailing slashes from words
+    for i in 0..wordlist.len() {
+        if wordlist[i].starts_with("/") {
+            wordlist[i].remove(0);
+        }
+
+        if wordlist[i].ends_with("/") {
+            wordlist[i].pop();
+        }
+    }
+
     wordlist.sort();
     wordlist.dedup();
-    
+
     let wordlist = Arc::new(wordlist);
 
 
