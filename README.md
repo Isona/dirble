@@ -34,26 +34,22 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 
 # Features
 
-|                                  | Dirble | Dirb | Dirsearch | Gobuster |
-|----------------------------------|:------:|:----:|:---------:|:--------:|
-| Cookies                          |    ✅   |   ✅  |     ✅     |     ❌    |
-| Custom headers                   |    ✅   |   ✅  |     ✅     |     ❌    |
-| Extensions                       |    ✅   |   ✅  |     ✅     |     ✅    |
-| HTTP basic auth                  |    ✅   |   ✅  |     ❌     |     ✅    |
-| Listable directory optimisation  |    ✅   |   ✅  |     ❌     |     ❌    |
-| Listable directory scraping      |    ✅   |   ❌  |     ❌     |     ❌    |
-| Output file                      |    ✅   |   ✅  |     ✅     |     ✅    |
-| Proxy                            |    ✅   |   ✅  |     ✅     |     ✅    |
-| Recursion                        |    ✅   |   ✅  |     ✅     |     ❌    |
-| Speed                            |    ✅   |   ✅  |     ❌     |     ✅    |
-| Status code blacklisting         |    ✅   |   ✅  |     ✅     |     ❌    |
-| Status code whitelisting         |    ✅   |   ❌  |     ❌     |     ✅    |
-| Threading                        |    ✅   |   ❌  |     ✅     |     ✅    |
-| Throttle                         |    ✅   |   ✅  |     ✅     |     ❌    |
-| Tune not found based on size/redirection |    ✅   |   ✅  |     ❌     |     ❌    |
-| URL list                         |    ✅   |   ❌  |     ✅     |     ❌    |
-| User agents                      |    ✅   |   ✅  |     ✅     |     ✅    |
-| Use different HTTP Verbs to scan |    ✅   |   ❌  |     ✅     |     ❌    |
+* Cookies
+* Custom Headers
+* Extensions and prefixes
+* HTTP basic auth
+* Listable directory detection and scraping
+* Save ouptut to file
+* Save output in XML and JSON formats
+* Proxy support
+* Recursion
+* Status code blacklisting and whitelisting
+* Threading
+* Request throttling
+* Detect not found code of each directory based on response code and length
+* Ability to provide list of URLs to be scanned
+* User agents
+* Scanning with GET, POST or HEAD requests
 
 # Performance
 
