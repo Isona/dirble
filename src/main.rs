@@ -23,7 +23,10 @@ use std::{
     path::Path,
     env::current_exe,
 };
-use simplelog::TermLogger;
+use simplelog::{
+    SimpleLogger,
+    TermLogger,
+};
 use log::Level;
 #[allow(unused)] use log::{
     trace,
@@ -50,19 +53,28 @@ fn main() {
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
 
-    // Prepare the logging handler
-    simplelog::CombinedLogger::init(vec![
-        TermLogger::new(
-            global_opts.log_level,
-            simplelog::Config {
-                time: Some(Level::Debug),
-                level: Some(Level::Error),
-                target: None,
-                location: None,
-                time_format: Some("%T"),
-            }
-        ).unwrap()
-    ]).unwrap();
+    // Prepare the logging handler. Default to a pretty TermLogger,
+    // but if the TermLogger initialisation fails (e.g. if we are not
+    // connected to a TTY) then set up a SimpleLogger instead.
+    let log_config = simplelog::Config {
+        time: Some(Level::Debug),
+        level: Some(Level::Error),
+        target: None,
+        location: None,
+        time_format: Some("%T"),
+    };
+    match TermLogger::init(
+        global_opts.log_level,
+        log_config,
+        ) {
+        Err(_) => {
+            SimpleLogger::init(
+                global_opts.log_level,
+                log_config,
+                ).unwrap();
+        },
+        Ok(_) => (),
+    }
 
     // Get the wordlist file from the arguments. If it has not been set
     // then try the default wordlist locations.
