@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.0 - 2019-07-05
+
+### Added
+* Add ability to do scans using HEAD and POST requests
+* Directories which return 401 and 403 codes are no longer scanned by default
+* Not found detection now can detect response lengths that vary by the URL length
+* Added dockerfile to git repository
+* Commit hashes are now displayed with the version number in local builds
+
+### Changed
+* Wordlist items now have a leading and trailing slash removed
+* Default wordlist location checks have been improved
+* SimpleLog crate now used to print additional scanning information
+* Silent and verbose flags now affect logging level
+* Output for listable directories now has a bold L
+* Wordlist splitting of initial URLs is increased
+
+### Fixed
+* Disable recursion flag now works as intended
+* Validator always defaulting to 404
+
 ## 1.3.1 - 2019-05-01
 
 ### Changed
