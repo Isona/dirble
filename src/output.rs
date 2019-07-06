@@ -210,5 +210,12 @@ pub fn startup_text(global_opts: Arc<GlobalOpts>, wordlist_file: &String) {
     else {
         println!("Extensions: {}", global_opts.extensions.clone()[1..].join(" "));
     }
+
+    if global_opts.length_blacklist.is_empty() {
+        println!("No lengths hidden");
+    }
+    else {
+        println!("Hidden lengths: {}", global_opts.length_blacklist);
+    }
     println!("");
 }

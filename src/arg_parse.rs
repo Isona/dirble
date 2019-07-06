@@ -15,7 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 extern crate clap;
-use std::process::exit;
+use std::{
+    fmt,
+    process::exit,
+};
 use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
@@ -58,14 +61,14 @@ pub struct GlobalOpts {
     pub length_blacklist: LengthRanges,
 }
 
-#[derive(Debug)]
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
 pub struct LengthRange {
-    pub start: u32,
-    pub end: Option<u32>,
+    pub start: usize,
+    pub end: Option<usize>,
 }
 
 impl LengthRange {
-    pub fn contains(&self, test: u32) -> bool {
+    pub fn contains(&self, test: usize) -> bool {
         if let Some(end) = self.end {
             return self.start <= test && test <= end;
         } else {
@@ -74,18 +77,35 @@ impl LengthRange {
     }
 }
 
+impl fmt::Debug for LengthRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let output: String;
+        if let Some(end) = self.end {
+            output = format!("{}-{}", self.start, end);
+        }
+        else{
+            output = format!("{}", self.start);
+        }
+        write!(f, "{}", output)
+    }
+}
+
 pub struct LengthRanges {
     pub ranges: Vec<LengthRange>,
 }
 
 impl LengthRanges {
-    pub fn contain(&self, test: u32) -> bool {
+    pub fn contains(&self, test: usize) -> bool {
         for range in &self.ranges {
             if range.contains(test) {
                 return true;
             }
         }
         false
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.ranges.is_empty()
     }
 }
 
@@ -94,6 +114,14 @@ impl Default for LengthRanges {
         Self {
             ranges: Vec::new(),
         }
+    }
+}
+
+impl fmt::Display for LengthRanges {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut ranges = self.ranges.clone();
+        ranges.sort();
+        write!(f, "{:?}", ranges)
     }
 }
 
@@ -850,14 +878,14 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
             let components: Vec<&str> = length.split("-").collect();
             assert!(components.len() == 2,
                 "Ranges must be in the form `150-300`");
-            start = components[0].parse::<u32>().unwrap();
-            end = Some(components[1].parse::<u32>().expect(
+            start = components[0].parse::<usize>().unwrap();
+            end = Some(components[1].parse::<usize>().expect(
                 "Ranges must be in the form `150-300`"));
             assert!(start < end.unwrap(),
                 "The start of a range must be smaller than the end");
         } else {
             // Length is just one number
-            start = length.parse::<u32>().unwrap();
+            start = length.parse::<usize>().unwrap();
             end = None;
         }
         length_vector.push(
