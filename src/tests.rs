@@ -33,7 +33,7 @@ fn argparse_length_range_contains() {
 fn argparse_length_ranges_contain() {
     // Empty range
     let ranges: crate::arg_parse::LengthRanges = Default::default();
-    assert!(!ranges.contain(4));
+    assert!(!ranges.contains(4));
 
     // Non-overlapping ranges
     let ranges = crate::arg_parse::LengthRanges {
@@ -48,13 +48,13 @@ fn argparse_length_ranges_contain() {
             },
         ]};
     // too small
-    assert!(!ranges.contain(3));
+    assert!(!ranges.contains(3));
     // in first range
-    assert!(ranges.contain(4));
+    assert!(ranges.contains(4));
     // in between
-    assert!(!ranges.contain(11));
+    assert!(!ranges.contains(11));
     //in second range
-    assert!(ranges.contain(18));
+    assert!(ranges.contains(18));
     // too large
-    assert!(!ranges.contain(19));
+    assert!(!ranges.contains(19));
 }
