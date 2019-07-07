@@ -543,7 +543,7 @@ set to 0 to disable")
     hostnames.dedup();
 
     // Parse wordlist file names into a vector
-    let mut wordlists:Option<Vec<String>>;
+    let wordlists:Option<Vec<String>>;
 
     if args.is_present("wordlist") {
         let mut wordlists_vec = Vec::new();

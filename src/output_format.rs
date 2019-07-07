@@ -76,10 +76,10 @@ pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
     let mut code_string:String = format!{"{}", response.code};
     if color {
         code_string = match response.code {
-            200...299 => { code_string.green().to_string() }
-            300...399 => { code_string.cyan().to_string() }
-            400...499 => { code_string.red().to_string() }
-            500...599 => { code_string.yellow().to_string() }
+            200..=299 => { code_string.green().to_string() }
+            300..=399 => { code_string.cyan().to_string() }
+            400..=499 => { code_string.red().to_string() }
+            500..=599 => { code_string.yellow().to_string() }
             _ => { code_string }
         }
     }
