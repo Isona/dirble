@@ -6,6 +6,9 @@ Dirble is a website directory scanning tool for Windows and Linux. It's designed
 
 Download one of the [precompiled binaries](https://github.com/nccgroup/dirble/releases/latest) for Linux, Windows, or Mac, or compile the source using Cargo, then run it from a terminal. The default wordlist Dirble uses is dirble_wordlist.txt in the same directory as the executable.
 
+There is also a docker image, which can be run as:
+`docker run --rm -t isona/dirble [dirble arguments]`
+
 # Example Uses
 
 Run against a website using the default dirble_wordlist.txt from the current directory:
@@ -50,6 +53,7 @@ To cross-compile for 32- and 64-bit Linux and Windows targets, there is a handy 
 * Ability to provide list of URLs to be scanned
 * User agents
 * Scanning with GET, POST or HEAD requests
+* Exclude ranges of response lengths from output
 
 # Performance
 
