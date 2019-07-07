@@ -17,7 +17,18 @@
 
 use std::{
     collections::VecDeque,
-    sync::{Arc, mpsc::{self, Sender, Receiver}},
+    sync::{
+        atomic::{
+            AtomicBool,
+            Ordering,
+        },
+        Arc,
+        mpsc::{
+            self,
+            Sender,
+            Receiver,
+        },
+    },
     thread,
     time::Duration,
     path::Path,
@@ -35,6 +46,7 @@ use log::Level;
     warn,
     error,
 };
+use ctrlc;
 #[macro_use]
 extern crate clap;
 extern crate curl;
@@ -217,10 +229,17 @@ fn main() {
 
     let output_thread = thread::spawn(|| output_thread::output_thread(output_rx, output_global_opts, file_handles));
 
+    let caught_ctrl_c = Arc::new(AtomicBool::new(false));
+    let caught_ctrl_c_clone_for_handler = caught_ctrl_c.clone();
+    ctrlc::set_handler(move || {
+        warn!("Caught interrupt signal, cleaning up...");
+        caught_ctrl_c_clone_for_handler.store(true, Ordering::SeqCst);
+    }).expect("Unable to attach interrupt signal handler");
+
     // Loop of checking for messages from the threads,
     // spawning new threads on items in the scan queue
     // and checking if the program is done
-    loop {
+    while !caught_ctrl_c.load(Ordering::SeqCst) {
 
         // Check for messages from the threads
         let to_scan = to_scan_rx.try_recv();
