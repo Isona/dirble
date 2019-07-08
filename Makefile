@@ -14,7 +14,7 @@ cargo_flags = --release \
 
 # Get the version string out of the Cargo.toml by taking the second field
 # (delimited by double quotes) of the 'version = "x.y.z"' line
-version=$(shell awk -F'"' '^/version/ {print $$2}' Cargo.toml)
+version=$(shell awk -F'"' '/^version/ {print $$2}' Cargo.toml)
 date=$(shell date +%Y%m%d)
 filename="dirble-${version}-${date}"
 
