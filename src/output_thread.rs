@@ -22,6 +22,7 @@ use std::{
 use crate::request;
 use crate::output;
 use simplelog::LevelFilter;
+use log::debug;
 
 pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
     global_opts: Arc<arg_parse::GlobalOpts>, file_handles: output::FileHandles)
@@ -31,6 +32,7 @@ pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
     loop {
         if let Ok(response) = rx.try_recv() {
             if response.url == "MAIN ENDING" {
+                debug!("Received signal to end, generating the report");
                 break; 
             }
             if global_opts.log_level >= LevelFilter::Info {

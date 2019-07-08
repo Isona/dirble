@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.1 - 2019-07-08
+
+### Added
+* Catch SIGINT fron Ctrl+C and save any output files specified (#30)
+* Hide results with specific lengths, or ranges of lengths
+
+### Changed
+
+### Fixed
+* Dirble now runs correctly when there is no TTY to attach to
+
 ## 1.4.0 - 2019-07-05
 
 ### Added
