@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.2 - 2019-07-09
+
+### Added
+
+### Changed
+* Extension lists are now in an extensions directory
+* Update dependencies
+
+# Fixed
+
 ## 1.4.1 - 2019-07-08
 
 ### Added
