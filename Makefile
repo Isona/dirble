@@ -33,7 +33,7 @@ help :
 release : $(targets) dirble_wordlist.txt
 	mkdir -p dirble/extensions
 	cp dirble_wordlist.txt dirble/
-	cp wordlists/* dirble/extensions
+	cp extensions/* dirble/extensions
 	cp target/x86_64-unknown-linux-gnu/release/dirble dirble/dirble
 	cp target/i686-unknown-linux-gnu/release/dirble dirble/dirble32
 	cp target/x86_64-pc-windows-gnu/release/dirble.exe dirble/dirble.exe
@@ -60,7 +60,7 @@ release : $(targets) dirble_wordlist.txt
 mac : x86_64-apple-darwin dirble_wordlist.txt
 	mkdir -p dirble/extensions
 	cp dirble_wordlist.txt dirble/
-	cp wordlists/* dirble/extensions
+	cp extensions/* dirble/extensions
 	cp target/x86_64-apple-darwin/release/dirble dirble/dirble
 	zip dirble/${filename}-x86_64-apple-darwin.zip \
 		dirble/dirble \
