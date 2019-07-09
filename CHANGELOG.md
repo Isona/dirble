@@ -8,7 +8,7 @@
 * Extension lists are now in an extensions directory
 * Update dependencies
 
-# Fixed
+### Fixed
 
 ## 1.4.1 - 2019-07-08
 
