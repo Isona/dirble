@@ -8,8 +8,8 @@ use crate::output::{
 #[test]
 fn test_print_response() {
     let rr = RequestResponse {
-        url: "http://example.com".into(),
-        code: 200,
+        url: "http://example.com/.htaccess".into(),
+        code: 403,
         content_len: 234,
         is_directory: false,
         is_listable: false,
@@ -17,10 +17,21 @@ fn test_print_response() {
         found_from_listable: false,
         parent_depth: 0,
     };
-    let globalopts: GlobalOpts = Default::default();
-    let globalopts = Arc::new(globalopts);
+    let mut globalopts: GlobalOpts = Default::default();
 
-    let output = print_response(&rr, globalopts.clone(), false, false, false);
-
-    assert!(output != None);
+    // Verify that htaccess files are hidden when the option is set in
+    // globalopts
+    globalopts.show_htaccess = false;
+    let output = print_response(
+        &rr, Arc::new(globalopts.clone()), false, false, false);
+    assert_eq!(output,
+               None,
+               ".htaccess is not being hidden");
+    // And check that they are not hidden otherwise
+    globalopts.show_htaccess = true;
+    let output = print_response(&rr, Arc::new(globalopts), false, false, false);
+    assert_eq!(output,
+              Some(String::from(
+                      "+ http://example.com/.htaccess (CODE:403|SIZE:234)")),
+              ".htaccess is not being hidden");
 }

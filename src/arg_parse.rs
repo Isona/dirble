@@ -24,6 +24,7 @@ use crate::wordlist::lines_from_file;
 use atty::Stream;
 use simplelog::LevelFilter;
 
+#[derive(Clone)]
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
     pub wordlist_files: Option<Vec<String>>,
@@ -90,6 +91,7 @@ impl fmt::Debug for LengthRange {
     }
 }
 
+#[derive(Clone)]
 pub struct LengthRanges {
     pub ranges: Vec<LengthRange>,
 }
@@ -125,13 +127,14 @@ impl fmt::Display for LengthRanges {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct ScanOpts {
     pub scan_401: bool,
     pub scan_403: bool
 }
 
 arg_enum!{
+    #[derive(Clone)]
     pub enum HttpVerb {
         Get,
         Head,
