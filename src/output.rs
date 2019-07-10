@@ -33,8 +33,13 @@ pub struct FileHandles {
     pub xml_file: Option<LineWriter<File>>
 }
 
-pub fn print_response(response: &RequestResponse, global_opts: Arc<GlobalOpts>, 
-    print_newlines: bool, indentation: bool, colour: bool) -> Option<String> {
+pub fn print_response(
+    response: &RequestResponse,
+    global_opts: Arc<GlobalOpts>,
+    print_newlines: bool,
+    indentation: bool,
+    colour: bool
+    ) -> Option<String> {
     if response.code == 403 && !global_opts.show_htaccess && response.url.contains("/.ht") 
     {
         return None 

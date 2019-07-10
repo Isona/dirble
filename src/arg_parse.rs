@@ -125,6 +125,7 @@ impl fmt::Display for LengthRanges {
     }
 }
 
+#[derive(Default)]
 pub struct ScanOpts {
     pub scan_401: bool,
     pub scan_403: bool
@@ -135,6 +136,12 @@ arg_enum!{
         Get,
         Head,
         Post
+    }
+}
+
+impl Default for HttpVerb {
+    fn default() -> Self {
+        HttpVerb::Get
     }
 }
 
