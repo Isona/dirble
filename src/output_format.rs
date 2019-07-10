@@ -20,9 +20,6 @@ use colored::*;
 use serde_json;
 use simple_xml_serialize::XMLElement;
 
-#[cfg(test)]
-mod tests;
-
 #[inline]
 pub fn output_indentation(response: &RequestResponse, print_newlines: bool, indentation: bool) -> String {
     let mut output: String;

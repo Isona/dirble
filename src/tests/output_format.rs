@@ -24,7 +24,7 @@ use serde_test::{Token, assert_tokens};
 
 #[test]
 fn check_output_indentation() {
-    //   super::output_indentation produces a number of spaces based on
+    //   crate::output_format::output_indentation produces a number of spaces based on
     // the parent_depth field of the RR and the number of slashes in
     // the url.
     //   Types of output:
@@ -37,20 +37,20 @@ fn check_output_indentation() {
     // Indentation disabled
     let mut req_response = generate_request_response();
     assert_eq!(
-        super::output_indentation(&req_response, false, false),
+        crate::output_format::output_indentation(&req_response, false, false),
         "",
         "Disabling of indentation does not stop the indentation");
 
     // Preceding newline, indentation disabled to force early return
     req_response.is_directory = true;
     assert_eq!(
-        super::output_indentation(&req_response, true, false),
+        crate::output_format::output_indentation(&req_response, true, false),
         "\n",
         "Newline is not printed");
 
     // Default indentation of zero spaces for base URL
     assert_eq!(
-        super::output_indentation(&req_response, false, true),
+        crate::output_format::output_indentation(&req_response, false, true),
         "",
         "Default empty indentation not returned");
 
@@ -58,14 +58,14 @@ fn check_output_indentation() {
     req_response.is_directory = false;
     req_response.url = "http://example.com/a/test/directory".into();
     assert_eq!(
-        super::output_indentation(&req_response, false, true),
+        crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
         "Indentation of nested directories incorrect");
 
     // Same scenario, but with a trailing slash
     req_response.url = "http://example.com/a/test/directory/".into();
     assert_eq!(
-        super::output_indentation(&req_response, false, true),
+        crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
         "Trailing slash is not taken into account");
 }
@@ -82,26 +82,26 @@ fn check_output_letter () {
     req_response.is_directory = true;
     req_response.is_listable = true;
     assert_eq!(
-        super::output_letter(&req_response),
+        crate::output_format::output_letter(&req_response),
         "\u{1b}[1mL \u{1b}[0m",
         "Listable directory prefix incorrect");
 
     req_response.is_listable = false;
     assert_eq!(
-        super::output_letter(&req_response),
+        crate::output_format::output_letter(&req_response),
         "D ",
         "Directory prefix incorrect");
 
     req_response.is_directory = false;
     req_response.found_from_listable = true;
     assert_eq!(
-        super::output_letter(&req_response),
+        crate::output_format::output_letter(&req_response),
         "~ ",
         "Found from listable prefix incorrect");
 
     req_response.found_from_listable = false;
     assert_eq!(
-        super::output_letter(&req_response),
+        crate::output_format::output_letter(&req_response),
         "+ ",
         "Regular file prefix incorrect");
 }
@@ -111,7 +111,7 @@ fn check_output_url() {
     // output_url simply returns the url, but with a space at the end
     let req_response = generate_request_response();
     assert_eq!(
-        super::output_url(&req_response),
+        crate::output_format::output_url(&req_response),
         format!("{} ", req_response.url),
         "Output URL formatted incorrectly");
 }
@@ -124,13 +124,13 @@ fn check_output_suffix() {
     req_response.content_len = 456;
     req_response.code = 201;
     assert_eq!(
-        super::output_suffix(&req_response, true),
+        crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[32m201\u{1b}[0m|SIZE:456)",
         "Output suffix for code 201 invalid");
 
     req_response.code = 304;
     assert_eq!(
-        super::output_suffix(&req_response, true),
+        crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[36m304\u{1b}[0m|SIZE:456)",
         "Output suffix for code 304 invalid");
 
@@ -138,25 +138,25 @@ fn check_output_suffix() {
     req_response.code = 301;
     req_response.redirect_url = "https://nccgroup.com".into();
     assert_eq!(
-        super::output_suffix(&req_response, true),
+        crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[36m301\u{1b}[0m|SIZE:456|DEST:https://nccgroup.com)",
         "Output suffix for code 301 invalid");
 
     req_response.code = 451;
     assert_eq!(
-        super::output_suffix(&req_response, true),
+        crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[31m451\u{1b}[0m|SIZE:456)",
         "Output suffix for code 451 invalid");
 
     req_response.code = 503;
     assert_eq!(
-        super::output_suffix(&req_response, true),
+        crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[33m503\u{1b}[0m|SIZE:456)",
         "Output suffix for code 503 invalid");
 
     // Check that turning off colours also works
     assert_eq!(
-        super::output_suffix(&req_response, false),
+        crate::output_format::output_suffix(&req_response, false),
         "(CODE:503|SIZE:456)",
         "Disabling colours hasn't worked properly");
 }
@@ -164,7 +164,7 @@ fn check_output_suffix() {
 #[test]
 fn check_output_xml() {
     // Same as check_output_json below, but with hardcoded XML output.
-    let req_response = super::RequestResponse {
+    let req_response = crate::request::RequestResponse {
         url: "http://example.com".into(),
         code: 204,
         content_len: 345,
@@ -177,7 +177,7 @@ fn check_output_xml() {
     // DO NOT change the indentation here, it matches the indentation
     // produced by the XML formatter.
     assert_eq!(
-        super::output_xml(&req_response),
+        crate::output_format::output_xml(&req_response),
         "<path \
             url=\"http://example.com\" \
             code=\"204\" \
@@ -195,7 +195,7 @@ fn check_output_json() {
     // This doesn't use the generate_request_response function because
     // the defaults may change but the expected JSON output is
     // hardcoded.
-    let req_response = super::RequestResponse {
+    let req_response = crate::request::RequestResponse {
         url: "http://example.com".into(),
         code: 200,
         content_len: 350,
@@ -235,10 +235,10 @@ fn check_output_json() {
 }
 
 #[inline]
-fn generate_request_response() -> super::RequestResponse {
+fn generate_request_response() -> crate::request::RequestResponse {
     // Generate a RequestResponse object with sane default settings to
     // simplify the testing routines.
-    super::RequestResponse {
+    crate::request::RequestResponse {
         url: "http://example.com".into(),
         code: 200,
         content_len: 350,
