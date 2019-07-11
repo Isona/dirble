@@ -112,13 +112,23 @@ fn send_response(
     global_opts: &arg_parse::GlobalOpts,
     response: request::RequestResponse,
     validator_opt: &Option<validator_thread::TargetValidator>
-    ) {
-
+) {
     if response.is_directory {
         dir_tx.send(response.clone()).unwrap();
         output_tx.send(response).unwrap();
-        return
+        return;
+    } if should_send_response(&global_opts, &response, &validator_opt) {
+        output_tx.send(response).unwrap();
     }
+}
+
+#[inline]
+pub fn should_send_response(
+    global_opts: &arg_parse::GlobalOpts,
+    response: &request::RequestResponse,
+    validator_opt: &Option<validator_thread::TargetValidator>,
+    ) -> bool {
+    
 
     // Check each of the conditions for outputting the discovered file
 
@@ -127,17 +137,17 @@ fn send_response(
     if global_opts.whitelist && !contains_code {
         trace!("[{}]: code {} not in whitelist",
                response.url, response.code);
-        return;
+        return false;
     }
     if !global_opts.whitelist && contains_code {
         trace!("[{}]: code {} in blacklist",
                response.url, response.code);
-        return;
+        return false;
     }
     if let Some(validator) = validator_opt {
         if validator.is_not_found(&response) {
             trace!("[{}]: matches Not Found condition", response.url);
-            return;
+            return false;
         }
     }
 
@@ -145,11 +155,11 @@ fn send_response(
     if global_opts.length_blacklist.contains(response.content_len) {
         trace!("[{}]: length {} is in a blacklist range",
                response.url, response.content_len);
-        return;
+        return false;
     }
 
     // Return the response for outputting
-    output_tx.send(response).unwrap();
+    return true;
 }
 
 #[inline]
