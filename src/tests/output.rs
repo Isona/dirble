@@ -7,6 +7,9 @@ use crate::output::{
 
 #[test]
 fn test_print_response() {
+    // Only the hidden and not hidden parts of output::print_response
+    // need to be tested - the rest is covered by the testing in
+    // tests/output_format.rs.
     let rr = RequestResponse {
         url: "http://example.com/.htaccess".into(),
         code: 403,
