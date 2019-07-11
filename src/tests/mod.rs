@@ -1,4 +1,5 @@
 use crate::arg_parse::GlobalOpts;
+use crate::request::RequestResponse;
 use log::LevelFilter::Info;
 
 mod argparse;
@@ -42,6 +43,21 @@ impl Default for GlobalOpts {
             scan_opts: Default::default(),
             log_level: Info,
             length_blacklist: Default::default(),
+        }
+    }
+}
+
+impl Default for RequestResponse {
+    fn default() -> Self {
+        RequestResponse {
+            url: "http://example.com/".into(),
+            code: 200,
+            content_len: 200,
+            is_directory: false,
+            is_listable: false,
+            redirect_url: "".into(),
+            found_from_listable: false,
+            parent_depth: 0,
         }
     }
 }

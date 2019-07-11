@@ -4,6 +4,7 @@ use crate::arg_parse::GlobalOpts;
 use crate::output::{
     print_response,
     sort_responses,
+    directory_name,
 };
 
 #[test]
@@ -101,6 +102,7 @@ fn test_sort_responses() {
 
 #[test]
 fn test_directory_name() {
+    let rr: RequestResponse = Default::default();
 }
 
 #[test]
