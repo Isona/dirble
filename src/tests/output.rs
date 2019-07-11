@@ -102,7 +102,19 @@ fn test_sort_responses() {
 
 #[test]
 fn test_directory_name() {
-    let rr: RequestResponse = Default::default();
+    let mut rr: RequestResponse = Default::default();
+    // First case: rr is a directory ending with slash
+    rr.url = "http://example.com/test/dir/".into();
+    rr.is_directory = true;
+    assert_eq!(directory_name(&rr), String::from("http://example.com/test/dir"));
+
+    // Second case: rr is a directory not ending with slash
+    rr.url = "http://example.com/test/dir".into();
+    assert_eq!(directory_name(&rr), String::from("http://example.com/test/dir"));
+
+    // Second case: rr is not a directory
+    rr.is_directory = false;
+    assert_eq!(directory_name(&rr), String::from("http://example.com/test"));
 }
 
 #[test]
