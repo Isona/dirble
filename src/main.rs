@@ -140,7 +140,10 @@ fn main() {
         wordlist_string = wordlist_file;
     }
 
-    output::startup_text(global_opts.clone(), &wordlist_string);
+    if let Some(text) = output::startup_text(
+        global_opts.clone(), &wordlist_string) {
+        println!("{}", text);
+    }
 
     // Remove leading and trailing slashes from words
     for i in 0..wordlist.len() {

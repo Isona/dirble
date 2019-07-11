@@ -188,39 +188,50 @@ fn generate_handle(filename: &String) -> Option<LineWriter<File>>
 }
 
 // Prints out start up information
-pub fn startup_text(global_opts: Arc<GlobalOpts>, wordlist_file: &String) {
-    if !global_opts.is_terminal { return }
+pub fn startup_text(global_opts: Arc<GlobalOpts>, wordlist_file: &String)
+    -> Option<String> {
+    if !global_opts.is_terminal {
+        return None;
+    }
 
-    println!("Dirble {}", get_version_string());
-    println!("Developed by Izzy Whistlecroft\n");
+    let text = format!("Dirble {}\n", get_version_string());
+    let text = format!("{}Developed by Izzy Whistlecroft\n", text);
 
-    println!("Targets: {}", global_opts.hostnames.clone().join(" "));
-    if let Some(globalopts_wordlists) = global_opts.wordlist_files.clone() {
-        println!("Wordlists: {}", globalopts_wordlists.join(" "));
+    let text = format!("{}Targets: {}\n", text,
+                       global_opts.hostnames.clone().join(" "));
+
+    let text = if let Some(globalopts_wordlists) =
+        global_opts.wordlist_files.clone() {
+        format!("{}Wordlists: {}\n", text, globalopts_wordlists.join(" "))
     }
     else {
-        println!("Wordlist: {}", wordlist_file);
-    }
+        format!("{}Wordlist: {}\n", text, wordlist_file)
+    };
 
-    if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
-        println!("No Prefixes");
+    let text = if global_opts.prefixes.len() == 1 &&
+        global_opts.prefixes[0] == "" {
+        format!("{}No Prefixes\n", text)
     }
     else {
-        println!("Prefixes: {}", global_opts.prefixes.clone()[1..].join(" "));
-    }
+        format!("{}Prefixes: {}\n", text,
+                global_opts.prefixes.clone()[1..].join(" "))
+    };
 
-    if global_opts.extensions.len() == 1 && global_opts.extensions[0] == "" {
-        println!("No Extensions");
+    let text = if global_opts.extensions.len() == 1 &&
+        global_opts.extensions[0] == "" {
+        format!("{}No Extensions\n", text)
     }
     else {
-        println!("Extensions: {}", global_opts.extensions.clone()[1..].join(" "));
-    }
+        format!("{}Extensions: {}\n", text,
+                global_opts.extensions.clone()[1..].join(" "))
+    };
 
-    if global_opts.length_blacklist.is_empty() {
-        println!("No lengths hidden");
+    let text = if global_opts.length_blacklist.is_empty() {
+        format!("{}No lengths hidden\n", text)
     }
     else {
-        println!("Hidden lengths: {}", global_opts.length_blacklist);
-    }
-    println!("");
+        format!("{}Hidden lengths: {}\n", text, global_opts.length_blacklist)
+    };
+
+    Some(text)
 }
