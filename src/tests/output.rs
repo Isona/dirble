@@ -38,3 +38,31 @@ fn test_print_response() {
                       "+ http://example.com/.htaccess (CODE:403|SIZE:234)")),
               ".htaccess is not being hidden");
 }
+
+#[test]
+fn test_print_report() {
+}
+
+#[test]
+fn test_write_file() {
+}
+
+#[test]
+fn test_sort_responses() {
+}
+
+#[test]
+fn test_directory_name() {
+}
+
+#[test]
+fn test_create_files() {
+}
+
+#[test]
+fn test_generate_handle() {
+}
+
+#[test]
+fn test_startup_text() {
+}
