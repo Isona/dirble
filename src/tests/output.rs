@@ -1,10 +1,15 @@
 use std::sync::Arc;
 use crate::request::RequestResponse;
-use crate::arg_parse::GlobalOpts;
+use crate::arg_parse::{
+    GlobalOpts,
+    LengthRange,
+    LengthRanges,
+};
 use crate::output::{
     print_response,
     sort_responses,
     directory_name,
+    startup_text,
 };
 
 #[test]
@@ -127,4 +132,51 @@ fn test_generate_handle() {
 
 #[test]
 fn test_startup_text() {
+    let mut globalopts: GlobalOpts = Default::default();
+
+    // Startup text should be None when the stdout is not going to a
+    // terminal
+    let text = startup_text(Arc::new(globalopts.clone()), &String::from("foo"));
+    assert_eq!(text, None);
+
+    // Startup text should have a simple value for default globalopts
+    globalopts.is_terminal = true;
+    let text = startup_text(Arc::new(globalopts.clone()), &String::from("foo"));
+    // Version string changes with each build, so we need to get the
+    // current value before validating the startup text. If the text is
+    // not a Some(text) then the unwrap will panic and the test will
+    // fail.
+    let version = crate::arg_parse::get_version_string();
+    let suffix = String::from(
+        "\nDeveloped by Izzy Whistlecroft\nTargets: \nWordlist: foo\n\
+        No Prefixes\nNo Extensions\nNo lengths hidden\n");
+    assert_eq!(text.unwrap(), format!("Dirble {}{}", version, suffix));
+
+    // Set all of the optional parameters, output text should display
+    // them.
+    globalopts.hostnames = vec![
+        "http://example.com".into(),
+        "http://example.org".into(),
+    ];
+    globalopts.wordlist_files = Some(vec!["foo".into(), "bar".into()]);
+    globalopts.prefixes = vec!["".into(), "~".into()];
+    globalopts.extensions= vec!["".into(), ".txt".into(), ".com".into()];
+    globalopts.length_blacklist = LengthRanges {
+        ranges: vec![
+            LengthRange {
+                start: 2400,
+                end: Some(3000),
+            },
+            LengthRange {
+                start: 400,
+                end: None,
+            },
+        ]};
+    let text = startup_text(Arc::new(globalopts.clone()), &String::from("foo"));
+    let suffix = String::from(
+        "\nDeveloped by Izzy Whistlecroft\n\
+        Targets: http://example.com http://example.org\n\
+        Wordlists: foo bar\nPrefixes: ~\nExtensions: .txt .com\n\
+        Hidden lengths: [400, 2400-3000]\n");
+    assert_eq!(text.unwrap(), format!("Dirble {}{}", version, suffix));
 }

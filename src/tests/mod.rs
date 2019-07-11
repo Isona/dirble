@@ -11,8 +11,8 @@ impl Default for GlobalOpts {
         GlobalOpts {
             hostnames: Default::default(),
             wordlist_files: Default::default(),
-            prefixes: Default::default(),
-            extensions: Default::default(),
+            prefixes: vec!["".into()],
+            extensions: vec!["".into()],
             max_threads: Default::default(),
             proxy_enabled: Default::default(),
             proxy_address: Default::default(),
