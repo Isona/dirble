@@ -5,6 +5,7 @@ use log::LevelFilter::Info;
 mod argparse;
 mod output;
 mod output_format;
+mod request_thread;
 
 impl Default for GlobalOpts {
     fn default() -> Self {
