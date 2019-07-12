@@ -2,3 +2,9 @@
 **/*.rs.bk
 /bin
 /release
+
+# Test coverage data
+build.gcda
+build.gcno
+main.gcda
+main.gcno

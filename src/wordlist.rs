@@ -15,23 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{
-    process::exit,
-    sync::Arc,
-    fs::File,
-    io::prelude::*
-};
-use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
-use chardet::{detect, charset2encoding};
-use encoding::{
-    DecoderTrap,
-    label::encoding_from_whatwg_label
-};
 use crate::validator_thread::TargetValidator;
+use chardet::{charset2encoding, detect};
+use encoding::{label::encoding_from_whatwg_label, DecoderTrap};
 use log::error;
+use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use std::{fs::File, io::prelude::*, process::exit, sync::Arc};
 
-
-// Struct for a UriGenerator, it needs the hostname, the suffix to append, a wordlist and an index into that wordlist
+// Struct for a UriGenerator, it needs the hostname, the suffix to
+// append, a wordlist and an index into that wordlist
 pub struct UriGenerator {
     pub hostname: String,
     prefix: String,
@@ -40,20 +32,27 @@ pub struct UriGenerator {
     wordlist: Arc<Vec<String>>,
     step_size: usize,
     pub parent_depth: u32,
-    pub validator:Option<TargetValidator>
+    pub validator: Option<TargetValidator>,
 }
 
 // Generates a new UriGenerator given various options
 impl UriGenerator {
-    pub fn new(mut hostname: String, prefix: String, suffix: String, 
-        wordlist: Arc<Vec<String>>, index: u32, step: u32, parent_depth:u32,
-        validator:Option<TargetValidator>) -> UriGenerator{
+    pub fn new(
+        mut hostname: String,
+        prefix: String,
+        suffix: String,
+        wordlist: Arc<Vec<String>>,
+        index: u32,
+        step: u32,
+        parent_depth: u32,
+        validator: Option<TargetValidator>,
+    ) -> UriGenerator {
         // Remove a trailing / characters from the url if there is one
         if hostname.ends_with("/") {
             hostname.pop();
         }
-        
-        UriGenerator { 
+
+        UriGenerator {
             hostname,
             prefix,
             suffix,
@@ -61,7 +60,7 @@ impl UriGenerator {
             wordlist,
             step_size: step as usize,
             parent_depth,
-            validator
+            validator,
         }
     }
 }
@@ -71,33 +70,36 @@ impl Iterator for UriGenerator {
     type Item = (String);
 
     fn next(&mut self) -> Option<Self::Item> {
-        
         // If we're at the end of the wordlist then return None
         if self.current_index >= self.wordlist.len() {
             return None;
         }
-        // Concatenate the hostname with the current wordlist item and the suffix, then url encode
-        let uri = self.hostname.clone() + "/" + &self.prefix + &self.wordlist[self.current_index].clone() + &self.suffix;
+        // Concatenate the hostname with the current wordlist item and
+        // the suffix, then url encode
+        let uri = self.hostname.clone()
+            + "/"
+            + &self.prefix
+            + &self.wordlist[self.current_index].clone()
+            + &self.suffix;
         let uri = utf8_percent_encode(&uri, DEFAULT_ENCODE_SET).to_string();
 
         // Maintain the index into the wordlist
         self.current_index += self.step_size;
         // Return the generated Uri
         Some(uri)
-
     }
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file(filename: &String) -> Vec<String>
-{
-    let mut file = File::open(filename.clone())
-        .unwrap_or_else(|error| { error!("Opening file \"{}\" failed: {}", filename, error); exit(2);});
+pub fn lines_from_file(filename: &String) -> Vec<String> {
+    let mut file = File::open(filename.clone()).unwrap_or_else(|error| {
+        error!("Opening file \"{}\" failed: {}", filename, error);
+        exit(2);
+    });
     let mut reader: Vec<u8> = Vec::new();
 
     // Read the raw file in as a vector of bytes
-    file.read_to_end(&mut reader)
-        .expect("Error reading file");
+    file.read_to_end(&mut reader).expect("Error reading file");
 
     // Detect the charset of the file
     let result = detect(&reader);
@@ -109,12 +111,13 @@ pub fn lines_from_file(filename: &String) -> Vec<String>
     let coder = encoding_from_whatwg_label(charset2encoding(&result.0));
     match coder {
         Some(coding) => {
-            return coding.decode(&reader, DecoderTrap::Ignore)
+            return coding
+                .decode(&reader, DecoderTrap::Ignore)
                 .expect("Error decoding to UTF-8")
                 .lines()
                 .map(|s| String::from(s))
                 .collect();
-        },
+        }
         None => {
             panic!("Error detecting file encoding");
         }

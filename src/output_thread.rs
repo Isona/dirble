@@ -16,29 +16,34 @@
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arg_parse;
-use std::{
-    sync::{Arc, mpsc::self}
-};
-use crate::request;
 use crate::output;
-use simplelog::LevelFilter;
+use crate::request;
 use log::debug;
+use simplelog::LevelFilter;
+use std::sync::{mpsc, Arc};
 
-pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
-    global_opts: Arc<arg_parse::GlobalOpts>, file_handles: output::FileHandles)
-{
+pub fn output_thread(
+    rx: mpsc::Receiver<request::RequestResponse>,
+    global_opts: Arc<arg_parse::GlobalOpts>,
+    file_handles: output::FileHandles,
+) {
     let mut response_list: Vec<request::RequestResponse> = Vec::new();
 
     loop {
         if let Ok(response) = rx.try_recv() {
             if response.url == "MAIN ENDING" {
                 debug!("Received signal to end, generating the report");
-                break; 
+                break;
             }
             if global_opts.log_level >= LevelFilter::Info {
-                match output::print_response(&response, global_opts.clone(),
-                    false, false, global_opts.is_terminal && !global_opts.no_color) {
-                    Some(output) => { println!("{}", output) },
+                match output::print_response(
+                    &response,
+                    global_opts.clone(),
+                    false,
+                    false,
+                    global_opts.is_terminal && !global_opts.no_color,
+                ) {
+                    Some(output) => println!("{}", output),
                     None => {}
                 }
             }
@@ -47,5 +52,4 @@ pub fn output_thread(rx: mpsc::Receiver<request::RequestResponse>,
     }
 
     output::print_report(response_list, global_opts.clone(), file_handles);
-
 }

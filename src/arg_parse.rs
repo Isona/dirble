@@ -15,15 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 extern crate clap;
-use std::{
-    fmt,
-    process::exit,
-};
-use clap::{App, Arg, AppSettings, ArgGroup, crate_version};
 use crate::wordlist::lines_from_file;
 use atty::Stream;
+use clap::{crate_version, App, AppSettings, Arg, ArgGroup};
 use simplelog::LevelFilter;
+use std::{fmt, process::exit};
 
+#[derive(Clone)]
 pub struct GlobalOpts {
     pub hostnames: Vec<String>,
     pub wordlist_files: Option<Vec<String>>,
@@ -32,7 +30,7 @@ pub struct GlobalOpts {
     pub max_threads: u32,
     pub proxy_enabled: bool,
     pub proxy_address: String,
-    pub proxy_auth_enabled: bool, 
+    pub proxy_auth_enabled: bool,
     pub ignore_cert: bool,
     pub show_htaccess: bool,
     pub throttle: u32,
@@ -53,9 +51,9 @@ pub struct GlobalOpts {
     pub whitelist: bool,
     pub code_list: Vec<u32>,
     pub is_terminal: bool,
-    pub no_color:bool,
-    pub disable_validator:bool,
-    pub http_verb:HttpVerb,
+    pub no_color: bool,
+    pub disable_validator: bool,
+    pub http_verb: HttpVerb,
     pub scan_opts: ScanOpts,
     pub log_level: LevelFilter,
     pub length_blacklist: LengthRanges,
@@ -82,14 +80,14 @@ impl fmt::Debug for LengthRange {
         let output: String;
         if let Some(end) = self.end {
             output = format!("{}-{}", self.start, end);
-        }
-        else{
+        } else {
             output = format!("{}", self.start);
         }
         write!(f, "{}", output)
     }
 }
 
+#[derive(Clone)]
 pub struct LengthRanges {
     pub ranges: Vec<LengthRange>,
 }
@@ -111,9 +109,7 @@ impl LengthRanges {
 
 impl Default for LengthRanges {
     fn default() -> Self {
-        Self {
-            ranges: Vec::new(),
-        }
+        Self { ranges: Vec::new() }
     }
 }
 
@@ -125,12 +121,14 @@ impl fmt::Display for LengthRanges {
     }
 }
 
+#[derive(Clone, Default)]
 pub struct ScanOpts {
     pub scan_401: bool,
-    pub scan_403: bool
+    pub scan_403: bool,
 }
 
-arg_enum!{
+arg_enum! {
+    #[derive(Clone)]
     pub enum HttpVerb {
         Get,
         Head,
@@ -138,8 +136,13 @@ arg_enum!{
     }
 }
 
-pub fn get_args() -> GlobalOpts
-{
+impl Default for HttpVerb {
+    fn default() -> Self {
+        HttpVerb::Get
+    }
+}
+
+pub fn get_args() -> GlobalOpts {
     // For general compilation, include the current commit hash and
     // build date in the version string. When building releases via the
     // Makefile, only use the release number.
@@ -535,9 +538,7 @@ set to 0 to disable")
              .value_delimiter(","))
         .get_matches();
 
-    
-
-    let mut hostnames:Vec<String> = Vec::new();
+    let mut hostnames: Vec<String> = Vec::new();
 
     // Get from host arguments
     if args.is_present("host") {
@@ -547,14 +548,18 @@ set to 0 to disable")
         for host_file in args.values_of("host_file").unwrap() {
             let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
-                if hostname.starts_with("https://") || hostname.starts_with("http://") { 
+                if hostname.starts_with("https://")
+                    || hostname.starts_with("http://")
+                {
                     hostnames.push(String::from(hostname));
-                }
-                else {
-                    println!("{} doesn't start with \"http://\" or \"https://\" - skipping", hostname);
+                } else {
+                    println!(
+                        "{} doesn't start with \"http://\" or \"https://\" -\
+                        skipping",
+                        hostname
+                    );
                 }
             }
-
         }
     }
     if args.is_present("extra_hosts") {
@@ -571,7 +576,7 @@ set to 0 to disable")
     hostnames.dedup();
 
     // Parse wordlist file names into a vector
-    let wordlists:Option<Vec<String>>;
+    let wordlists: Option<Vec<String>>;
 
     if args.is_present("wordlist") {
         let mut wordlists_vec = Vec::new();
@@ -579,12 +584,9 @@ set to 0 to disable")
             wordlists_vec.push(String::from(wordlist_file));
         }
         wordlists = Some(wordlists_vec);
-    }
-    else {
+    } else {
         wordlists = None;
     }
-
-
 
     // Check for proxy related flags
     let proxy_enabled;
@@ -593,18 +595,17 @@ set to 0 to disable")
         proxy_enabled = true;
         proxy_address = args.value_of("proxy").unwrap();
         if proxy_address == "http://localhost:8080" {
-            println!("You could use the --burp flag instead of the --proxy flag!");
+            println!(
+                "You could use the --burp flag instead of the --proxy flag!"
+            );
         }
-    }
-    else if args.is_present("burp") {
+    } else if args.is_present("burp") {
         proxy_enabled = true;
         proxy_address = "http://localhost:8080";
-    }
-    else if args.is_present("no_proxy") {
+    } else if args.is_present("no_proxy") {
         proxy_enabled = true;
         proxy_address = "";
-    }
-    else {
+    } else {
         proxy_enabled = false;
         proxy_address = "";
     }
@@ -617,7 +618,7 @@ set to 0 to disable")
         for cookie in args.values_of("cookie").unwrap() {
             temp_cookies.push(String::from(cookie));
         }
-        
+
         cookies = Some(temp_cookies.join("; "));
     }
 
@@ -632,15 +633,14 @@ set to 0 to disable")
     }
 
     let mut whitelist = false;
-    let mut code_list:Vec<u32> = Vec::new();
-    
+    let mut code_list: Vec<u32> = Vec::new();
+
     if args.is_present("code_whitelist") {
         whitelist = true;
         for code in args.values_of("code_whitelist").unwrap() {
             code_list.push(code.parse::<u32>().unwrap());
         }
-    }
-    else if args.is_present("code_blacklist") {
+    } else if args.is_present("code_blacklist") {
         whitelist = false;
         for code in args.values_of("code_blacklist").unwrap() {
             code_list.push(code.parse::<u32>().unwrap());
@@ -650,14 +650,17 @@ set to 0 to disable")
     let mut max_recursion_depth = None;
     if args.is_present("disable_recursion") {
         max_recursion_depth = Some(0);
-
+    } else if args.is_present("max_recursion_depth") {
+        let string_recursion_depth =
+            args.value_of("max_recursion_depth").unwrap();
+        max_recursion_depth =
+            Some(string_recursion_depth.parse::<i32>().unwrap());
     }
-    else if args.is_present("max_recursion_depth") {
-        let string_recursion_depth = args.value_of("max_recursion_depth").unwrap();
-        max_recursion_depth = Some(string_recursion_depth.parse::<i32>().unwrap());
-    }
 
-    let mut scan_opts = ScanOpts{scan_401:false, scan_403:false};
+    let mut scan_opts = ScanOpts {
+        scan_401: false,
+        scan_403: false,
+    };
     if args.is_present("scan_401") || (whitelist && code_list.contains(&401)) {
         scan_opts.scan_401 = true;
     }
@@ -688,7 +691,7 @@ set to 0 to disable")
             args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled,
         proxy_address,
-        proxy_auth_enabled: false,   
+        proxy_auth_enabled: false,
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
         throttle:
@@ -737,104 +740,107 @@ set to 0 to disable")
 }
 
 #[inline]
-fn filename_from_args(args: &clap::ArgMatches, filetype: &str)
-    -> Option<String> {
-        let extension;
-        match filetype {
-            "txt" => {
-                extension = "txt";
-                if args.is_present("output_file") {
-                    return Some(
-                        String::from(args.value_of("output_file").unwrap()))
-                }
+fn filename_from_args(
+    args: &clap::ArgMatches,
+    filetype: &str,
+) -> Option<String> {
+    let extension;
+    match filetype {
+        "txt" => {
+            extension = "txt";
+            if args.is_present("output_file") {
+                return Some(String::from(
+                    args.value_of("output_file").unwrap(),
+                ));
             }
-            "json" => {
-                extension = "json";
-                if args.is_present("json_file") {
-                    return Some(
-                        String::from(args.value_of("json_file").unwrap()))
-                }
+        }
+        "json" => {
+            extension = "json";
+            if args.is_present("json_file") {
+                return Some(String::from(args.value_of("json_file").unwrap()));
             }
-            "xml" => {
-                extension = "xml";
-                if args.is_present("xml_file") {
-                    return Some(
-                        String::from(args.value_of("xml_file").unwrap()))
-                }
+        }
+        "xml" => {
+            extension = "xml";
+            if args.is_present("xml_file") {
+                return Some(String::from(args.value_of("xml_file").unwrap()));
             }
-            _ => panic!()
         }
-        if args.is_present("output_all") {
-            return Some(format!("{}.{}",
-                         args.value_of("output_all").unwrap(),
-                         extension))
-        }
-        else {
-            None
-        }
+        _ => panic!(),
+    }
+    if args.is_present("output_all") {
+        return Some(format!(
+            "{}.{}",
+            args.value_of("output_all").unwrap(),
+            extension
+        ));
+    } else {
+        None
+    }
 }
 
 #[inline]
-fn load_modifiers(args: &clap::ArgMatches, mod_type: &str)
-    -> Vec<String> {
-        let singular_arg;
-        let file_arg;
-        match mod_type {
-            "prefixes" => {
-                singular_arg = "prefixes";
-                file_arg = "prefix_file";
-            },
-            "extensions" => {
-                singular_arg = "extensions";
-                file_arg = "extension_file";
-            },
-            _ => panic!()
+fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
+    let singular_arg;
+    let file_arg;
+    match mod_type {
+        "prefixes" => {
+            singular_arg = "prefixes";
+            file_arg = "prefix_file";
         }
-        let file_arg = String::from(file_arg);
+        "extensions" => {
+            singular_arg = "extensions";
+            file_arg = "extension_file";
+        }
+        _ => panic!(),
+    }
+    let file_arg = String::from(file_arg);
 
-        let mut modifiers = vec![String::from("")];
-        if args.is_present(&singular_arg) {
-            for modifier in args.values_of(singular_arg).unwrap() {
+    let mut modifiers = vec![String::from("")];
+    if args.is_present(&singular_arg) {
+        for modifier in args.values_of(singular_arg).unwrap() {
+            modifiers.push(String::from(modifier));
+        }
+    }
+    if args.is_present(&file_arg) {
+        for filename in args.values_of(file_arg).unwrap() {
+            for modifier in lines_from_file(&String::from(filename)) {
                 modifiers.push(String::from(modifier));
             }
         }
-        if args.is_present(&file_arg) {
-            for filename in args.values_of(file_arg).unwrap() {
-                for modifier in lines_from_file(&String::from(filename)) {
-                    modifiers.push(String::from(modifier));
-                }
-            }
-        }
+    }
 
-        modifiers.sort();
-        modifiers.dedup();
+    modifiers.sort();
+    modifiers.dedup();
 
-        modifiers
+    modifiers
 }
 
 #[inline]
 pub fn get_version_string() -> &'static str {
     if cfg!(feature = "release_version_string") {
-        return crate_version!()
-    }
-    else {
+        return crate_version!();
+    } else {
         return concat!(
             env!("VERGEN_SEMVER"),
             " (commit ",
             env!("VERGEN_SHA_SHORT"),
             ", build ",
             env!("VERGEN_BUILD_DATE"),
-            ")")
+            ")"
+        );
     }
 }
 
-// Validator for the provided host name, ensures that the value begins with http:// or https://
+// Validator for the provided host name, ensures that the value begins
+// with http:// or https://
 fn starts_with_http(hostname: String) -> Result<(), String> {
     if hostname.starts_with("https://") || hostname.starts_with("http://") {
         Ok(())
-    }
-    else {
-        Err(String::from("The provided target URI must start with http:// or https://"))
+    } else {
+        Err(String::from(
+            "The provided target URI must start with http:// or https://",
+        ))
     }
 }
 
@@ -845,12 +851,12 @@ fn positive_int_check(value: String) -> Result<(), String> {
     match int_val {
         Ok(max) => {
             if max > 0 {
-                return Ok(())
+                return Ok(());
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     };
-    return Err(String::from("The number given must be a positive integer."))
+    return Err(String::from("The number given must be a positive integer."));
 }
 
 // Validator for various arguments, ensures that value is a
@@ -858,17 +864,15 @@ fn positive_int_check(value: String) -> Result<(), String> {
 fn int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
-        Ok(_) => {
-            return Ok(())
-        },
-        Err(_) => {},
+        Ok(_) => return Ok(()),
+        Err(_) => {}
     };
-    return Err(String::from("The number given must be an integer."))
+    return Err(String::from("The number given must be an integer."));
 }
 
 fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
-    let mut length_vector: Vec<LengthRange> = Vec::with_capacity(
-        blacklist_inputs.len());
+    let mut length_vector: Vec<LengthRange> =
+        Vec::with_capacity(blacklist_inputs.len());
 
     for length in blacklist_inputs {
         let start;
@@ -876,22 +880,28 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
 
         if length.contains("-") {
             let components: Vec<&str> = length.split("-").collect();
-            assert!(components.len() == 2,
-                "Ranges must be in the form `150-300`");
+            assert!(
+                components.len() == 2,
+                "Ranges must be in the form `150-300`"
+            );
             start = components[0].parse::<usize>().unwrap();
-            end = Some(components[1].parse::<usize>().expect(
-                "Ranges must be in the form `150-300`"));
-            assert!(start < end.unwrap(),
-                "The start of a range must be smaller than the end");
+            end = Some(
+                components[1]
+                    .parse::<usize>()
+                    .expect("Ranges must be in the form `150-300`"),
+            );
+            assert!(
+                start < end.unwrap(),
+                "The start of a range must be smaller than the end"
+            );
         } else {
             // Length is just one number
             start = length.parse::<usize>().unwrap();
             end = None;
         }
-        length_vector.push(
-            LengthRange { start, end });
+        length_vector.push(LengthRange { start, end });
     }
-    LengthRanges{
+    LengthRanges {
         ranges: length_vector,
     }
 }
