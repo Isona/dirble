@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-
 // NOTE: Do NOT autoindent this entire file, as the XML format checker
 // relies on the indented string having the correct number of leading
 // spaces.
 
-use serde_test::{Token, assert_tokens};
+use serde_test::{assert_tokens, Token};
 
 #[test]
 fn check_output_indentation() {
@@ -39,20 +38,23 @@ fn check_output_indentation() {
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, false),
         "",
-        "Disabling of indentation does not stop the indentation");
+        "Disabling of indentation does not stop the indentation"
+    );
 
     // Preceding newline, indentation disabled to force early return
     req_response.is_directory = true;
     assert_eq!(
         crate::output_format::output_indentation(&req_response, true, false),
         "\n",
-        "Newline is not printed");
+        "Newline is not printed"
+    );
 
     // Default indentation of zero spaces for base URL
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "",
-        "Default empty indentation not returned");
+        "Default empty indentation not returned"
+    );
 
     // Indentation of four spaces for file three levels deep
     req_response.is_directory = false;
@@ -60,18 +62,20 @@ fn check_output_indentation() {
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
-        "Indentation of nested directories incorrect");
+        "Indentation of nested directories incorrect"
+    );
 
     // Same scenario, but with a trailing slash
     req_response.url = "http://example.com/a/test/directory/".into();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
-        "Trailing slash is not taken into account");
+        "Trailing slash is not taken into account"
+    );
 }
 
 #[test]
-fn check_output_letter () {
+fn check_output_letter() {
     // Check that:
     // * directory && listable -> L
     // * directory && !listable -> D
@@ -84,26 +88,30 @@ fn check_output_letter () {
     assert_eq!(
         crate::output_format::output_letter(&req_response),
         "\u{1b}[1mL \u{1b}[0m",
-        "Listable directory prefix incorrect");
+        "Listable directory prefix incorrect"
+    );
 
     req_response.is_listable = false;
     assert_eq!(
         crate::output_format::output_letter(&req_response),
         "D ",
-        "Directory prefix incorrect");
+        "Directory prefix incorrect"
+    );
 
     req_response.is_directory = false;
     req_response.found_from_listable = true;
     assert_eq!(
         crate::output_format::output_letter(&req_response),
         "~ ",
-        "Found from listable prefix incorrect");
+        "Found from listable prefix incorrect"
+    );
 
     req_response.found_from_listable = false;
     assert_eq!(
         crate::output_format::output_letter(&req_response),
         "+ ",
-        "Regular file prefix incorrect");
+        "Regular file prefix incorrect"
+    );
 }
 
 #[test]
@@ -113,7 +121,8 @@ fn check_output_url() {
     assert_eq!(
         crate::output_format::output_url(&req_response),
         format!("{} ", req_response.url),
-        "Output URL formatted incorrectly");
+        "Output URL formatted incorrectly"
+    );
 }
 
 #[test]
@@ -126,13 +135,15 @@ fn check_output_suffix() {
     assert_eq!(
         crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[32m201\u{1b}[0m|SIZE:456)",
-        "Output suffix for code 201 invalid");
+        "Output suffix for code 201 invalid"
+    );
 
     req_response.code = 304;
     assert_eq!(
         crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[36m304\u{1b}[0m|SIZE:456)",
-        "Output suffix for code 304 invalid");
+        "Output suffix for code 304 invalid"
+    );
 
     // Test that the redirect URL is included
     req_response.code = 301;
@@ -140,25 +151,29 @@ fn check_output_suffix() {
     assert_eq!(
         crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[36m301\u{1b}[0m|SIZE:456|DEST:https://nccgroup.com)",
-        "Output suffix for code 301 invalid");
+        "Output suffix for code 301 invalid"
+    );
 
     req_response.code = 451;
     assert_eq!(
         crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[31m451\u{1b}[0m|SIZE:456)",
-        "Output suffix for code 451 invalid");
+        "Output suffix for code 451 invalid"
+    );
 
     req_response.code = 503;
     assert_eq!(
         crate::output_format::output_suffix(&req_response, true),
         "(CODE:\u{1b}[33m503\u{1b}[0m|SIZE:456)",
-        "Output suffix for code 503 invalid");
+        "Output suffix for code 503 invalid"
+    );
 
     // Check that turning off colours also works
     assert_eq!(
         crate::output_format::output_suffix(&req_response, false),
         "(CODE:503|SIZE:456)",
-        "Disabling colours hasn't worked properly");
+        "Disabling colours hasn't worked properly"
+    );
 }
 
 #[test]
@@ -172,7 +187,7 @@ fn check_output_xml() {
         is_listable: false,
         found_from_listable: true,
         redirect_url: "https://example.org".into(),
-        parent_depth: 2
+        parent_depth: 2,
     };
     // DO NOT change the indentation here, it matches the indentation
     // produced by the XML formatter.
@@ -203,35 +218,33 @@ fn check_output_json() {
         is_listable: true,
         redirect_url: "https://example.org".into(),
         found_from_listable: false,
-        parent_depth: 0
+        parent_depth: 0,
     };
 
-    assert_tokens(&req_response, &[
-                  Token::Struct{ len: 7, name: "RequestResponse" },
-
-                  Token::String("url"),
-                  Token::String("http://example.com"),
-
-                  Token::String("code"),
-                  Token::U32(200),
-
-                  Token::String("size"),
-                  Token::U64(350),
-
-                  Token::String("is_directory"),
-                  Token::Bool(false),
-
-                  Token::String("is_listable"),
-                  Token::Bool(true),
-
-                  Token::String("redirect_url"),
-                  Token::String("https://example.org"),
-
-                  Token::String("found_from_listable"),
-                  Token::Bool(false),
-
-                  Token::StructEnd,
-    ]);
+    assert_tokens(
+        &req_response,
+        &[
+            Token::Struct {
+                len: 7,
+                name: "RequestResponse",
+            },
+            Token::String("url"),
+            Token::String("http://example.com"),
+            Token::String("code"),
+            Token::U32(200),
+            Token::String("size"),
+            Token::U64(350),
+            Token::String("is_directory"),
+            Token::Bool(false),
+            Token::String("is_listable"),
+            Token::Bool(true),
+            Token::String("redirect_url"),
+            Token::String("https://example.org"),
+            Token::String("found_from_listable"),
+            Token::Bool(false),
+            Token::StructEnd,
+        ],
+    );
 }
 
 #[inline]
@@ -246,6 +259,6 @@ fn generate_request_response() -> crate::request::RequestResponse {
         is_listable: false,
         found_from_listable: false,
         redirect_url: "https://example.org".into(),
-        parent_depth: 2 // Depth is number of slashes, 2 for http://
+        parent_depth: 2, // Depth is number of slashes, 2 for http://
     }
 }

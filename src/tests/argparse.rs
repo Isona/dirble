@@ -46,7 +46,8 @@ fn argparse_length_ranges_contain() {
                 start: 15,
                 end: Some(18),
             },
-        ]};
+        ],
+    };
     // too small
     assert!(!ranges.contains(3));
     // in first range

@@ -1,16 +1,9 @@
-use std::sync::Arc;
-use crate::request::RequestResponse;
-use crate::arg_parse::{
-    GlobalOpts,
-    LengthRange,
-    LengthRanges,
-};
+use crate::arg_parse::{GlobalOpts, LengthRange, LengthRanges};
 use crate::output::{
-    print_response,
-    sort_responses,
-    directory_name,
-    startup_text,
+    directory_name, print_response, sort_responses, startup_text,
 };
+use crate::request::RequestResponse;
+use std::sync::Arc;
 
 #[test]
 fn test_print_response() {
@@ -32,27 +25,26 @@ fn test_print_response() {
     // Verify that htaccess files are hidden when the option is set in
     // globalopts
     globalopts.show_htaccess = false;
-    let output = print_response(
-        &rr, Arc::new(globalopts.clone()), false, false, false);
-    assert_eq!(output,
-               None,
-               ".htaccess is not being hidden");
+    let output =
+        print_response(&rr, Arc::new(globalopts.clone()), false, false, false);
+    assert_eq!(output, None, ".htaccess is not being hidden");
     // And check that they are not hidden otherwise
     globalopts.show_htaccess = true;
     let output = print_response(&rr, Arc::new(globalopts), false, false, false);
-    assert_eq!(output,
-              Some(String::from(
-                      "+ http://example.com/.htaccess (CODE:403|SIZE:234)")),
-              ".htaccess is not being hidden");
+    assert_eq!(
+        output,
+        Some(String::from(
+            "+ http://example.com/.htaccess (CODE:403|SIZE:234)"
+        )),
+        ".htaccess is not being hidden"
+    );
 }
 
 #[test]
-fn test_print_report() {
-}
+fn test_print_report() {}
 
 #[test]
-fn test_write_file() {
-}
+fn test_write_file() {}
 
 #[test]
 fn test_sort_responses() {
@@ -82,8 +74,11 @@ fn test_sort_responses() {
     rr.url = "http://example.com/one/".into();
     rr.is_directory = true;
     rr_vec.push(rr.clone());
-    assert_eq!(num_test_cases, rr_vec.len(),
-        "Length of test vector does not match expected number of cases");
+    assert_eq!(
+        num_test_cases,
+        rr_vec.len(),
+        "Length of test vector does not match expected number of cases"
+    );
 
     dbg!(&rr_vec);
 
@@ -111,11 +106,17 @@ fn test_directory_name() {
     // First case: rr is a directory ending with slash
     rr.url = "http://example.com/test/dir/".into();
     rr.is_directory = true;
-    assert_eq!(directory_name(&rr), String::from("http://example.com/test/dir"));
+    assert_eq!(
+        directory_name(&rr),
+        String::from("http://example.com/test/dir")
+    );
 
     // Second case: rr is a directory not ending with slash
     rr.url = "http://example.com/test/dir".into();
-    assert_eq!(directory_name(&rr), String::from("http://example.com/test/dir"));
+    assert_eq!(
+        directory_name(&rr),
+        String::from("http://example.com/test/dir")
+    );
 
     // Second case: rr is not a directory
     rr.is_directory = false;
@@ -123,12 +124,10 @@ fn test_directory_name() {
 }
 
 #[test]
-fn test_create_files() {
-}
+fn test_create_files() {}
 
 #[test]
-fn test_generate_handle() {
-}
+fn test_generate_handle() {}
 
 #[test]
 fn test_startup_text() {
@@ -149,18 +148,17 @@ fn test_startup_text() {
     let version = crate::arg_parse::get_version_string();
     let suffix = String::from(
         "\nDeveloped by Izzy Whistlecroft\nTargets: \nWordlist: foo\n\
-        No Prefixes\nNo Extensions\nNo lengths hidden\n");
+         No Prefixes\nNo Extensions\nNo lengths hidden\n",
+    );
     assert_eq!(text.unwrap(), format!("Dirble {}{}", version, suffix));
 
     // Set all of the optional parameters, output text should display
     // them.
-    globalopts.hostnames = vec![
-        "http://example.com".into(),
-        "http://example.org".into(),
-    ];
+    globalopts.hostnames =
+        vec!["http://example.com".into(), "http://example.org".into()];
     globalopts.wordlist_files = Some(vec!["foo".into(), "bar".into()]);
     globalopts.prefixes = vec!["".into(), "~".into()];
-    globalopts.extensions= vec!["".into(), ".txt".into(), ".com".into()];
+    globalopts.extensions = vec!["".into(), ".txt".into(), ".com".into()];
     globalopts.length_blacklist = LengthRanges {
         ranges: vec![
             LengthRange {
@@ -171,12 +169,14 @@ fn test_startup_text() {
                 start: 400,
                 end: None,
             },
-        ]};
+        ],
+    };
     let text = startup_text(Arc::new(globalopts.clone()), &String::from("foo"));
     let suffix = String::from(
         "\nDeveloped by Izzy Whistlecroft\n\
-        Targets: http://example.com http://example.org\n\
-        Wordlists: foo bar\nPrefixes: ~\nExtensions: .txt .com\n\
-        Hidden lengths: [400, 2400-3000]\n");
+         Targets: http://example.com http://example.org\n\
+         Wordlists: foo bar\nPrefixes: ~\nExtensions: .txt .com\n\
+         Hidden lengths: [400, 2400-3000]\n",
+    );
     assert_eq!(text.unwrap(), format!("Dirble {}{}", version, suffix));
 }

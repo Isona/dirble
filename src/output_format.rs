@@ -21,17 +21,22 @@ use serde_json;
 use simple_xml_serialize::XMLElement;
 
 #[inline]
-pub fn output_indentation(response: &RequestResponse, print_newlines: bool, indentation: bool) -> String {
+pub fn output_indentation(
+    response: &RequestResponse,
+    print_newlines: bool,
+    indentation: bool,
+) -> String {
     let mut output: String;
 
     if response.is_directory && print_newlines {
         output = String::from("\n");
-    }
-    else {
+    } else {
         output = String::from("");
     }
 
-    if !indentation { return output }
+    if !indentation {
+        return output;
+    }
 
     let mut depth = response.url.matches("/").count() as i32;
 
@@ -39,11 +44,11 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
         depth -= 1;
     }
 
-    depth -= response.parent_depth as i32; 
+    depth -= response.parent_depth as i32;
     depth -= 1;
-    
+
     if depth <= 0 {
-        return output
+        return output;
     }
 
     for _ in 0..depth {
@@ -55,10 +60,15 @@ pub fn output_indentation(response: &RequestResponse, print_newlines: bool, inde
 
 #[inline]
 pub fn output_letter(response: &RequestResponse) -> String {
-    if response.is_directory && response.is_listable { "L ".bold().to_string() }
-    else if response.is_directory { String:: from("D ") }
-    else if response.found_from_listable { String::from("~ ") }
-    else { String::from("+ ") }
+    if response.is_directory && response.is_listable {
+        "L ".bold().to_string()
+    } else if response.is_directory {
+        String::from("D ")
+    } else if response.found_from_listable {
+        String::from("~ ")
+    } else {
+        String::from("+ ")
+    }
 }
 
 #[inline]
@@ -68,27 +78,27 @@ pub fn output_url(response: &RequestResponse) -> String {
 
 #[inline]
 pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
-    if response.found_from_listable { return String::from("(SCRAPED)") }
+    if response.found_from_listable {
+        return String::from("(SCRAPED)");
+    }
 
-    let mut code_string:String = format!{"{}", response.code};
+    let mut code_string: String = format!("{}", response.code);
     if color {
         code_string = match response.code {
-            200..=299 => { code_string.green().to_string() }
-            300..=399 => { code_string.cyan().to_string() }
-            400..=499 => { code_string.red().to_string() }
-            500..=599 => { code_string.yellow().to_string() }
-            _ => { code_string }
+            200..=299 => code_string.green().to_string(),
+            300..=399 => code_string.cyan().to_string(),
+            400..=499 => code_string.red().to_string(),
+            500..=599 => code_string.yellow().to_string(),
+            _ => code_string,
         }
     }
 
     match response.code {
-        301 | 302 => {
-            format!("(CODE:{}|SIZE:{:#?}|DEST:{})", 
-                code_string, response.content_len, response.redirect_url)
-        }
-        _ => {
-            format!("(CODE:{}|SIZE:{:#?})", code_string, response.content_len)
-        }
+        301 | 302 => format!(
+            "(CODE:{}|SIZE:{:#?}|DEST:{})",
+            code_string, response.content_len, response.redirect_url,
+        ),
+        _ => format!("(CODE:{}|SIZE:{:#?})", code_string, response.content_len),
     }
 }
 

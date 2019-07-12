@@ -16,25 +16,23 @@
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::{
-    sync::{Arc, mpsc::self},
+    sync::{mpsc, Arc},
     thread,
     time::Duration,
 };
 extern crate curl;
 use crate::arg_parse;
 use crate::request;
-use crate::wordlist;
 use crate::validator_thread;
-use log::{
-    trace,
-    debug,
-    warn,
-};
+use crate::wordlist;
+use log::{debug, trace, warn};
 
-pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>, 
+pub fn thread_spawn(
+    dir_tx: mpsc::Sender<request::RequestResponse>,
     output_tx: mpsc::Sender<request::RequestResponse>,
-    uri_gen: wordlist::UriGenerator, global_opts: Arc<arg_parse::GlobalOpts>) {
-
+    uri_gen: wordlist::UriGenerator,
+    global_opts: Arc<arg_parse::GlobalOpts>,
+) {
     let hostname = uri_gen.hostname.clone();
 
     debug!("Scanning {}", hostname);
@@ -57,24 +55,46 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
         // This may also scrape listable directories if the parameter is set
         // Then return each discovered item to the main thread
         if response.is_directory {
-            let mut response_list = request::listable_check(&mut easy, response.url, 
-                global_opts.max_recursion_depth, response.parent_depth as i32, global_opts.scrape_listable);
+            let mut response_list = request::listable_check(
+                &mut easy,
+                response.url,
+                global_opts.max_recursion_depth,
+                response.parent_depth as i32,
+                global_opts.scrape_listable,
+            );
 
             let mut original_response = response_list.remove(0);
             original_response.found_from_listable = false;
             original_response.parent_depth = parent_depth;
-            send_response(&dir_tx, &output_tx, &global_opts, original_response, &validator);
+            send_response(
+                &dir_tx,
+                &output_tx,
+                &global_opts,
+                original_response,
+                &validator,
+            );
 
             for mut scraped_response in response_list {
                 scraped_response.parent_depth = parent_depth;
-                send_response(&dir_tx, &output_tx, &global_opts, scraped_response, &validator);
+                send_response(
+                    &dir_tx,
+                    &output_tx,
+                    &global_opts,
+                    scraped_response,
+                    &validator,
+                );
             }
-
-        } 
+        }
         // If it isn't a directory then just send the response to the main thread
         else {
             response.parent_depth = parent_depth;
-            send_response(&dir_tx, &output_tx, &global_opts, response, &validator); 
+            send_response(
+                &dir_tx,
+                &output_tx,
+                &global_opts,
+                response,
+                &validator,
+            );
         }
 
         // Detect consecutive errors and stop the thread if the count is exceeded
@@ -82,11 +102,14 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
             if code == 0 {
                 consecutive_errors += 1;
                 if consecutive_errors >= global_opts.max_errors {
-                    warn!("Thread scanning {} stopping due to multiple consecutive errors received", hostname);
+                    warn!(
+                        "Thread scanning {} stopping due to multiple \
+                         consecutive errors received",
+                        hostname
+                    );
                     break;
                 }
-            }
-            else {
+            } else {
                 consecutive_errors = 0;
             }
         }
@@ -107,17 +130,18 @@ pub fn thread_spawn(dir_tx: mpsc::Sender<request::RequestResponse>,
 // dependent on whitelist/blacklist settings and response code
 #[inline]
 fn send_response(
-    dir_tx: &mpsc::Sender<request::RequestResponse>, 
+    dir_tx: &mpsc::Sender<request::RequestResponse>,
     output_tx: &mpsc::Sender<request::RequestResponse>,
     global_opts: &arg_parse::GlobalOpts,
     response: request::RequestResponse,
-    validator_opt: &Option<validator_thread::TargetValidator>
+    validator_opt: &Option<validator_thread::TargetValidator>,
 ) {
     if response.is_directory {
         dir_tx.send(response.clone()).unwrap();
         output_tx.send(response).unwrap();
         return;
-    } if should_send_response(&global_opts, &response, &validator_opt) {
+    }
+    if should_send_response(&global_opts, &response, &validator_opt) {
         output_tx.send(response).unwrap();
     }
 }
@@ -127,21 +151,21 @@ pub fn should_send_response(
     global_opts: &arg_parse::GlobalOpts,
     response: &request::RequestResponse,
     validator_opt: &Option<validator_thread::TargetValidator>,
-    ) -> bool {
-    
-
+) -> bool {
     // Check each of the conditions for outputting the discovered file
 
     // Check the response code white/blacklist
     let contains_code = global_opts.code_list.contains(&response.code);
     if global_opts.whitelist && !contains_code {
-        trace!("[{}]: code {} not in whitelist",
-               response.url, response.code);
+        trace!(
+            "[{}]: code {} not in whitelist",
+            response.url,
+            response.code
+        );
         return false;
     }
     if !global_opts.whitelist && contains_code {
-        trace!("[{}]: code {} in blacklist",
-               response.url, response.code);
+        trace!("[{}]: code {} in blacklist", response.url, response.code);
         return false;
     }
     if let Some(validator) = validator_opt {
@@ -153,8 +177,11 @@ pub fn should_send_response(
 
     // Check that the response size has not been blacklisted
     if global_opts.length_blacklist.contains(response.content_len) {
-        trace!("[{}]: length {} is in a blacklist range",
-               response.url, response.content_len);
+        trace!(
+            "[{}]: length {} is in a blacklist range",
+            response.url,
+            response.content_len
+        );
         return false;
     }
 
@@ -168,10 +195,10 @@ fn generate_end() -> request::RequestResponse {
         url: String::from("END"),
         code: 0,
         content_len: 0,
-        is_directory:false,
+        is_directory: false,
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false,
-        parent_depth: 0
+        parent_depth: 0,
     }
 }

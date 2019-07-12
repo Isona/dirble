@@ -15,23 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::arg_parse::{GlobalOpts, HttpVerb};
+use crate::content_parse;
 use curl::Error;
+use percent_encoding::percent_decode;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::arg_parse::{GlobalOpts, HttpVerb};
-use percent_encoding::percent_decode;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
-use crate::content_parse;
-use serde::{Serialize, Deserialize};
+use log::trace;
+use serde::{Deserialize, Serialize};
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
-use log::trace;
 
-pub struct Collector
-{
+pub struct Collector {
     pub contents: Vec<u8>,
-    pub content_len: usize
+    pub content_len: usize,
 }
 
 impl Collector {
@@ -55,30 +54,32 @@ impl Handler for Collector {
 #[xml_element("path")]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct RequestResponse {
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub url: String,
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub code: u32,
-#[sxs_type_attr]
-#[serde(rename = "size")]
+    #[sxs_type_attr]
+    #[serde(rename = "size")]
     pub content_len: usize,
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub is_directory: bool,
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub is_listable: bool,
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub redirect_url: String,
-#[sxs_type_attr]
+    #[sxs_type_attr]
     pub found_from_listable: bool,
-#[serde(skip)]
-    pub parent_depth: u32
+    #[serde(skip)]
+    pub parent_depth: u32,
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
-pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResponse {
-
+pub fn make_request(
+    mut easy: &mut Easy2<Collector>,
+    url: String,
+) -> RequestResponse {
     trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
     easy.url(&url).unwrap();
@@ -93,13 +94,13 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
                 url: url.clone(),
                 code: 0,
                 content_len: 0,
-                is_directory:false,
+                is_directory: false,
                 is_listable: false,
                 redirect_url: String::from(""),
                 found_from_listable: false,
-                parent_depth: 0
+                parent_depth: 0,
             };
-            return req_response; 
+            return req_response;
         }
     }
 
@@ -111,11 +112,11 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
         url: url.clone(),
         code: code,
         content_len: 0,
-        is_directory:false,
+        is_directory: false,
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false,
-        parent_depth: 0
+        parent_depth: 0,
     };
 
     // If the response was a redirect, check if it's a directory
@@ -123,10 +124,10 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
     // Generally, directories will redirect requests to them with no trailing /
     // so that they have a trailing /
     if code == 301 || code == 302 {
-
         // Obtain and url decode the redirect destination
         let redir_dest = easy.redirect_url().unwrap().unwrap();
-        let redir_dest = percent_decode(redir_dest.as_bytes()).decode_utf8().unwrap();
+        let redir_dest =
+            percent_decode(redir_dest.as_bytes()).decode_utf8().unwrap();
 
         // Clone and url decode the url
         let dir_url = url.clone() + "/";
@@ -146,9 +147,13 @@ pub fn make_request(mut easy: &mut Easy2<Collector>, url: String) -> RequestResp
     req_response
 }
 
-pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String, 
-                    max_recursion_depth: Option<i32>, parent_depth: i32,
-                    scrape_listable: bool) -> Vec<RequestResponse> {
+pub fn listable_check(
+    easy: &mut Easy2<Collector>,
+    original_url: String,
+    max_recursion_depth: Option<i32>,
+    parent_depth: i32,
+    scrape_listable: bool,
+) -> Vec<RequestResponse> {
     // Formulate the directory name and make a request to get the contents of the page
     let mut dir_url = String::from(original_url.clone());
     if !dir_url.ends_with("/") {
@@ -156,25 +161,25 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String,
     }
     let mut response = make_request(easy, dir_url.clone());
     let content = get_content(easy).to_lowercase();
-    let mut output_list:Vec<RequestResponse> = Vec::new();
+    let mut output_list: Vec<RequestResponse> = Vec::new();
 
     match response.code {
         // If a found response was returned then check if the directory is listable or not
         200 => {
-            let listable = content.contains("parent directory") || content.contains("up to ") 
+            let listable = content.contains("parent directory")
+                || content.contains("up to ")
                 || content.contains("directory listing for");
 
-            if listable{
+            if listable {
                 response.is_listable = true;
                 response.is_directory = true;
                 output_list.push(response);
-            }
-            else{
+            } else {
                 response.is_listable = false;
                 response.is_directory = true;
-                
+
                 output_list.push(response);
-                return output_list
+                return output_list;
             }
         }
         // If the code returned was not a 200 then create a struct
@@ -183,22 +188,28 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String,
             response.is_directory = true;
             response.is_listable = false;
             output_list.push(response);
-            return output_list
+            return output_list;
         }
     }
 
     // If scraping of listables is disabled then just return from the function
-    if !scrape_listable { return output_list }
+    if !scrape_listable {
+        return output_list;
+    }
 
     // Get urls scraped from the response
-    let scraped_urls:Vec<String> = content_parse::scrape_urls(content, dir_url);
+    let scraped_urls: Vec<String> =
+        content_parse::scrape_urls(content, dir_url);
 
     for scraped_url in scraped_urls {
         // If the scraped url doesn't end in a /, it's unlikely to be a folder
         // Add it to the list of found URLs to be returned
         if !scraped_url.ends_with("/") {
             output_list.push(fabricate_request_response(
-                scraped_url, false, false));
+                scraped_url,
+                false,
+                false,
+            ));
         }
         // If the url ends in a /, it is likely to be a folder
         else {
@@ -216,18 +227,31 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String,
 
                 // If we've exceeded the max depth, add the url to the values to be returned
                 if depth > max_depth {
-                    output_list.push(fabricate_request_response(scraped_url, true, false));
-                }
-                else {
-                    output_list.append(&mut listable_check(easy, scraped_url, 
-                            max_recursion_depth, parent_depth, scrape_listable));
+                    output_list.push(fabricate_request_response(
+                        scraped_url,
+                        true,
+                        false,
+                    ));
+                } else {
+                    output_list.append(&mut listable_check(
+                        easy,
+                        scraped_url,
+                        max_recursion_depth,
+                        parent_depth,
+                        scrape_listable,
+                    ));
                 }
             }
             // If there is no limit to recursion depth
             // then call this function on the discovered folder
             else {
-                output_list.append(&mut listable_check(easy, scraped_url, 
-                            max_recursion_depth, parent_depth, scrape_listable));
+                output_list.append(&mut listable_check(
+                    easy,
+                    scraped_url,
+                    max_recursion_depth,
+                    parent_depth,
+                    scrape_listable,
+                ));
             }
         }
     }
@@ -236,19 +260,28 @@ pub fn listable_check(easy: &mut Easy2<Collector>, original_url: String,
 }
 
 // Creates an easy2 instance based on the parameters provided by the user
-pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
-{
+pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector> {
     // Create a new curl Easy2 instance and set it to use GET requests
-    let mut easy = Easy2::new(Collector{contents: Vec::new(), content_len: 0});
+    let mut easy = Easy2::new(Collector {
+        contents: Vec::new(),
+        content_len: 0,
+    });
 
     match &global_opts.http_verb {
-        HttpVerb::Get => { easy.get(true).unwrap(); },
-        HttpVerb::Head => { easy.nobody(true).unwrap(); },
-        HttpVerb::Post => { easy.post(true).unwrap(); }
+        HttpVerb::Get => {
+            easy.get(true).unwrap();
+        }
+        HttpVerb::Head => {
+            easy.nobody(true).unwrap();
+        }
+        HttpVerb::Post => {
+            easy.post(true).unwrap();
+        }
     }
 
     // Set the timeout of the easy
-    easy.timeout(Duration::from_secs(global_opts.timeout as u64)).unwrap();
+    easy.timeout(Duration::from_secs(global_opts.timeout as u64))
+        .unwrap();
 
     // Use proxy settings if they have been provided
     if global_opts.proxy_enabled {
@@ -269,7 +302,8 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
     // Set http basic auth options
     if let Some(username) = &global_opts.username {
         easy.username(&username.clone()).unwrap();
-        easy.password(&global_opts.password.clone().unwrap()).unwrap();
+        easy.password(&global_opts.password.clone().unwrap())
+            .unwrap();
     }
 
     // Set cookies
@@ -278,7 +312,7 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
     }
 
     // Set headers
-    if let Some(headers) =  &global_opts.headers {
+    if let Some(headers) = &global_opts.headers {
         let mut header_list = curl::easy::List::new();
         for header in headers {
             header_list.append(header).unwrap();
@@ -291,28 +325,29 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector>
 
 // Before each request, the buffer should be cleared
 // This provides support for chunked http responses
-fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error>
-{
+fn perform(easy: &mut Easy2<Collector>) -> Result<(), Error> {
     easy.get_mut().clear_buffer();
     easy.perform()
 }
 
 // Get the current content of the given easy and return it as a string
-fn get_content(easy: &mut Easy2<Collector>) -> String
-{
+fn get_content(easy: &mut Easy2<Collector>) -> String {
     let contents = easy.get_ref();
     String::from_utf8_lossy(&contents.contents).to_string()
 }
 
 // Generate a struct for a response for use when a request hasn't been made
 // Used when items were discovered via scraping
-pub fn fabricate_request_response(url: String, is_directory: bool, is_listable: bool) -> RequestResponse
-{
+pub fn fabricate_request_response(
+    url: String,
+    is_directory: bool,
+    is_listable: bool,
+) -> RequestResponse {
     let mut new_url = url.clone();
     if new_url.ends_with("/") {
         new_url.pop();
     }
-    
+
     RequestResponse {
         url: url.clone(),
         code: 0,
@@ -321,6 +356,6 @@ pub fn fabricate_request_response(url: String, is_directory: bool, is_listable: 
         is_listable: is_listable,
         redirect_url: String::from(""),
         found_from_listable: true,
-        parent_depth: 0
+        parent_depth: 0,
     }
 }
