@@ -121,8 +121,8 @@ pub fn make_request(
 
     // If the response was a redirect, check if it's a directory
     // Also add the redirect url to the struct
-    // Generally, directories will redirect requests to them with no trailing /
-    // so that they have a trailing /
+    // Generally, directories will redirect requests to them with no
+    // trailing / so that they have a trailing /
     if code == 301 || code == 302 {
         // Obtain and url decode the redirect destination
         let redir_dest = easy.redirect_url().unwrap().unwrap();
@@ -154,7 +154,8 @@ pub fn listable_check(
     parent_depth: i32,
     scrape_listable: bool,
 ) -> Vec<RequestResponse> {
-    // Formulate the directory name and make a request to get the contents of the page
+    // Formulate the directory name and make a request to get the
+    // contents of the page
     let mut dir_url = String::from(original_url.clone());
     if !dir_url.ends_with("/") {
         dir_url = dir_url + "/";
@@ -164,7 +165,8 @@ pub fn listable_check(
     let mut output_list: Vec<RequestResponse> = Vec::new();
 
     match response.code {
-        // If a found response was returned then check if the directory is listable or not
+        // If a found response was returned then check if the directory
+        // is listable or not
         200 => {
             let listable = content.contains("parent directory")
                 || content.contains("up to ")
@@ -192,7 +194,8 @@ pub fn listable_check(
         }
     }
 
-    // If scraping of listables is disabled then just return from the function
+    // If scraping of listables is disabled then just return from the
+    // function
     if !scrape_listable {
         return output_list;
     }
@@ -202,7 +205,8 @@ pub fn listable_check(
         content_parse::scrape_urls(content, dir_url);
 
     for scraped_url in scraped_urls {
-        // If the scraped url doesn't end in a /, it's unlikely to be a folder
+        // If the scraped url doesn't end in a /, it's unlikely to be a
+        // folder
         // Add it to the list of found URLs to be returned
         if !scraped_url.ends_with("/") {
             output_list.push(fabricate_request_response(
@@ -225,7 +229,8 @@ pub fn listable_check(
 
                 depth -= parent_depth as i32;
 
-                // If we've exceeded the max depth, add the url to the values to be returned
+                // If we've exceeded the max depth, add the url to the
+                // values to be returned
                 if depth > max_depth {
                     output_list.push(fabricate_request_response(
                         scraped_url,

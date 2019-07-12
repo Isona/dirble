@@ -139,7 +139,8 @@ fn main() {
     let wordlist = Arc::new(wordlist);
 
     // Create a channel for threads to communicate with the parent on
-    // This is used to send information about ending threads and information on responses
+    // This is used to send information about ending threads and
+    // information on responses
     let (output_tx, output_rx): (
         Sender<request::RequestResponse>,
         Receiver<request::RequestResponse>,
@@ -215,7 +216,8 @@ fn main() {
             }
         }
     }
-    // Define the max number of threads and the number of threads currently in use
+    // Define the max number of threads and the number of threads
+    // currently in use
     let mut threads_in_use = 0;
 
     let file_handles = output::create_files(global_opts.clone());
@@ -244,14 +246,17 @@ fn main() {
         // Check for messages from the threads
         let to_scan = to_scan_rx.try_recv();
 
-        // Ignore any errors - this happens if the message queue is empty, that's okay
+        // Ignore any errors - this happens if the message queue is
+        // empty, that's okay
         if let Ok(dir_info_opt) = to_scan {
             if let Some(dir_info) = dir_info_opt {
-                // If a thread has sent end, then we can reduce the threads in use count
+                // If a thread has sent end, then we can reduce the
+                // threads in use count
                 if dir_info.url == "END" {
                     threads_in_use -= 1;
                 }
-                // Check the validator to see if the directory should be scanned
+                // Check the validator to see if the directory should
+                // be scanned
                 else {
                     match &dir_info.validator {
                         Some(validator) => {
@@ -289,14 +294,15 @@ fn main() {
         // If there are items in the scan queue and available threads
         // Spawn a new thread to scan an item
         if threads_in_use < global_opts.max_threads && scan_queue.len() > 0 {
-            // Clone a new sender to the channel and a new wordlist reference
-            // Then pop the scan target from the queue
+            // Clone a new sender to the channel and a new wordlist
+            // reference, then pop the scan target from the queue
             let to_validate_tx_clone = mpsc::Sender::clone(&to_validate_tx);
             let output_tx_clone = mpsc::Sender::clone(&output_tx);
             let list_gen = scan_queue.pop_front().unwrap();
             let arg_clone = global_opts.clone();
 
-            // Spawn a thread with the arguments and increment the in use counter
+            // Spawn a thread with the arguments and increment the in
+            // use counter
             thread::spawn(|| {
                 request_thread::thread_spawn(
                     to_validate_tx_clone,
@@ -308,7 +314,8 @@ fn main() {
             threads_in_use += 1;
         }
 
-        // If there are no threads in use and the queue is empty then stop
+        // If there are no threads in use and the queue is empty then
+        // stop
         if threads_in_use == 0 && scan_queue.len() == 0 {
             break;
         }

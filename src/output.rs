@@ -63,7 +63,8 @@ pub fn print_response(
     Some(output)
 }
 
-// Called after a scan to print the discovered items in a sorted way - deals with saving to files too
+// Called after a scan to print the discovered items in a sorted way -
+// deals with saving to files too
 pub fn print_report(
     responses: Vec<RequestResponse>,
     global_opts: Arc<GlobalOpts>,
@@ -147,7 +148,8 @@ fn write_file(file_writer: &mut LineWriter<File>, line: String) {
     file_writer.write_all(write_line).unwrap();
 }
 
-// Sorts responses so that files in a directory come first, followed by the subdirs
+// Sorts responses so that files in a directory come first, followed by
+// the subdirs
 pub fn sort_responses(
     mut responses: Vec<RequestResponse>,
 ) -> Vec<RequestResponse> {
@@ -174,7 +176,8 @@ pub fn directory_name(response: &RequestResponse) -> String {
     }
 }
 
-// Returns a FileHandles struct with LineWriters for each specified output type
+// Returns a FileHandles struct with LineWriters for each specified
+// output type
 pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
     let mut output_file = None;
 

@@ -86,7 +86,8 @@ impl TargetValidator {
     }
 
     // Function used to compare the validator to a RequestResponse,
-    // Returns true if the given request matches the not found definition
+    // Returns true if the given request matches the not found
+    // definition
     pub fn is_not_found(&self, response: &request::RequestResponse) -> bool {
         // If the responses codes don't match then it is "found"
         if self.response_code != response.code {
@@ -212,7 +213,8 @@ pub fn validator_thread(
                 break;
             } else {
                 // Don't do anything if it's somehow not a directory
-                // Also don't do anything if it's listable and we aren't scanning those
+                // Also don't do anything if it's listable and we aren't
+                // scanning those
                 if !response.is_directory
                     || (response.is_listable && !global_opts.scan_listable)
                 {
@@ -253,14 +255,16 @@ pub fn validator_thread(
                     continue;
                 }
 
-                // Generate an easy and make 3 random requests to the folder
+                // Generate an easy and make 3 random requests to the
+                // folder
                 let mut easy = request::generate_easy(&global_opts);
                 let responses = make_requests(response.url.clone(), &mut easy);
 
                 //Get a validator
                 let validator_option = determine_not_found(responses);
 
-                // If there is a validator then wrap it in a DirectoryInfo and send to main
+                // If there is a validator then wrap it in a
+                // DirectoryInfo and send to main
                 if let Some(validator) = validator_option {
                     info!(
                         "Detected nonexistent paths for {} are {}",
@@ -274,8 +278,9 @@ pub fn validator_thread(
                     );
                     main_tx.send(Some(directory_info)).unwrap();
                 }
-                // If there isn't a validator then send a none back to main
-                // This will be ignored but is necessary during validation of initial directories
+                // If there isn't a validator then send a none back to
+                // main. This will be ignored but is necessary during
+                // validation of initial directories
                 else {
                     warn!(
                         "{} errored too often during validation, skipping scanning",
@@ -288,7 +293,8 @@ pub fn validator_thread(
     }
 }
 
-// Makes a set of 3 requests to random strings of different lengths in the given folder
+// Makes a set of 3 requests to random strings of different lengths in
+// the given folder
 fn make_requests(
     mut base_url: String,
     easy: &mut Easy2<request::Collector>,

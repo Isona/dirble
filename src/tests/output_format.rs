@@ -23,9 +23,9 @@ use serde_test::{assert_tokens, Token};
 
 #[test]
 fn check_output_indentation() {
-    //   crate::output_format::output_indentation produces a number of spaces based on
-    // the parent_depth field of the RR and the number of slashes in
-    // the url.
+    //   crate::output_format::output_indentation produces a number of
+    // spaces based on the parent_depth field of the RR and the number
+    // of slashes in the url.
     //   Types of output:
     //     * Indentation disabled: empty String
     //     * Two spaces for each level below the parent directory the

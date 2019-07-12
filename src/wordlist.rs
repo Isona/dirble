@@ -22,7 +22,8 @@ use log::error;
 use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use std::{fs::File, io::prelude::*, process::exit, sync::Arc};
 
-// Struct for a UriGenerator, it needs the hostname, the suffix to append, a wordlist and an index into that wordlist
+// Struct for a UriGenerator, it needs the hostname, the suffix to
+// append, a wordlist and an index into that wordlist
 pub struct UriGenerator {
     pub hostname: String,
     prefix: String,
@@ -73,7 +74,8 @@ impl Iterator for UriGenerator {
         if self.current_index >= self.wordlist.len() {
             return None;
         }
-        // Concatenate the hostname with the current wordlist item and the suffix, then url encode
+        // Concatenate the hostname with the current wordlist item and
+        // the suffix, then url encode
         let uri = self.hostname.clone()
             + "/"
             + &self.prefix

@@ -553,7 +553,11 @@ set to 0 to disable")
                 {
                     hostnames.push(String::from(hostname));
                 } else {
-                    println!("{} doesn't start with \"http://\" or \"https://\" - skipping", hostname);
+                    println!(
+                        "{} doesn't start with \"http://\" or \"https://\" -\
+                        skipping",
+                        hostname
+                    );
                 }
             }
         }
@@ -828,7 +832,8 @@ pub fn get_version_string() -> &'static str {
     }
 }
 
-// Validator for the provided host name, ensures that the value begins with http:// or https://
+// Validator for the provided host name, ensures that the value begins
+// with http:// or https://
 fn starts_with_http(hostname: String) -> Result<(), String> {
     if hostname.starts_with("https://") || hostname.starts_with("http://") {
         Ok(())

@@ -24,7 +24,8 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
     let mut output_urls: Vec<String> = Vec::new();
     let mut scraped_urls: Vec<String> = Vec::new();
 
-    // Get the contents of href attributes from the given response content
+    // Get the contents of href attributes from the given response
+    // content
     Document::from_read(content.as_bytes())
         .unwrap()
         .find(Name("a"))
@@ -36,8 +37,8 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
         let complete_url;
 
         // If a url starts with of these then it is potentially a parent
-        // or a mechanism for sorting the directory
-        // not of interest or may cause issues when scanning so are skipped
+        // or a mechanism for sorting the directory not of interest or
+        // may cause issues when scanning so are skipped
         if scraped_url.starts_with("../")
             || scraped_url.starts_with("?")
             || scraped_url.starts_with("./")
@@ -46,7 +47,8 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
         }
         // The scraped url is a path from the base URL
         else if scraped_url.starts_with("/") {
-            // need to get the base address from the original url and append this
+            // need to get the base address from the original url and
+            // append this
             let start_index = if original_url.starts_with("https://") {
                 8
             } else {
@@ -68,7 +70,8 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
             complete_url = format!("{}{}", original_url, scraped_url);
         }
 
-        // Only add to the list if it's a subdirectory of the current directory
+        // Only add to the list if it's a subdirectory of the current
+        // directory
         // And if the current directory doesn't begin with it
         if !original_url.starts_with(&complete_url)
             && complete_url.starts_with(&original_url)
