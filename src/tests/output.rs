@@ -40,11 +40,11 @@ fn test_print_response() {
     );
 }
 
-#[test]
-fn test_print_report() {}
+//#[test]
+//fn test_print_report() {}
 
-#[test]
-fn test_write_file() {}
+//#[test]
+//fn test_write_file() {}
 
 #[test]
 fn test_sort_responses() {
@@ -123,11 +123,11 @@ fn test_directory_name() {
     assert_eq!(directory_name(&rr), String::from("http://example.com/test"));
 }
 
-#[test]
-fn test_create_files() {}
+//#[test]
+//fn test_create_files() {}
 
-#[test]
-fn test_generate_handle() {}
+//#[test]
+//fn test_generate_handle() {}
 
 #[test]
 fn test_startup_text() {
