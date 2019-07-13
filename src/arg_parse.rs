@@ -20,6 +20,7 @@ use atty::Stream;
 use clap::{crate_version, App, AppSettings, Arg, ArgGroup};
 use simplelog::LevelFilter;
 use std::{fmt, process::exit};
+use url::Url;
 
 #[derive(Clone)]
 pub struct GlobalOpts {
@@ -177,7 +178,7 @@ http://user:pass@host:port")
              .index(1)
              .next_line_help(true)
              .takes_value(true)
-             .validator(starts_with_http)
+             .validator(url_is_valid)
              .value_name("uri"))
         .arg(Arg::with_name("extra_hosts")
              .alias("host")
@@ -189,7 +190,7 @@ http://user:pass@host:port")
              .next_line_help(true)
              .short("u")
              .takes_value(true)
-             .validator(starts_with_http)
+             .validator(url_is_valid)
              .value_name("uri")
              .visible_alias("url"))
         .arg(Arg::with_name("host_file")
@@ -542,16 +543,16 @@ set to 0 to disable")
 
     // Get from host arguments
     if args.is_present("host") {
-        hostnames.push(String::from(args.value_of("host").unwrap()))
+        hostnames.push(strip_default_port_from_hostname(String::from(
+                    args.value_of("host").unwrap())))
     }
     if args.is_present("host_file") {
         for host_file in args.values_of("host_file").unwrap() {
             let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
-                if hostname.starts_with("https://")
-                    || hostname.starts_with("http://")
-                {
-                    hostnames.push(String::from(hostname));
+                if url_is_valid(hostname.clone()).is_ok() {
+                    hostnames.push(strip_default_port_from_hostname(
+                            String::from(hostname)));
                 } else {
                     println!(
                         "{} doesn't start with \"http://\" or \"https://\" -\
@@ -564,7 +565,9 @@ set to 0 to disable")
     }
     if args.is_present("extra_hosts") {
         for hostname in args.values_of("extra_hosts").unwrap() {
-            hostnames.push(String::from(hostname));
+            hostnames.push(strip_default_port_from_hostname(String::from(
+                hostname
+            )));
         }
     }
 
@@ -834,14 +837,12 @@ pub fn get_version_string() -> &'static str {
     }
 }
 
-// Validator for the provided host name, ensures that the value begins
-// with http:// or https://
-fn starts_with_http(hostname: String) -> Result<(), String> {
-    if hostname.starts_with("https://") || hostname.starts_with("http://") {
+fn url_is_valid(hostname: String) -> Result<(), String> {
+    if Url::parse(hostname.as_str()).is_ok() {
         Ok(())
     } else {
         Err(String::from(
-            "The provided target URI must start with http:// or https://",
+            "The provided target URI is invald",
         ))
     }
 }
@@ -906,4 +907,12 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
     LengthRanges {
         ranges: length_vector,
     }
+}
+
+fn strip_default_port_from_hostname(hostname: String) -> String {
+    // The unwrap is safe because every url has been validated by the
+    // url parse method
+    let u = Url::parse(hostname.as_str()).unwrap();
+
+    String::from(u.as_str())
 }

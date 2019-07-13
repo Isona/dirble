@@ -23,6 +23,7 @@ simple_xml_serialize_macro = "0.2.1"
 log = "0.4.6"
 simplelog = "0.5.0"
 ctrlc = "3.0"
+url = "1.7"
 
 [build-dependencies]
 vergen = "3"
