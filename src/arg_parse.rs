@@ -818,11 +818,13 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
 
 #[inline]
 pub fn get_version_string() -> &'static str {
-    if cfg!(feature = "release_version_string") {
+    if cfg!(feature = "release_version_string")
+        || env!("VERGEN_SHA_SHORT") == "UNKNOWN"
+    {
         return crate_version!();
     } else {
         return concat!(
-            env!("VERGEN_SEMVER"),
+            crate_version!(),
             " (commit ",
             env!("VERGEN_SHA_SHORT"),
             ", build ",
