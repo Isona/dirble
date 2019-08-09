@@ -26,17 +26,18 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
 use log::{info, warn};
+use url::Url;
 
 // Struct for passing information back to the main thread
 pub struct DirectoryInfo {
-    pub url: String,
+    pub url: Url,
     pub validator: Option<TargetValidator>,
     pub parent_depth: u32,
 }
 
 impl DirectoryInfo {
     pub fn new(
-        url: String,
+        url: Url,
         validator: Option<TargetValidator>,
         parent_depth: u32,
     ) -> DirectoryInfo {
@@ -50,7 +51,7 @@ impl DirectoryInfo {
     // Used to inform the main thread that a request thread ended
     pub fn generate_end() -> DirectoryInfo {
         DirectoryInfo {
-            url: String::from("END"),
+            url: Url::parse("data:END").unwrap(),
             validator: None,
             parent_depth: 0,
         }
@@ -108,7 +109,7 @@ impl TargetValidator {
         match self.diff_response_len {
             Some(size) => {
                 let diff = (response.content_len as i32
-                    - response.url.len() as i32)
+                    - response.url.as_str().len() as i32)
                     .abs();
                 return size == diff;
             }
@@ -206,10 +207,10 @@ pub fn validator_thread(
         // Get a RequestResponse from the receiver
         if let Ok(response) = rx.try_recv() {
             // If the main thread is trying to exit then stop
-            if response.url == "END" {
+            if response.url == Url::parse("data:END").unwrap() {
                 main_tx.send(Some(DirectoryInfo::generate_end())).unwrap();
                 continue;
-            } else if response.url == "MAIN ENDING" {
+            } else if response.url == Url::parse("data:MAIN ENDING").unwrap() {
                 break;
             } else {
                 // Don't do anything if it's somehow not a directory
@@ -226,9 +227,12 @@ pub fn validator_thread(
                     global_opts.max_recursion_depth
                 {
                     // Calculate the depth
-                    let mut depth = response.url.matches("/").count() as i32;
+                    let mut depth = response.url
+                        .as_str()
+                        .matches("/")
+                        .count() as i32;
 
-                    if response.url.ends_with("/") {
+                    if response.url.as_str().ends_with("/") {
                         depth -= 1;
                     }
 
@@ -296,17 +300,14 @@ pub fn validator_thread(
 // Makes a set of 3 requests to random strings of different lengths in
 // the given folder
 fn make_requests(
-    mut base_url: String,
+    base_url: Url,
     easy: &mut Easy2<request::Collector>,
 ) -> Vec<request::RequestResponse> {
     let mut response_vector: Vec<request::RequestResponse> = Vec::new();
 
-    if !base_url.ends_with("/") {
-        base_url += "/";
-    }
-
     for i in 1..=3 {
-        let url = format!("{}{}", base_url, rand_string(10 * i));
+        //let url = format!("{}{}", base_url, rand_string(10 * i));
+        let url = base_url.join(&rand_string(10 * i)).unwrap();
         response_vector.push(request::make_request(easy, url));
     }
 
@@ -379,13 +380,13 @@ fn determine_not_found(
     let mut diff_response_size = None;
     if response_size == None {
         let diff_0 = ((responses[0].content_len as i32)
-            - responses[0].url.len() as i32)
+            - responses[0].url.as_str().len() as i32)
             .abs();
         let diff_1 = ((responses[1].content_len as i32)
-            - responses[1].url.len() as i32)
+            - responses[1].url.as_str().len() as i32)
             .abs();
         let diff_2 = ((responses[2].content_len as i32)
-            - responses[2].url.len() as i32)
+            - responses[2].url.as_str().len() as i32)
             .abs();
 
         if diff_0 == diff_1 || diff_0 == diff_2 {

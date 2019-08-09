@@ -21,6 +21,7 @@ use crate::request;
 use log::debug;
 use simplelog::LevelFilter;
 use std::sync::{mpsc, Arc};
+use url::Url;
 
 pub fn output_thread(
     rx: mpsc::Receiver<request::RequestResponse>,
@@ -31,7 +32,7 @@ pub fn output_thread(
 
     loop {
         if let Ok(response) = rx.try_recv() {
-            if response.url == "MAIN ENDING" {
+            if response.url == Url::parse("data:MAIN ENDING").unwrap() {
                 debug!("Received signal to end, generating the report");
                 break;
             }

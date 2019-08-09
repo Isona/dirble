@@ -38,15 +38,13 @@ pub fn output_indentation(
         return output;
     }
 
-    let mut depth = response.url.matches("/").count() as i32;
-
-    if response.url.ends_with("/") {
+    let mut depth = response.url.path_segments().unwrap().count() as i32;
+    if response.url.path().ends_with("/") {
         depth -= 1;
     }
 
     depth -= response.parent_depth as i32;
     depth -= 1;
-
     if depth <= 0 {
         return output;
     }

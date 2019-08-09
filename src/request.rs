@@ -24,9 +24,10 @@ use std::time::Duration;
 extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
 use log::trace;
-use serde::{Deserialize, Serialize};
+use serde::{ser::SerializeStruct, Serialize, Serializer};
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
+use url::Url;
 
 pub struct Collector {
     pub contents: Vec<u8>,
@@ -52,14 +53,13 @@ impl Handler for Collector {
 // Struct which contains information about a response
 // This is sent back to the main thread
 #[xml_element("path")]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RequestResponse {
     #[sxs_type_attr]
-    pub url: String,
+    pub url: Url,
     #[sxs_type_attr]
     pub code: u32,
     #[sxs_type_attr]
-    #[serde(rename = "size")]
     pub content_len: usize,
     #[sxs_type_attr]
     pub is_directory: bool,
@@ -69,8 +69,24 @@ pub struct RequestResponse {
     pub redirect_url: String,
     #[sxs_type_attr]
     pub found_from_listable: bool,
-    #[serde(skip)]
     pub parent_depth: u32,
+}
+
+impl Serialize for RequestResponse {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("RequestResponse", 8)?;
+        s.serialize_field("url", &self.url.as_str())?;
+        s.serialize_field("code", &self.code)?;
+        s.serialize_field("size", &self.content_len)?;
+        s.serialize_field("is_directory", &self.is_directory)?;
+        s.serialize_field("is_listable", &self.is_listable)?;
+        s.serialize_field("redirect_url", &self.redirect_url)?;
+        s.serialize_field("found_from_listable", &self.found_from_listable)?;
+        s.end()
+    }
 }
 
 // This function takes an instance of "Easy2", a base URL and a suffix
@@ -78,11 +94,11 @@ pub struct RequestResponse {
 // then it will return a RequestResponse struct
 pub fn make_request(
     mut easy: &mut Easy2<Collector>,
-    url: String,
+    url: Url,
 ) -> RequestResponse {
     trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
-    easy.url(&url).unwrap();
+    easy.url(&url.as_str()).unwrap();
 
     // Perform the request and check if it's empty
     // If it's empty then return a RequestResponse struct
@@ -130,7 +146,7 @@ pub fn make_request(
             percent_decode(redir_dest.as_bytes()).decode_utf8().unwrap();
 
         // Clone and url decode the url
-        let dir_url = url.clone() + "/";
+        let dir_url = [url.as_str().clone(), "/"].join("");
         let dir_url = percent_decode(dir_url.as_bytes()).decode_utf8().unwrap();
 
         if dir_url == redir_dest {
@@ -149,18 +165,18 @@ pub fn make_request(
 
 pub fn listable_check(
     easy: &mut Easy2<Collector>,
-    original_url: String,
+    original_url: Url,
     max_recursion_depth: Option<i32>,
     parent_depth: i32,
     scrape_listable: bool,
 ) -> Vec<RequestResponse> {
     // Formulate the directory name and make a request to get the
     // contents of the page
-    let mut dir_url = String::from(original_url.clone());
+    let mut dir_url = String::from(original_url.as_str());
     if !dir_url.ends_with("/") {
         dir_url = dir_url + "/";
     }
-    let mut response = make_request(easy, dir_url.clone());
+    let mut response = make_request(easy, Url::parse(&dir_url.as_str()).unwrap());
     let content = get_content(easy).to_lowercase();
     let mut output_list: Vec<RequestResponse> = Vec::new();
 
@@ -210,7 +226,7 @@ pub fn listable_check(
         // Add it to the list of found URLs to be returned
         if !scraped_url.ends_with("/") {
             output_list.push(fabricate_request_response(
-                scraped_url,
+                Url::parse(scraped_url.as_str()).unwrap(),
                 false,
                 false,
             ));
@@ -233,14 +249,14 @@ pub fn listable_check(
                 // values to be returned
                 if depth > max_depth {
                     output_list.push(fabricate_request_response(
-                        scraped_url,
+                        Url::parse(scraped_url.as_str()).unwrap(),
                         true,
                         false,
                     ));
                 } else {
                     output_list.append(&mut listable_check(
                         easy,
-                        scraped_url,
+                        Url::parse(scraped_url.as_str()).unwrap(),
                         max_recursion_depth,
                         parent_depth,
                         scrape_listable,
@@ -252,7 +268,7 @@ pub fn listable_check(
             else {
                 output_list.append(&mut listable_check(
                     easy,
-                    scraped_url,
+                    Url::parse(scraped_url.as_str()).unwrap(),
                     max_recursion_depth,
                     parent_depth,
                     scrape_listable,
@@ -344,17 +360,12 @@ fn get_content(easy: &mut Easy2<Collector>) -> String {
 // Generate a struct for a response for use when a request hasn't been made
 // Used when items were discovered via scraping
 pub fn fabricate_request_response(
-    url: String,
+    url: Url,
     is_directory: bool,
     is_listable: bool,
 ) -> RequestResponse {
-    let mut new_url = url.clone();
-    if new_url.ends_with("/") {
-        new_url.pop();
-    }
-
     RequestResponse {
-        url: url.clone(),
+        url,
         code: 0,
         content_len: 0,
         is_directory: is_directory,

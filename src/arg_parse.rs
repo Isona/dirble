@@ -24,7 +24,7 @@ use url::Url;
 
 #[derive(Clone)]
 pub struct GlobalOpts {
-    pub hostnames: Vec<String>,
+    pub hostnames: Vec<Url>,
     pub wordlist_files: Option<Vec<String>>,
     pub prefixes: Vec<String>,
     pub extensions: Vec<String>,
@@ -539,35 +539,35 @@ set to 0 to disable")
              .value_delimiter(","))
         .get_matches();
 
-    let mut hostnames: Vec<String> = Vec::new();
+    let mut hostnames: Vec<Url> = Vec::new();
 
     // Get from host arguments
     if args.is_present("host") {
-        hostnames.push(strip_default_port_from_hostname(String::from(
-                    args.value_of("host").unwrap())))
+        if let Ok(host) = Url::parse(args.value_of("host").unwrap()) {
+            hostnames.push(host);
+        } else {
+            println!("Invaid URL: {}", args.value_of("host").unwrap());
+        }
     }
     if args.is_present("host_file") {
         for host_file in args.values_of("host_file").unwrap() {
             let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
                 if url_is_valid(hostname.clone()).is_ok() {
-                    hostnames.push(strip_default_port_from_hostname(
-                            String::from(hostname)));
+                    if let Ok(host) = Url::parse(hostname.as_str()) {
+                        hostnames.push(host);
+                    }
                 } else {
-                    println!(
-                        "{} doesn't start with \"http://\" or \"https://\" -\
-                        skipping",
-                        hostname
-                    );
+                    println!("Invalid URL: {}", hostname);
                 }
             }
         }
     }
     if args.is_present("extra_hosts") {
         for hostname in args.values_of("extra_hosts").unwrap() {
-            hostnames.push(strip_default_port_from_hostname(String::from(
-                hostname
-            )));
+            if let Ok(host) = Url::parse(hostname) {
+                hostnames.push(host);
+            }
         }
     }
 
@@ -907,12 +907,4 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
     LengthRanges {
         ranges: length_vector,
     }
-}
-
-fn strip_default_port_from_hostname(hostname: String) -> String {
-    // The unwrap is safe because every url has been validated by the
-    // url parse method
-    let u = Url::parse(hostname.as_str()).unwrap();
-
-    String::from(u.as_str())
 }

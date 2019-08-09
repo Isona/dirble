@@ -19,13 +19,13 @@ use crate::validator_thread::TargetValidator;
 use chardet::{charset2encoding, detect};
 use encoding::{label::encoding_from_whatwg_label, DecoderTrap};
 use log::error;
-use percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use std::{fs::File, io::prelude::*, process::exit, sync::Arc};
+use url::Url;
 
 // Struct for a UriGenerator, it needs the hostname, the suffix to
 // append, a wordlist and an index into that wordlist
 pub struct UriGenerator {
-    pub hostname: String,
+    pub base: Url,
     prefix: String,
     suffix: String,
     current_index: usize,
@@ -38,7 +38,7 @@ pub struct UriGenerator {
 // Generates a new UriGenerator given various options
 impl UriGenerator {
     pub fn new(
-        mut hostname: String,
+        base: Url,
         prefix: String,
         suffix: String,
         wordlist: Arc<Vec<String>>,
@@ -46,14 +46,9 @@ impl UriGenerator {
         step: u32,
         parent_depth: u32,
         validator: Option<TargetValidator>,
-    ) -> UriGenerator {
-        // Remove a trailing / characters from the url if there is one
-        if hostname.ends_with("/") {
-            hostname.pop();
-        }
-
-        UriGenerator {
-            hostname,
+    ) -> Self {
+        Self {
+            base,
             prefix,
             suffix,
             current_index: index as usize,
@@ -67,21 +62,19 @@ impl UriGenerator {
 
 // Defines iterating over a UriGenerator
 impl Iterator for UriGenerator {
-    type Item = (String);
+    type Item = (Url);
 
     fn next(&mut self) -> Option<Self::Item> {
         // If we're at the end of the wordlist then return None
         if self.current_index >= self.wordlist.len() {
             return None;
         }
-        // Concatenate the hostname with the current wordlist item and
-        // the suffix, then url encode
-        let uri = self.hostname.clone()
-            + "/"
-            + &self.prefix
-            + &self.wordlist[self.current_index].clone()
-            + &self.suffix;
-        let uri = utf8_percent_encode(&uri, DEFAULT_ENCODE_SET).to_string();
+        // Append the prefixed and suffixed filename onto the URI
+        let uri = self.base.join([
+            self.prefix.clone(),
+            self.wordlist[self.current_index].clone(),
+            self.suffix.clone(),
+        ].join("").as_str()).unwrap();
 
         // Maintain the index into the wordlist
         self.current_index += self.step_size;

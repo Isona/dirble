@@ -26,6 +26,7 @@ use crate::request;
 use crate::validator_thread;
 use crate::wordlist;
 use log::{debug, trace, warn};
+use url::Url;
 
 pub fn thread_spawn(
     dir_tx: mpsc::Sender<request::RequestResponse>,
@@ -33,9 +34,9 @@ pub fn thread_spawn(
     uri_gen: wordlist::UriGenerator,
     global_opts: Arc<arg_parse::GlobalOpts>,
 ) {
-    let hostname = uri_gen.hostname.clone();
+    let uri = uri_gen.base.clone();
 
-    debug!("Scanning {}", hostname);
+    debug!("Scanning {}", uri);
 
     let mut easy = request::generate_easy(&global_opts);
 
@@ -105,7 +106,7 @@ pub fn thread_spawn(
                     warn!(
                         "Thread scanning {} stopping due to multiple \
                          consecutive errors received",
-                        hostname
+                        uri
                     );
                     break;
                 }
@@ -120,7 +121,7 @@ pub fn thread_spawn(
         }
     }
 
-    debug!("Finished scanning {}", hostname);
+    debug!("Finished scanning {}", uri);
 
     // Send a message to the main thread so it knows the thread is done
     dir_tx.send(generate_end()).unwrap();
@@ -192,7 +193,7 @@ pub fn should_send_response(
 #[inline]
 fn generate_end() -> request::RequestResponse {
     request::RequestResponse {
-        url: String::from("END"),
+        url: Url::parse("data:END").unwrap(),
         code: 0,
         content_len: 0,
         is_directory: false,

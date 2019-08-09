@@ -1,6 +1,7 @@
 use crate::arg_parse::GlobalOpts;
 use crate::request::RequestResponse;
 use log::LevelFilter::Info;
+use url::Url;
 
 mod argparse;
 mod output;
@@ -51,7 +52,7 @@ impl Default for GlobalOpts {
 impl Default for RequestResponse {
     fn default() -> Self {
         RequestResponse {
-            url: "http://example.com/".into(),
+            url: Url::parse("http://example.com/").unwrap(),
             code: 200,
             content_len: 200,
             is_directory: false,

@@ -4,6 +4,7 @@ use crate::output::{
 };
 use crate::request::RequestResponse;
 use std::sync::Arc;
+use url::Url;
 
 #[test]
 fn test_print_response() {
@@ -11,7 +12,7 @@ fn test_print_response() {
     // need to be tested - the rest is covered by the testing in
     // tests/output_format.rs.
     let rr = RequestResponse {
-        url: "http://example.com/.htaccess".into(),
+        url: Url::parse("http://example.com/.htaccess").unwrap(),
         code: 403,
         content_len: 234,
         is_directory: false,
@@ -49,7 +50,7 @@ fn test_print_response() {
 #[test]
 fn test_sort_responses() {
     let mut rr = RequestResponse {
-        url: "http://example.com/".into(),
+        url: Url::parse("http://example.com/").unwrap(),
         code: 200,
         content_len: 200,
         is_directory: false,
@@ -65,13 +66,13 @@ fn test_sort_responses() {
 
     rr_vec.push(rr.clone());
 
-    rr.url = "http://example.com/two".into();
+    rr.url = Url::parse("http://example.com/two").unwrap();
     rr_vec.push(rr.clone());
 
-    rr.url = "http://example.com/one/three".into();
+    rr.url = Url::parse("http://example.com/one/three").unwrap();
     rr_vec.push(rr.clone());
 
-    rr.url = "http://example.com/one/".into();
+    rr.url = Url::parse("http://example.com/one/").unwrap();
     rr.is_directory = true;
     rr_vec.push(rr.clone());
     assert_eq!(
@@ -86,11 +87,11 @@ fn test_sort_responses() {
 
     dbg!(&sorted);
 
-    let sorted_urls: Vec<String> = vec![
-        "http://example.com/".into(),
-        "http://example.com/two".into(),
-        "http://example.com/one/".into(),
-        "http://example.com/one/three".into(),
+    let sorted_urls: Vec<Url> = vec![
+        Url::parse("http://example.com/").unwrap(),
+        Url::parse("http://example.com/two").unwrap(),
+        Url::parse("http://example.com/one/").unwrap(),
+        Url::parse("http://example.com/one/three").unwrap(),
     ];
 
     assert_eq!(&sorted.len(), &sorted_urls.len());
@@ -104,7 +105,7 @@ fn test_sort_responses() {
 fn test_directory_name() {
     let mut rr: RequestResponse = Default::default();
     // First case: rr is a directory ending with slash
-    rr.url = "http://example.com/test/dir/".into();
+    rr.url = Url::parse("http://example.com/test/dir/").unwrap();
     rr.is_directory = true;
     assert_eq!(
         directory_name(&rr),
@@ -112,7 +113,7 @@ fn test_directory_name() {
     );
 
     // Second case: rr is a directory not ending with slash
-    rr.url = "http://example.com/test/dir".into();
+    rr.url = Url::parse("http://example.com/test/dir").unwrap();
     assert_eq!(
         directory_name(&rr),
         String::from("http://example.com/test/dir")
@@ -147,15 +148,17 @@ fn test_startup_text() {
     // fail.
     let version = crate::arg_parse::get_version_string();
     let suffix = String::from(
-        "\nDeveloped by Izzy Whistlecroft\nTargets: \nWordlist: foo\n\
+        "\nDeveloped by Izzy Whistlecroft\nTargets:\nWordlist: foo\n\
          No Prefixes\nNo Extensions\nNo lengths hidden\n",
     );
     assert_eq!(text.unwrap(), format!("Dirble {}{}", version, suffix));
 
     // Set all of the optional parameters, output text should display
     // them.
-    globalopts.hostnames =
-        vec!["http://example.com".into(), "http://example.org".into()];
+    globalopts.hostnames = vec![
+        Url::parse("http://example.com").unwrap(),
+        Url::parse("http://example.org").unwrap(),
+    ];
     globalopts.wordlist_files = Some(vec!["foo".into(), "bar".into()]);
     globalopts.prefixes = vec!["".into(), "~".into()];
     globalopts.extensions = vec!["".into(), ".txt".into(), ".com".into()];
@@ -174,7 +177,7 @@ fn test_startup_text() {
     let text = startup_text(Arc::new(globalopts.clone()), &String::from("foo"));
     let suffix = String::from(
         "\nDeveloped by Izzy Whistlecroft\n\
-         Targets: http://example.com http://example.org\n\
+         Targets: http://example.com/ http://example.org/\n\
          Wordlists: foo bar\nPrefixes: ~\nExtensions: .txt .com\n\
          Hidden lengths: [400, 2400-3000]\n",
     );

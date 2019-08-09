@@ -32,6 +32,7 @@ use std::{
     thread,
     time::Duration,
 };
+use url::Url;
 #[macro_use]
 extern crate clap;
 extern crate curl;
@@ -166,10 +167,7 @@ fn main() {
     for hostname in &global_opts.hostnames {
         let mut request =
             request::fabricate_request_response(hostname.clone(), true, false);
-        let mut depth = hostname.matches("/").count() as u32;
-        if hostname.ends_with("/") {
-            depth -= 1;
-        }
+        let depth = hostname.path_segments().unwrap().count() as u32;
         request.parent_depth = depth;
         to_validate_tx.send(request).unwrap();
     }
@@ -252,7 +250,7 @@ fn main() {
             if let Some(dir_info) = dir_info_opt {
                 // If a thread has sent end, then we can reduce the
                 // threads in use count
-                if dir_info.url == "END" {
+                if dir_info.url.as_str() == "data:END" {
                     threads_in_use -= 1;
                 }
                 // Check the validator to see if the directory should
@@ -378,7 +376,7 @@ fn add_dir_to_scan_queue(
 
 fn generate_end() -> request::RequestResponse {
     request::RequestResponse {
-        url: String::from("MAIN ENDING"),
+        url: Url::parse("data:MAIN ENDING").unwrap(),
         code: 0,
         content_len: 0,
         is_directory: false,

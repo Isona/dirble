@@ -42,7 +42,7 @@ pub fn print_response(
 ) -> Option<String> {
     if response.code == 403
         && !global_opts.show_htaccess
-        && response.url.contains("/.ht")
+        && response.url.path().contains("/.ht")
     {
         return None;
     }
@@ -163,16 +163,18 @@ pub fn sort_responses(
 }
 
 // Gets the base directory name of the requested url of the given struct
+#[inline]
 pub fn directory_name(response: &RequestResponse) -> String {
+    let url = response.url.as_str();
     if response.is_directory {
-        if response.url.ends_with("/") {
-            String::from(&response.url[0..response.url.len() - 1])
+        if url.ends_with("/") {
+            String::from(&url[0..url.len() - 1])
         } else {
-            response.url.clone()
+            String::from(url)
         }
     } else {
-        let last_slash = response.url.rfind("/").unwrap();
-        String::from(&response.url[0..last_slash])
+        let last_slash = url.rfind("/").unwrap();
+        String::from(&url[0..last_slash])
     }
 }
 
@@ -227,9 +229,11 @@ pub fn startup_text(
     let text = format!("{}Developed by Izzy Whistlecroft\n", text);
 
     let text = format!(
-        "{}Targets: {}\n",
+        "{}Targets:{}\n",
         text,
-        global_opts.hostnames.clone().join(" ")
+        global_opts.hostnames.clone()
+            .iter()
+            .fold(String::from(""), |acc, x| acc + " " + x.as_str())
     );
 
     let text = if let Some(globalopts_wordlists) =

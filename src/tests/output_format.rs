@@ -20,6 +20,7 @@
 // spaces.
 
 use serde_test::{assert_tokens, Token};
+use url::Url;
 
 #[test]
 fn check_output_indentation() {
@@ -58,7 +59,7 @@ fn check_output_indentation() {
 
     // Indentation of four spaces for file three levels deep
     req_response.is_directory = false;
-    req_response.url = "http://example.com/a/test/directory".into();
+    req_response.url = Url::parse("http://example.com/a/test/directory").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
@@ -66,7 +67,7 @@ fn check_output_indentation() {
     );
 
     // Same scenario, but with a trailing slash
-    req_response.url = "http://example.com/a/test/directory/".into();
+    req_response.url = Url::parse("http://example.com/a/test/directory/").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "    ", // four spaces
@@ -180,7 +181,7 @@ fn check_output_suffix() {
 fn check_output_xml() {
     // Same as check_output_json below, but with hardcoded XML output.
     let req_response = crate::request::RequestResponse {
-        url: "http://example.com".into(),
+        url: Url::parse("http://example.com").unwrap(),
         code: 204,
         content_len: 345,
         is_directory: false,
@@ -194,7 +195,7 @@ fn check_output_xml() {
     assert_eq!(
         crate::output_format::output_xml(&req_response),
         "<path \
-            url=\"http://example.com\" \
+            url=\"http://example.com/\" \
             code=\"204\" \
             content_len=\"345\" \
             is_directory=\"false\" \
@@ -211,7 +212,7 @@ fn check_output_json() {
     // the defaults may change but the expected JSON output is
     // hardcoded.
     let req_response = crate::request::RequestResponse {
-        url: "http://example.com".into(),
+        url: Url::parse("http://example.com").unwrap(),
         code: 200,
         content_len: 350,
         is_directory: false,
@@ -221,7 +222,7 @@ fn check_output_json() {
         parent_depth: 0,
     };
 
-    assert_tokens(
+    /*assert_tokens(
         &req_response,
         &[
             Token::Struct {
@@ -244,6 +245,9 @@ fn check_output_json() {
             Token::Bool(false),
             Token::StructEnd,
         ],
+    );*/
+    assert_eq!(serde_json::to_string(&req_response).unwrap(),
+    "{\"url\":\"http://example.com/\",\"code\":200,\"size\":350,\"is_directory\":false,\"is_listable\":true,\"redirect_url\":\"https://example.org\",\"found_from_listable\":false}"
     );
 }
 
@@ -252,13 +256,13 @@ fn generate_request_response() -> crate::request::RequestResponse {
     // Generate a RequestResponse object with sane default settings to
     // simplify the testing routines.
     crate::request::RequestResponse {
-        url: "http://example.com".into(),
+        url: Url::parse("http://example.com").unwrap(),
         code: 200,
         content_len: 350,
         is_directory: false,
         is_listable: false,
         found_from_listable: false,
         redirect_url: "https://example.org".into(),
-        parent_depth: 2, // Depth is number of slashes, 2 for http://
+        parent_depth: 0,
     }
 }
