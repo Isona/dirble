@@ -31,6 +31,7 @@ pub struct UriGenerator {
     current_index: usize,
     wordlist: Arc<Vec<String>>,
     step_size: usize,
+    pub parent_index: usize,
     pub parent_depth: u32,
     pub validator: Option<TargetValidator>,
 }
@@ -44,6 +45,7 @@ impl UriGenerator {
         wordlist: Arc<Vec<String>>,
         index: u32,
         step: u32,
+        parent_index: usize,
         parent_depth: u32,
         validator: Option<TargetValidator>,
     ) -> Self {
@@ -54,6 +56,7 @@ impl UriGenerator {
             current_index: index as usize,
             wordlist,
             step_size: step as usize,
+            parent_index,
             parent_depth,
             validator,
         }

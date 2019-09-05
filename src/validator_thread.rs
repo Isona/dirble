@@ -32,6 +32,7 @@ use url::Url;
 pub struct DirectoryInfo {
     pub url: Url,
     pub validator: Option<TargetValidator>,
+    pub parent_index: usize,
     pub parent_depth: u32,
 }
 
@@ -39,11 +40,13 @@ impl DirectoryInfo {
     pub fn new(
         url: Url,
         validator: Option<TargetValidator>,
+        parent_index: usize,
         parent_depth: u32,
     ) -> DirectoryInfo {
         DirectoryInfo {
             url,
             validator,
+            parent_index,
             parent_depth,
         }
     }
@@ -53,6 +56,7 @@ impl DirectoryInfo {
         DirectoryInfo {
             url: Url::parse("data:END").unwrap(),
             validator: None,
+            parent_index: 0,
             parent_depth: 0,
         }
     }
@@ -254,6 +258,7 @@ pub fn validator_thread(
                     let directory_info = DirectoryInfo::new(
                         response.url,
                         None,
+                        response.parent_index,
                         response.parent_depth,
                     );
                     main_tx.send(Some(directory_info)).unwrap();
@@ -279,6 +284,7 @@ pub fn validator_thread(
                     let directory_info = DirectoryInfo::new(
                         response.url,
                         Some(validator),
+                        response.parent_index,
                         response.parent_depth,
                     );
                     main_tx.send(Some(directory_info)).unwrap();

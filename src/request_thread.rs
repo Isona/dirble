@@ -41,6 +41,7 @@ pub fn thread_spawn(
     let mut easy = request::generate_easy(&global_opts);
 
     let mut consecutive_errors = 0;
+    let parent_index = uri_gen.parent_index;
     let parent_depth = uri_gen.parent_depth;
 
     let validator = uri_gen.validator.clone();
@@ -60,12 +61,14 @@ pub fn thread_spawn(
                 &mut easy,
                 response.url,
                 global_opts.max_recursion_depth,
+                response.parent_index,
                 response.parent_depth as i32,
                 global_opts.scrape_listable,
             );
 
             let mut original_response = response_list.remove(0);
             original_response.found_from_listable = false;
+            original_response.parent_index = parent_index;
             original_response.parent_depth = parent_depth;
             send_response(
                 &dir_tx,
@@ -76,6 +79,7 @@ pub fn thread_spawn(
             );
 
             for mut scraped_response in response_list {
+                scraped_response.parent_index = parent_index;
                 scraped_response.parent_depth = parent_depth;
                 send_response(
                     &dir_tx,
@@ -88,6 +92,7 @@ pub fn thread_spawn(
         }
         // If it isn't a directory then just send the response to the main thread
         else {
+            response.parent_index = parent_index;
             response.parent_depth = parent_depth;
             send_response(
                 &dir_tx,
@@ -200,6 +205,7 @@ fn generate_end() -> request::RequestResponse {
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     }
 }

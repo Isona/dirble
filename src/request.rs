@@ -69,6 +69,7 @@ pub struct RequestResponse {
     pub redirect_url: String,
     #[sxs_type_attr]
     pub found_from_listable: bool,
+    pub parent_index: usize,
     pub parent_depth: u32,
 }
 
@@ -114,6 +115,7 @@ pub fn make_request(
                 is_listable: false,
                 redirect_url: String::from(""),
                 found_from_listable: false,
+                parent_index: 0,
                 parent_depth: 0,
             };
             return req_response;
@@ -132,6 +134,7 @@ pub fn make_request(
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     };
 
@@ -167,6 +170,7 @@ pub fn listable_check(
     easy: &mut Easy2<Collector>,
     original_url: Url,
     max_recursion_depth: Option<i32>,
+    parent_index: usize,
     parent_depth: i32,
     scrape_listable: bool,
 ) -> Vec<RequestResponse> {
@@ -258,6 +262,7 @@ pub fn listable_check(
                         easy,
                         Url::parse(scraped_url.as_str()).unwrap(),
                         max_recursion_depth,
+                        parent_index,
                         parent_depth,
                         scrape_listable,
                     ));
@@ -270,6 +275,7 @@ pub fn listable_check(
                     easy,
                     Url::parse(scraped_url.as_str()).unwrap(),
                     max_recursion_depth,
+                    parent_index,
                     parent_depth,
                     scrape_listable,
                 ));
@@ -372,6 +378,7 @@ pub fn fabricate_request_response(
         is_listable: is_listable,
         redirect_url: String::from(""),
         found_from_listable: true,
+        parent_index: 0,
         parent_depth: 0,
     }
 }

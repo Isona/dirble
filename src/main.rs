@@ -164,10 +164,12 @@ fn main() {
         )
     });
 
-    for hostname in &global_opts.hostnames {
+    for host_index in 0..global_opts.hostnames.len() {
+        let hostname = &global_opts.hostnames[host_index];
         let mut request =
             request::fabricate_request_response(hostname.clone(), true, false);
         let depth = hostname.path_segments().unwrap().count() as u32;
+        request.parent_index = host_index;
         request.parent_depth = depth;
         to_validate_tx.send(request).unwrap();
     }
@@ -366,6 +368,7 @@ fn add_dir_to_scan_queue(
                     wordlist.clone(),
                     start_index,
                     wordlist_split,
+                    dir_info.parent_index,
                     dir_info.parent_depth,
                     dir_info.validator.clone(),
                 ));
@@ -383,6 +386,7 @@ fn generate_end() -> request::RequestResponse {
         is_listable: false,
         redirect_url: String::from(""),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     }
 }
