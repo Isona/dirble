@@ -237,6 +237,7 @@ pub fn validator_thread(
                     }
 
                     depth -= response.parent_depth as i32;
+                    depth -= 1;
 
                     // If the depth exceeds the max_recursion_depth
                     // Skip scanning this directory
