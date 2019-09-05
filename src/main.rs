@@ -164,8 +164,7 @@ fn main() {
         )
     });
 
-    for host_index in 0..global_opts.hostnames.len() {
-        let hostname = &global_opts.hostnames[host_index];
+    for (host_index, hostname) in global_opts.hostnames.iter().enumerate() {
         let mut request =
             request::fabricate_request_response(hostname.clone(), true, false);
         let depth = hostname.path_segments().unwrap().count() as u32;
