@@ -231,18 +231,8 @@ pub fn validator_thread(
                     global_opts.max_recursion_depth
                 {
                     // Calculate the depth
-                    let mut depth = response.url
-                        .as_str()
-                        .matches("/")
-                        .count() as i32;
-
-                    if response.url.as_str().ends_with("/") {
-                        depth -= 1;
-                    }
-
-                    depth -= response.parent_depth as i32;
-                    depth -= 1;
-
+                    let depth = response.get_depth();
+                    
                     // If the depth exceeds the max_recursion_depth
                     // Skip scanning this directory
                     if depth > max_recursion_depth {

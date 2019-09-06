@@ -90,6 +90,24 @@ impl Serialize for RequestResponse {
     }
 }
 
+impl RequestResponse {
+    pub fn get_depth(&self) -> i32 {
+        let mut depth = self.url
+            .as_str()
+            .matches("/")
+            .count() as i32;
+
+        if self.url.as_str().ends_with("/") {
+            depth -= 1;
+        }
+
+        depth -= self.parent_depth as i32;
+        depth -= 1;
+
+        return depth
+    }
+}
+
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
