@@ -66,48 +66,54 @@ pub fn print_response(
 // Called after a scan to print the discovered items in a sorted way -
 // deals with saving to files too
 pub fn print_report(
-    responses: Vec<RequestResponse>,
+    mut responses: Vec<Vec<RequestResponse>>,
     global_opts: Arc<GlobalOpts>,
     file_handles: FileHandles,
 ) {
-    let responses = sort_responses(responses);
+    for mut response_list in &mut responses {
+        //*response_list = 
+        sort_responses(&mut response_list);
+    }
 
     if global_opts.log_level >= LevelFilter::Info && global_opts.is_terminal {
         println!("\n");
     }
 
-    let report_string = String::from("Dirble Scan Report: \n");
-
     // If stdout is a terminal then write a report to it
     if global_opts.is_terminal {
-        println!("{}", report_string);
-        for response in &responses {
-            if let Some(line) = print_response(
-                &response,
-                global_opts.clone(),
-                true,
-                true,
-                !global_opts.no_color,
-            ) {
-                println!("{}", line);
+        for (index, response_list) in responses.iter().enumerate() {
+            println!("Dirble Scan Report for {}:", global_opts.hostnames[index]);
+            for response in response_list {
+                if let Some(line) = print_response(
+                    &response,
+                    global_opts.clone(),
+                    true,
+                    true,
+                    !global_opts.no_color,
+                ) {
+                    println!("{}", line);
+                }
             }
         }
     }
 
     // If it was provided, write to a normally formatted output file
     if let Some(mut handle) = file_handles.output_file {
-        write_file(&mut handle, report_string);
 
-        for response in &responses {
-            if let Some(line) = print_response(
-                &response,
-                global_opts.clone(),
-                true,
-                false,
-                false,
-            ) {
-                let file_line = format!("{}\n", line);
-                write_file(&mut handle, file_line);
+        for (index, response_list) in responses.iter().enumerate() {
+            let report_string = format!("Dirble Scan Report for {}:", global_opts.hostnames[index]);
+            write_file(&mut handle, report_string);
+            for response in response_list {
+                if let Some(line) = print_response(
+                    &response,
+                    global_opts.clone(),
+                    true,
+                    false,
+                    false,
+                ) {
+                    let file_line = format!("{}\n", line);
+                    write_file(&mut handle, file_line);
+                }
             }
         }
     }
@@ -115,14 +121,22 @@ pub fn print_report(
     if responses.len() > 0 {
         if let Some(mut handle) = file_handles.json_file {
             write_file(&mut handle, String::from("["));
-            for response in &responses[0..responses.len() - 1] {
+            for response_list in &responses[0..responses.len() - 1] {
+                for response in response_list {
+                    let line =
+                        format!("{},\n", output_format::output_json(response));
+                    write_file(&mut handle, line);
+                }
+            }
+            let final_response_list = &responses[responses.len() - 1];
+            for response in &final_response_list[0..final_response_list.len() - 1] {
                 let line =
                     format!("{},\n", output_format::output_json(response));
                 write_file(&mut handle, line);
             }
             let final_line = format!(
                 "{}]",
-                output_format::output_json(&responses[responses.len() - 1])
+                output_format::output_json(&final_response_list[final_response_list.len() - 1])
             );
             write_file(&mut handle, final_line);
         }
@@ -134,8 +148,10 @@ pub fn print_report(
             String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"),
         );
         write_file(&mut handle, String::from("<dirble_scan>\n"));
-        for response in &responses {
-            write_file(&mut handle, output_format::output_xml(response));
+        for response_list in responses {
+            for response in &response_list {
+                write_file(&mut handle, output_format::output_xml(response));
+            }
         }
         write_file(&mut handle, String::from("</dirble_scan>"));
     }
@@ -150,16 +166,12 @@ fn write_file(file_writer: &mut LineWriter<File>, line: String) {
 
 // Sorts responses so that files in a directory come first, followed by
 // the subdirs
-pub fn sort_responses(
-    mut responses: Vec<RequestResponse>,
-) -> Vec<RequestResponse> {
+pub fn sort_responses(responses: &mut Vec<RequestResponse>) {
     responses.sort_by(|a, b| {
         directory_name(&a)
             .cmp(&directory_name(&b))
             .then(a.url.cmp(&b.url))
     });
-
-    return responses;
 }
 
 // Gets the base directory name of the requested url of the given struct
