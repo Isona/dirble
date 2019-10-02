@@ -6,8 +6,12 @@ Dirble is a website directory scanning tool for Windows and Linux. It's designed
 
 Download one of the [precompiled binaries](https://github.com/nccgroup/dirble/releases/latest) for Linux, Windows, or Mac, or compile the source using Cargo, then run it from a terminal. The default wordlist Dirble uses is dirble_wordlist.txt in the same directory as the executable.
 
+It can be installed in BlackArch using `sudo pacman -S dirble`
+
 There is also a docker image, which can be run as:
 `docker run --rm -t isona/dirble [dirble arguments]`
+
+The help text can be displayed using `dirble --help`, alternatively it can be found on the github wiki: https://github.com/nccgroup/dirble/wiki/Help-Text
 
 # Example Uses
 
