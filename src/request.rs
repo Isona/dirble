@@ -323,7 +323,7 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector> {
     }
 
     // Set the timeout of the easy
-    easy.timeout(Duration::from_secs(global_opts.timeout as u64))
+    easy.timeout(Duration::from_secs(u64::from(global_opts.timeout)))
         .unwrap();
 
     // Use proxy settings if they have been provided
