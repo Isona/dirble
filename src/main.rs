@@ -367,7 +367,7 @@ fn add_dir_to_scan_queue(
                     dir_info.parent_index,
                     dir_info.parent_depth,
                     dir_info.validator.clone(),
-                    global_opts.extension_substitution
+                    global_opts.extension_substitution,
                 ));
             }
         }

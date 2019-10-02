@@ -871,9 +871,7 @@ fn url_is_valid(hostname: String) -> Result<(), String> {
     if Url::parse(hostname.as_str()).is_ok() {
         Ok(())
     } else {
-        Err(String::from(
-            "The provided target URI is invald",
-        ))
+        Err(String::from("The provided target URI is invald"))
     }
 }
 
@@ -895,7 +893,7 @@ fn int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
         Ok(_) => Ok(()),
-        Err(_) => Err(String::from("The number given must be an integer."))
+        Err(_) => Err(String::from("The number given must be an integer.")),
     }
 }
 

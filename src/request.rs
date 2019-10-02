@@ -92,10 +92,7 @@ impl Serialize for RequestResponse {
 
 impl RequestResponse {
     pub fn get_depth(&self) -> i32 {
-        let mut depth = self.url
-            .as_str()
-            .matches('/')
-            .count() as i32;
+        let mut depth = self.url.as_str().matches('/').count() as i32;
 
         if self.url.as_str().ends_with('/') {
             depth -= 1;
@@ -198,7 +195,8 @@ pub fn listable_check(
     if !dir_url.ends_with('/') {
         dir_url += "/";
     }
-    let mut response = make_request(easy, Url::parse(&dir_url.as_str()).unwrap());
+    let mut response =
+        make_request(easy, Url::parse(&dir_url.as_str()).unwrap());
     let content = get_content(easy).to_lowercase();
     let mut output_list: Vec<RequestResponse> = Vec::new();
 

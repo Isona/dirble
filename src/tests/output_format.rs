@@ -58,7 +58,8 @@ fn check_output_indentation() {
 
     // Indentation of four spaces for file three levels deep
     req_response.is_directory = false;
-    req_response.url = Url::parse("http://example.com/a/test/directory").unwrap();
+    req_response.url =
+        Url::parse("http://example.com/a/test/directory").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "        ", // eight spaces
@@ -66,7 +67,8 @@ fn check_output_indentation() {
     );
 
     // Same scenario, but with a trailing slash
-    req_response.url = Url::parse("http://example.com/a/test/directory/").unwrap();
+    req_response.url =
+        Url::parse("http://example.com/a/test/directory/").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
         "        ", // eight spaces

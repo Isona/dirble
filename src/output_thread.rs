@@ -28,7 +28,8 @@ pub fn output_thread(
     global_opts: Arc<arg_parse::GlobalOpts>,
     file_handles: output::FileHandles,
 ) {
-    let mut response_list: Vec<Vec<request::RequestResponse>> = vec![Vec::new(); global_opts.hostnames.len()];
+    let mut response_list: Vec<Vec<request::RequestResponse>> =
+        vec![Vec::new(); global_opts.hostnames.len()];
 
     loop {
         if let Ok(response) = rx.try_recv() {

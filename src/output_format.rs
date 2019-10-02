@@ -26,7 +26,7 @@ pub fn output_indentation(
     print_newlines: bool,
     indentation: bool,
 ) -> String {
-    let mut output =  if response.is_directory && print_newlines {
+    let mut output = if response.is_directory && print_newlines {
         String::from("\n")
     } else {
         String::from("")
@@ -37,7 +37,7 @@ pub fn output_indentation(
     }
 
     let depth = response.get_depth();
-    
+
     if depth <= 0 {
         return output;
     }

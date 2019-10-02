@@ -117,9 +117,7 @@ impl TargetValidator {
                     .abs();
                 size == diff
             }
-            None => {
-                true
-            }
+            None => true,
         }
     }
 
@@ -233,7 +231,7 @@ pub fn validator_thread(
                 {
                     // Calculate the depth
                     let depth = response.get_depth();
-                    
+
                     // If the depth exceeds the max_recursion_depth
                     // Skip scanning this directory
                     if depth > max_recursion_depth {

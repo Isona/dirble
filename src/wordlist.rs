@@ -79,19 +79,23 @@ impl Iterator for UriGenerator {
 
         let uri = if !self.extension_substitution {
             // Append the prefixed and suffixed filename onto the URI
-            self.base.join([
-                self.prefix.clone(),
-                self.wordlist[self.current_index].clone(),
-                self.suffix.clone(),
-            ].join("").as_str()).unwrap()
-        }
-        else {
+            self.base
+                .join(
+                    [
+                        self.prefix.clone(),
+                        self.wordlist[self.current_index].clone(),
+                        self.suffix.clone(),
+                    ]
+                    .join("")
+                    .as_str(),
+                )
+                .unwrap()
+        } else {
             let word = self.wordlist[self.current_index]
                 .replace("%EXT%", &self.suffix);
-            self.base.join([
-                self.prefix.clone(),
-                word,
-            ].join("").as_str()).unwrap()
+            self.base
+                .join([self.prefix.clone(), word].join("").as_str())
+                .unwrap()
         };
 
         // Maintain the index into the wordlist
@@ -121,15 +125,17 @@ pub fn lines_from_file(filename: &str) -> Vec<String> {
     // Decode the file into UTF-8 from the guessed encoding
     let coder = encoding_from_whatwg_label(charset2encoding(&result.0));
     match coder {
-        Some(coding) => {
-            coding.decode(&reader, DecoderTrap::Ignore)
-                .expect("Error decoding to UTF-8")
-                .lines()
-                .map(String::from)
-                .collect()
-        }
+        Some(coding) => coding
+            .decode(&reader, DecoderTrap::Ignore)
+            .expect("Error decoding to UTF-8")
+            .lines()
+            .map(String::from)
+            .collect(),
         None => {
-            panic!("Error detecting file encoding of {} - is the file empty?", filename);
+            panic!(
+                "Error detecting file encoding of {} - is the file empty?",
+                filename
+            );
         }
     }
 }
