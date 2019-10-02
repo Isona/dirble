@@ -122,7 +122,9 @@ pub fn thread_spawn(
 
         // Sleep if throttle is set
         if global_opts.throttle != 0 {
-            thread::sleep(Duration::from_millis(u64::from(global_opts.throttle)));
+            thread::sleep(Duration::from_millis(u64::from(
+                global_opts.throttle,
+            )));
         }
     }
 
