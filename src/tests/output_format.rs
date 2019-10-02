@@ -194,6 +194,7 @@ fn check_output_xml() {
     };
     // DO NOT change the indentation here, it matches the indentation
     // produced by the XML formatter.
+    #[rustfmt::skip]
     assert_eq!(
         crate::output_format::output_xml(&req_response),
         "<path \
