@@ -19,7 +19,6 @@
 // relies on the indented string having the correct number of leading
 // spaces.
 
-use serde_test::{assert_tokens, Token};
 use url::Url;
 
 #[test]

@@ -70,9 +70,9 @@ pub struct LengthRange {
 impl LengthRange {
     pub fn contains(&self, test: usize) -> bool {
         if let Some(end) = self.end {
-            return self.start <= test && test <= end;
+            self.start <= test && test <= end
         } else {
-            return test == self.start;
+            test == self.start
         }
     }
 }
@@ -144,6 +144,7 @@ impl Default for HttpVerb {
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub fn get_args() -> GlobalOpts {
     // For general compilation, include the current commit hash and
     // build date in the version string. When building releases via the
@@ -582,7 +583,7 @@ set to 0 to disable")
         }
     }
 
-    if hostnames.len() == 0 {
+    if hostnames.is_empty() {
         println!("No valid hosts were provided - exiting");
         exit(2);
     }
@@ -590,17 +591,15 @@ set to 0 to disable")
     hostnames.dedup();
 
     // Parse wordlist file names into a vector
-    let wordlists: Option<Vec<String>>;
-
-    if args.is_present("wordlist") {
+    let wordlists: Option<Vec<String>> = if args.is_present("wordlist") {
         let mut wordlists_vec = Vec::new();
         for wordlist_file in args.values_of("wordlist").unwrap() {
             wordlists_vec.push(String::from(wordlist_file));
         }
-        wordlists = Some(wordlists_vec);
+        Some(wordlists_vec)
     } else {
-        wordlists = None;
-    }
+        None
+    };
 
     // Check for proxy related flags
     let proxy_enabled;
@@ -626,25 +625,26 @@ set to 0 to disable")
     let proxy_address = String::from(proxy_address);
 
     // Read provided cookie values into a vector
-    let mut cookies = None;
-    if args.is_present("cookie") {
+    let cookies: Option<String> = if args.is_present("cookie") {
         let mut temp_cookies: Vec<String> = Vec::new();
         for cookie in args.values_of("cookie").unwrap() {
             temp_cookies.push(String::from(cookie));
         }
-
-        cookies = Some(temp_cookies.join("; "));
-    }
+        Some(temp_cookies.join("; "))
+    } else {
+        None
+    };
 
     // Read provided headers into a vector
-    let mut headers = None;
-    if args.is_present("header") {
+    let headers: Option<Vec<String>> = if args.is_present("header") {
         let mut temp_headers: Vec<String> = Vec::new();
         for header in args.values_of("header").unwrap() {
             temp_headers.push(String::from(header));
         }
-        headers = Some(temp_headers);
-    }
+        Some(temp_headers)
+    } else {
+        None
+    };
 
     let mut whitelist = false;
     let mut code_list: Vec<u32> = Vec::new();
@@ -783,12 +783,13 @@ fn filename_from_args(
         }
         _ => panic!(),
     }
+
     if args.is_present("output_all") {
-        return Some(format!(
+        Some(format!(
             "{}.{}",
             args.value_of("output_all").unwrap(),
             extension
-        ));
+        ))
     } else {
         None
     }
@@ -820,7 +821,7 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
     if args.is_present(&file_arg) {
         for filename in args.values_of(file_arg).unwrap() {
             for modifier in lines_from_file(&String::from(filename)) {
-                modifiers.push(String::from(modifier));
+                modifiers.push(modifier);
             }
         }
     }
@@ -863,15 +864,12 @@ fn url_is_valid(hostname: String) -> Result<(), String> {
 // Ensures that the value is a positive integer (not 0)
 fn positive_int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
-    match int_val {
-        Ok(max) => {
-            if max > 0 {
-                return Ok(());
-            }
+    if let Ok(max) = int_val {
+        if max > 0 {
+            return Ok(());
         }
-        Err(_) => {}
-    };
-    return Err(String::from("The number given must be a positive integer."));
+    }
+    Err(String::from("The number given must be a positive integer."))
 }
 
 // Validator for various arguments, ensures that value is a
@@ -879,10 +877,9 @@ fn positive_int_check(value: String) -> Result<(), String> {
 fn int_check(value: String) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
-        Ok(_) => return Ok(()),
-        Err(_) => {}
-    };
-    return Err(String::from("The number given must be an integer."));
+        Ok(_) => Ok(()),
+        Err(_) => Err(String::from("The number given must be an integer."))
+    }
 }
 
 fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
@@ -893,8 +890,8 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
         let start;
         let end;
 
-        if length.contains("-") {
-            let components: Vec<&str> = length.split("-").collect();
+        if length.contains('-') {
+            let components: Vec<&str> = length.split('-').collect();
             assert!(
                 components.len() == 2,
                 "Ranges must be in the form `150-300`"

@@ -94,17 +94,17 @@ impl RequestResponse {
     pub fn get_depth(&self) -> i32 {
         let mut depth = self.url
             .as_str()
-            .matches("/")
+            .matches('/')
             .count() as i32;
 
-        if self.url.as_str().ends_with("/") {
+        if self.url.as_str().ends_with('/') {
             depth -= 1;
         }
 
         depth -= self.parent_depth as i32;
         depth -= 1;
 
-        return depth
+        depth
     }
 }
 
@@ -146,7 +146,7 @@ pub fn make_request(
     // Declare the RequestResponse for the current request
     let mut req_response = RequestResponse {
         url: url.clone(),
-        code: code,
+        code,
         content_len: 0,
         is_directory: false,
         is_listable: false,
@@ -167,7 +167,7 @@ pub fn make_request(
             percent_decode(redir_dest.as_bytes()).decode_utf8().unwrap();
 
         // Clone and url decode the url
-        let dir_url = [url.as_str().clone(), "/"].join("");
+        let dir_url = [url.as_str(), "/"].join("");
         let dir_url = percent_decode(dir_url.as_bytes()).decode_utf8().unwrap();
 
         if dir_url == redir_dest {
@@ -195,8 +195,8 @@ pub fn listable_check(
     // Formulate the directory name and make a request to get the
     // contents of the page
     let mut dir_url = String::from(original_url.as_str());
-    if !dir_url.ends_with("/") {
-        dir_url = dir_url + "/";
+    if !dir_url.ends_with('/') {
+        dir_url += "/";
     }
     let mut response = make_request(easy, Url::parse(&dir_url.as_str()).unwrap());
     let content = get_content(easy).to_lowercase();
@@ -246,7 +246,7 @@ pub fn listable_check(
         // If the scraped url doesn't end in a /, it's unlikely to be a
         // folder
         // Add it to the list of found URLs to be returned
-        if !scraped_url.ends_with("/") {
+        if !scraped_url.ends_with('/') {
             output_list.push(fabricate_request_response(
                 Url::parse(scraped_url.as_str()).unwrap(),
                 false,
@@ -259,9 +259,9 @@ pub fn listable_check(
             // If the max depth is exceeded then just add the URL to the list
             // Otherwise call this function on the scraped URL
             if let Some(max_depth) = max_recursion_depth {
-                let mut depth = scraped_url.matches("/").count() as i32;
+                let mut depth = scraped_url.matches('/').count() as i32;
 
-                if scraped_url.ends_with("/") {
+                if scraped_url.ends_with('/') {
                     depth -= 1;
                 }
 
@@ -392,8 +392,8 @@ pub fn fabricate_request_response(
         url,
         code: 0,
         content_len: 0,
-        is_directory: is_directory,
-        is_listable: is_listable,
+        is_directory,
+        is_listable,
         redirect_url: String::from(""),
         found_from_listable: true,
         parent_index: 0,

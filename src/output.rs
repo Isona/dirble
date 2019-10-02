@@ -113,7 +113,7 @@ pub fn print_report(
         }
     }
 
-    if responses.len() > 0 {
+    if !responses.is_empty() {
         if let Some(mut handle) = file_handles.json_file {
             write_file(&mut handle, String::from("["));
             for response_list in &responses[0..responses.len() - 1] {
@@ -174,13 +174,13 @@ pub fn sort_responses(responses: &mut Vec<RequestResponse>) {
 pub fn directory_name(response: &RequestResponse) -> String {
     let url = response.url.as_str();
     if response.is_directory {
-        if url.ends_with("/") {
+        if url.ends_with('/') {
             String::from(&url[0..url.len() - 1])
         } else {
             String::from(url)
         }
     } else {
-        let last_slash = url.rfind("/").unwrap();
+        let last_slash = url.rfind('/').unwrap();
         String::from(&url[0..last_slash])
     }
 }
@@ -205,14 +205,14 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
     }
 
     FileHandles {
-        output_file: output_file,
-        json_file: json_file,
-        xml_file: xml_file,
+        output_file,
+        json_file,
+        xml_file,
     }
 }
 
 #[inline]
-fn generate_handle(filename: &String) -> Option<LineWriter<File>> {
+fn generate_handle(filename: &str) -> Option<LineWriter<File>> {
     let path = Path::new(&filename);
     let display = path.display();
     match File::create(&path) {
@@ -226,7 +226,7 @@ fn generate_handle(filename: &String) -> Option<LineWriter<File>> {
 // Prints out start up information
 pub fn startup_text(
     global_opts: Arc<GlobalOpts>,
-    wordlist_file: &String,
+    wordlist_file: &str,
 ) -> Option<String> {
     if !global_opts.is_terminal {
         return None;
