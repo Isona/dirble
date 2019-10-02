@@ -53,7 +53,7 @@ fn check_output_indentation() {
     // Default indentation of zero spaces for base URL
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
-        "",
+        "  ", // two spaces
         "Default empty indentation not returned"
     );
 
@@ -62,7 +62,7 @@ fn check_output_indentation() {
     req_response.url = Url::parse("http://example.com/a/test/directory").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
-        "    ", // four spaces
+        "        ", // eight spaces
         "Indentation of nested directories incorrect"
     );
 
@@ -70,7 +70,7 @@ fn check_output_indentation() {
     req_response.url = Url::parse("http://example.com/a/test/directory/").unwrap();
     assert_eq!(
         crate::output_format::output_indentation(&req_response, false, true),
-        "    ", // four spaces
+        "        ", // eight spaces
         "Trailing slash is not taken into account"
     );
 }
@@ -188,6 +188,7 @@ fn check_output_xml() {
         is_listable: false,
         found_from_listable: true,
         redirect_url: "https://example.org".into(),
+        parent_index: 0,
         parent_depth: 2,
     };
     // DO NOT change the indentation here, it matches the indentation
@@ -219,6 +220,7 @@ fn check_output_json() {
         is_listable: true,
         redirect_url: "https://example.org".into(),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     };
 
@@ -263,6 +265,7 @@ fn generate_request_response() -> crate::request::RequestResponse {
         is_listable: false,
         found_from_listable: false,
         redirect_url: "https://example.org".into(),
+        parent_index: 0,
         parent_depth: 0,
     }
 }

@@ -19,6 +19,7 @@ fn test_print_response() {
         is_listable: false,
         redirect_url: Default::default(),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     };
     let mut globalopts: GlobalOpts = Default::default();
@@ -57,6 +58,7 @@ fn test_sort_responses() {
         is_listable: false,
         redirect_url: "".into(),
         found_from_listable: false,
+        parent_index: 0,
         parent_depth: 0,
     };
 
@@ -83,7 +85,8 @@ fn test_sort_responses() {
 
     dbg!(&rr_vec);
 
-    let sorted = sort_responses(rr_vec);
+    let mut sorted = rr_vec.clone();
+    sort_responses(&mut sorted);
 
     dbg!(&sorted);
 

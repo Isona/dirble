@@ -15,6 +15,7 @@ impl Default for GlobalOpts {
             wordlist_files: Default::default(),
             prefixes: vec!["".into()],
             extensions: vec!["".into()],
+            extension_substitution: false,
             max_threads: Default::default(),
             proxy_enabled: Default::default(),
             proxy_address: Default::default(),
@@ -59,6 +60,7 @@ impl Default for RequestResponse {
             is_listable: false,
             redirect_url: "".into(),
             found_from_listable: false,
+            parent_index: 0,
             parent_depth: 0,
         }
     }
