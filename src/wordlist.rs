@@ -130,7 +130,7 @@ pub fn lines_from_file(filename: &String) -> Vec<String> {
                 .collect();
         }
         None => {
-            panic!("Error detecting file encoding");
+            panic!("Error detecting file encoding of {} - is the file empty?", filename);
         }
     }
 }

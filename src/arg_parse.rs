@@ -263,6 +263,12 @@ per line")
 substituted with the current extension")
             .long("ext-sub")
             .requires("extension-options"))
+        .arg(Arg::with_name("force_extension")
+            .display_order(31)
+            .help("Only scan with provided extensions")
+            .requires("extension-options")
+            .short("f")
+            .long("force-extension"))
         .arg(Arg::with_name("prefixes")
              .display_order(30)
              .help(
@@ -811,7 +817,12 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
     }
     let file_arg = String::from(file_arg);
 
-    let mut modifiers = vec![String::from("")];
+    let mut modifiers = vec![];
+
+    if !args.is_present("force_extension") || mod_type == "prefixes" {
+        modifiers.push(String::from(""));
+    }
+
     if args.is_present(&singular_arg) {
         for modifier in args.values_of(singular_arg).unwrap() {
             modifiers.push(String::from(modifier));
@@ -827,6 +838,12 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
 
     modifiers.sort();
     modifiers.dedup();
+
+    if modifiers.is_empty() {
+        panic!(
+"The length of the {} list is zero! Did you use -f with an empty {} file?",
+ mod_type, mod_type);
+    }
 
     modifiers
 }
