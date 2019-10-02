@@ -18,7 +18,6 @@
 use crate::arg_parse::{get_version_string, GlobalOpts};
 use crate::output_format;
 use crate::request::RequestResponse;
-use simplelog::LevelFilter;
 use std::error::Error;
 use std::fs::File;
 use std::io::{LineWriter, Write};
@@ -74,15 +73,11 @@ pub fn print_report(
         //*response_list = 
         sort_responses(&mut response_list);
     }
-
-    if global_opts.log_level >= LevelFilter::Info && global_opts.is_terminal {
-        println!("\n");
-    }
-
+    
     // If stdout is a terminal then write a report to it
     if global_opts.is_terminal {
         for (index, response_list) in responses.iter().enumerate() {
-            println!("Dirble Scan Report for {}:", global_opts.hostnames[index]);
+            println!("\nDirble Scan Report for {}:", global_opts.hostnames[index]);
             for response in response_list {
                 if let Some(line) = print_response(
                     &response,
