@@ -28,6 +28,7 @@ pub struct GlobalOpts {
     pub wordlist_files: Option<Vec<String>>,
     pub prefixes: Vec<String>,
     pub extensions: Vec<String>,
+    pub extension_substitution: bool,
     pub max_threads: u32,
     pub proxy_enabled: bool,
     pub proxy_address: String,
@@ -252,6 +253,16 @@ per line")
              .next_line_help(true)
              .short("X")
              .value_name("extension-file"))
+        .group(ArgGroup::with_name("extension-options")
+               .args(&["extensions", "extension_file"])
+               .multiple(true))
+        .arg(Arg::with_name("extension_substitution")
+            .display_order(31)
+            .help(
+"Indicates whether the string \"%EXT%\" in a wordlist file should be 
+substituted with the current extension")
+            .long("ext-sub")
+            .requires("extension-options"))
         .arg(Arg::with_name("prefixes")
              .display_order(30)
              .help(
@@ -690,6 +701,7 @@ set to 0 to disable")
         wordlist_files: wordlists,
         prefixes: load_modifiers(&args, "prefixes"),
         extensions: load_modifiers(&args, "extensions"),
+        extension_substitution: args.is_present("extension_substitution"),
         max_threads:
             args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
         proxy_enabled,

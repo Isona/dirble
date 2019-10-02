@@ -34,6 +34,7 @@ pub struct UriGenerator {
     pub parent_index: usize,
     pub parent_depth: u32,
     pub validator: Option<TargetValidator>,
+    extension_substitution: bool,
 }
 
 // Generates a new UriGenerator given various options
@@ -48,6 +49,7 @@ impl UriGenerator {
         parent_index: usize,
         parent_depth: u32,
         validator: Option<TargetValidator>,
+        extension_substitution: bool,
     ) -> Self {
         Self {
             base,
@@ -59,6 +61,7 @@ impl UriGenerator {
             parent_index,
             parent_depth,
             validator,
+            extension_substitution,
         }
     }
 }
@@ -72,12 +75,24 @@ impl Iterator for UriGenerator {
         if self.current_index >= self.wordlist.len() {
             return None;
         }
-        // Append the prefixed and suffixed filename onto the URI
-        let uri = self.base.join([
-            self.prefix.clone(),
-            self.wordlist[self.current_index].clone(),
-            self.suffix.clone(),
-        ].join("").as_str()).unwrap();
+
+        let uri;
+        if !self.extension_substitution {
+            // Append the prefixed and suffixed filename onto the URI
+            uri = self.base.join([
+                self.prefix.clone(),
+                self.wordlist[self.current_index].clone(),
+                self.suffix.clone(),
+            ].join("").as_str()).unwrap();
+        }
+        else {
+            let word = self.wordlist[self.current_index]
+                .replace("%EXT%", &self.suffix);
+            uri = self.base.join([
+                self.prefix.clone(),
+                word,
+            ].join("").as_str()).unwrap();
+        }
 
         // Maintain the index into the wordlist
         self.current_index += self.step_size;
