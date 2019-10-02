@@ -40,13 +40,13 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
         // or a mechanism for sorting the directory not of interest or
         // may cause issues when scanning so are skipped
         if scraped_url.starts_with("../")
-            || scraped_url.starts_with("?")
+            || scraped_url.starts_with('?')
             || scraped_url.starts_with("./")
         {
             continue;
         }
         // The scraped url is a path from the base URL
-        else if scraped_url.starts_with("/") {
+        else if scraped_url.starts_with('/') {
             // need to get the base address from the original url and
             // append this
             let start_index = if original_url.starts_with("https://") {
@@ -54,7 +54,7 @@ pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
             } else {
                 7
             };
-            let end_index = original_url[start_index..].find("/").unwrap();
+            let end_index = original_url[start_index..].find('/').unwrap();
             complete_url = format!(
                 "{}{}",
                 &original_url[0..end_index + start_index],

@@ -26,13 +26,11 @@ pub fn output_indentation(
     print_newlines: bool,
     indentation: bool,
 ) -> String {
-    let mut output: String;
-
-    if response.is_directory && print_newlines {
-        output = String::from("\n");
+    let mut output =  if response.is_directory && print_newlines {
+        String::from("\n")
     } else {
-        output = String::from("");
-    }
+        String::from("")
+    };
 
     if !indentation {
         return output;

@@ -37,15 +37,14 @@ pub fn output_thread(
                 break;
             }
             if global_opts.log_level >= LevelFilter::Info {
-                match output::print_response(
+                if let Some(output) = output::print_response(
                     &response,
                     global_opts.clone(),
                     false,
                     false,
                     global_opts.is_terminal && !global_opts.no_color,
                 ) {
-                    Some(output) => println!("{}", output),
-                    None => {}
+                    println!("{}", output);
                 }
             }
             response_list[response.parent_index].push(response);

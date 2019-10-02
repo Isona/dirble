@@ -115,10 +115,10 @@ impl TargetValidator {
                 let diff = (response.content_len as i32
                     - response.url.as_str().len() as i32)
                     .abs();
-                return size == diff;
+                size == diff
             }
             None => {
-                return true;
+                true
             }
         }
     }
@@ -149,13 +149,13 @@ impl TargetValidator {
     pub fn scan_folder(&self, scan_opts: &arg_parse::ScanOpts) -> bool {
         if let Some(validator_alert) = &self.validator_alert {
             match validator_alert {
-                ValidatorAlert::Code401 => return scan_opts.scan_401,
-                ValidatorAlert::Code403 => return scan_opts.scan_403,
+                ValidatorAlert::Code401 => scan_opts.scan_401,
+                ValidatorAlert::Code403 => scan_opts.scan_403,
                 // Placeholder branch for future use
-                ValidatorAlert::RedirectToHTTPS => return true,
+                ValidatorAlert::RedirectToHTTPS => true,
             }
         } else {
-            return true;
+            true
         }
     }
 
@@ -175,6 +175,7 @@ impl TargetValidator {
 pub enum ValidatorAlert {
     Code401,
     Code403,
+    #[allow(dead_code)]
     RedirectToHTTPS,
 }
 

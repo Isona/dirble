@@ -17,8 +17,7 @@
 
 use ctrlc;
 use log::Level;
-#[allow(unused)]
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use simplelog::{SimpleLogger, TermLogger};
 use std::{
     collections::VecDeque,
@@ -48,6 +47,7 @@ mod tests;
 mod validator_thread;
 mod wordlist;
 
+#[allow(clippy::cognitive_complexity)]
 fn main() {
     // Read the arguments in using the arg_parse module
     let global_opts = Arc::new(arg_parse::get_args());
@@ -62,11 +62,8 @@ fn main() {
         location: None,
         time_format: Some("%T"),
     };
-    match TermLogger::init(global_opts.log_level, log_config) {
-        Err(_) => {
-            SimpleLogger::init(global_opts.log_level, log_config).unwrap();
-        }
-        Ok(_) => (),
+    if TermLogger::init(global_opts.log_level, log_config).is_err() {
+        SimpleLogger::init(global_opts.log_level, log_config).unwrap();
     }
 
     // Get the wordlist file from the arguments. If it has not been set
@@ -124,13 +121,13 @@ fn main() {
     }
 
     // Remove leading and trailing slashes from words
-    for i in 0..wordlist.len() {
-        if wordlist[i].starts_with("/") {
-            wordlist[i].remove(0);
+    for word in &mut wordlist {
+        if word.starts_with('/') {
+            word.remove(0);
         }
 
-        if wordlist[i].ends_with("/") {
-            wordlist[i].pop();
+        if word.ends_with('/') {
+            word.pop();
         }
     }
 
@@ -292,7 +289,7 @@ fn main() {
 
         // If there are items in the scan queue and available threads
         // Spawn a new thread to scan an item
-        if threads_in_use < global_opts.max_threads && scan_queue.len() > 0 {
+        if threads_in_use < global_opts.max_threads && !scan_queue.is_empty() {
             // Clone a new sender to the channel and a new wordlist
             // reference, then pop the scan target from the queue
             let to_validate_tx_clone = mpsc::Sender::clone(&to_validate_tx);
@@ -315,7 +312,7 @@ fn main() {
 
         // If there are no threads in use and the queue is empty then
         // stop
-        if threads_in_use == 0 && scan_queue.len() == 0 {
+        if threads_in_use == 0 && scan_queue.is_empty() {
             break;
         }
 
@@ -362,8 +359,8 @@ fn add_dir_to_scan_queue(
             for start_index in 0..wordlist_split {
                 scan_queue.push_back(wordlist::UriGenerator::new(
                     dir_info.url.clone(),
-                    String::from(prefix.clone()),
-                    String::from(extension.clone()),
+                    prefix.clone(),
+                    extension.clone(),
                     wordlist.clone(),
                     start_index,
                     wordlist_split,

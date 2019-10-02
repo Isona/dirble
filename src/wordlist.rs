@@ -39,6 +39,7 @@ pub struct UriGenerator {
 
 // Generates a new UriGenerator given various options
 impl UriGenerator {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         base: Url,
         prefix: String,
@@ -76,23 +77,22 @@ impl Iterator for UriGenerator {
             return None;
         }
 
-        let uri;
-        if !self.extension_substitution {
+        let uri = if !self.extension_substitution {
             // Append the prefixed and suffixed filename onto the URI
-            uri = self.base.join([
+            self.base.join([
                 self.prefix.clone(),
                 self.wordlist[self.current_index].clone(),
                 self.suffix.clone(),
-            ].join("").as_str()).unwrap();
+            ].join("").as_str()).unwrap()
         }
         else {
             let word = self.wordlist[self.current_index]
                 .replace("%EXT%", &self.suffix);
-            uri = self.base.join([
+            self.base.join([
                 self.prefix.clone(),
                 word,
-            ].join("").as_str()).unwrap();
-        }
+            ].join("").as_str()).unwrap()
+        };
 
         // Maintain the index into the wordlist
         self.current_index += self.step_size;
@@ -102,8 +102,8 @@ impl Iterator for UriGenerator {
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file(filename: &String) -> Vec<String> {
-    let mut file = File::open(filename.clone()).unwrap_or_else(|error| {
+pub fn lines_from_file(filename: &str) -> Vec<String> {
+    let mut file = File::open(filename).unwrap_or_else(|error| {
         error!("Opening file \"{}\" failed: {}", filename, error);
         exit(2);
     });
@@ -122,12 +122,11 @@ pub fn lines_from_file(filename: &String) -> Vec<String> {
     let coder = encoding_from_whatwg_label(charset2encoding(&result.0));
     match coder {
         Some(coding) => {
-            return coding
-                .decode(&reader, DecoderTrap::Ignore)
+            coding.decode(&reader, DecoderTrap::Ignore)
                 .expect("Error decoding to UTF-8")
                 .lines()
-                .map(|s| String::from(s))
-                .collect();
+                .map(String::from)
+                .collect()
         }
         None => {
             panic!("Error detecting file encoding of {} - is the file empty?", filename);

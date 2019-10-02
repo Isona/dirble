@@ -51,7 +51,7 @@ pub fn thread_spawn(
     for uri in uri_gen {
         let mut response = request::make_request(&mut easy, uri.clone());
 
-        let code = response.code.clone();
+        let code = response.code;
 
         // If the url is a directory, then check if it's listable
         // This may also scrape listable directories if the parameter is set
@@ -192,7 +192,7 @@ pub fn should_send_response(
     }
 
     // Return the response for outputting
-    return true;
+    true
 }
 
 #[inline]
