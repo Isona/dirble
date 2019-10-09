@@ -18,6 +18,7 @@
 use crate::arg_parse;
 use crate::request;
 use curl::easy::Easy2;
+use std::collections::HashSet;
 use std::fmt;
 use std::sync::{mpsc, Arc};
 extern crate rand;
@@ -25,7 +26,7 @@ extern crate rand;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-use log::{info, warn};
+use log::{info, debug, warn};
 use url::Url;
 
 // Struct for passing information back to the main thread
@@ -206,6 +207,8 @@ pub fn validator_thread(
     main_tx: mpsc::Sender<Option<DirectoryInfo>>,
     global_opts: Arc<arg_parse::GlobalOpts>,
 ) {
+    let mut scanned_directories = HashSet::new();
+
     loop {
         // Get a RequestResponse from the receiver
         if let Ok(response) = rx.try_recv() {
@@ -222,6 +225,12 @@ pub fn validator_thread(
                 if !response.is_directory
                     || (response.is_listable && !global_opts.scan_listable)
                 {
+                    continue;
+                }
+
+                if !scanned_directories.insert(response.url.clone()) {
+                    main_tx.send(None).unwrap();
+                    debug!("{} has already been added to the scan queue", response.url);
                     continue;
                 }
 
