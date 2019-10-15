@@ -868,8 +868,13 @@ pub fn get_version_string() -> &'static str {
 }
 
 fn url_is_valid(hostname: String) -> Result<(), String> {
-    if Url::parse(hostname.as_str()).is_ok() {
-        Ok(())
+    let url = Url::parse(hostname.as_str());
+    if let Ok(u) = url {
+        if u.scheme() == "http" || u.scheme() == "https" {
+            Ok(())
+        } else {
+            Err(format!("The URI \"{}\" is not HTTP or HTTPS", hostname))
+        }
     } else {
         Err(format!("The URI \"{}\" is invalid", hostname))
     }
