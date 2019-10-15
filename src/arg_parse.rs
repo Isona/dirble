@@ -871,7 +871,7 @@ fn url_is_valid(hostname: String) -> Result<(), String> {
     if Url::parse(hostname.as_str()).is_ok() {
         Ok(())
     } else {
-        Err(String::from("The provided target URI is invald"))
+        Err(String::from("The provided target URI is invalid"))
     }
 }
 
