@@ -1,5 +1,5 @@
 use futures::{future, Future, Poll, Stream};
-use hyper::{self , Request, Response, Body};
+use hyper::{self, Body, Request, Response};
 use std::sync::Arc;
 use std::{thread, time};
 use tokio::net::TcpListener;
@@ -8,8 +8,8 @@ use tower_hyper::server::Server;
 use url::Url;
 
 use super::mock_server;
-use crate::request;
 use crate::arg_parse::GlobalOpts;
+use crate::request;
 
 #[test]
 fn test_200_response() {

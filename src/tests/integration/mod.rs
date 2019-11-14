@@ -5,12 +5,12 @@ use tower::{builder::ServiceBuilder, Service};
 use tower_hyper::server::Server;
 
 mod basic_requests;
-mod status_detection;
 mod scraping;
+mod status_detection;
 
 const URL: &str = "http://[::1]:3000";
 
-pub fn mock_server()  {
+pub fn mock_server() {
     println!("Making a mock server");
     hyper::rt::run(future::lazy(|| {
         let addr = "[::1]:3000".parse().unwrap();
@@ -29,13 +29,13 @@ pub fn mock_server()  {
 
                 hyper::rt::spawn(
                     server
-                    .serve(stream)
-                    .map_err(|e| panic!("Server error: {:?}", e)),
-                    );
+                        .serve(stream)
+                        .map_err(|e| panic!("Server error: {:?}", e)),
+                );
 
                 Ok(server)
             })
-        .map_err(|e| panic!("serve errror: {:?}", e))
+            .map_err(|e| panic!("serve errror: {:?}", e))
             .map(|_| {})
     }));
 }
@@ -60,7 +60,9 @@ struct MakeSvc;
 impl Service<()> for MakeSvc {
     type Response = Svc;
     type Error = hyper::Error;
-    type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error> + Send + 'static>;
+    type Future = Box<
+        dyn Future<Item = Self::Response, Error = Self::Error> + Send + 'static,
+    >;
 
     fn poll_ready(&mut self) -> Poll<(), Self::Error> {
         Ok(().into())

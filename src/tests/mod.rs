@@ -4,10 +4,10 @@ use log::LevelFilter::Info;
 use url::Url;
 
 mod argparse;
+mod integration;
 mod output;
 mod output_format;
 mod request_thread;
-mod integration;
 
 impl Default for GlobalOpts {
     fn default() -> Self {
