@@ -7,6 +7,7 @@ mod argparse;
 mod output;
 mod output_format;
 mod request_thread;
+mod integration;
 
 impl Default for GlobalOpts {
     fn default() -> Self {
