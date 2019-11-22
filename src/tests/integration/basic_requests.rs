@@ -43,5 +43,5 @@ fn test_200_response() {
             parent_depth: 0,
         },
         "Response not recognised :(",
-        );
+    );
 }
