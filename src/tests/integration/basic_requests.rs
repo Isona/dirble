@@ -1,10 +1,4 @@
-use futures::{future, Future, Poll, Stream};
-use hyper::{self, Body, Request, Response};
 use std::sync::Arc;
-use std::{thread, time};
-use tokio::net::TcpListener;
-use tower::{builder::ServiceBuilder, Service};
-use tower_hyper::server::Server;
 use url::Url;
 
 use super::mock_server;
@@ -16,7 +10,7 @@ fn test_200_response() {
     mock_server();
 
 
-    let mut global_opts: GlobalOpts = Default::default();
+    let global_opts: GlobalOpts = Default::default();
     let global_opts = Arc::new(global_opts);
     let mut easy = request::generate_easy(&global_opts);
 
@@ -47,7 +41,7 @@ fn test_200_response() {
 fn test_301_response() {
     mock_server();
 
-    let mut global_opts: GlobalOpts = Default::default();
+    let global_opts: GlobalOpts = Default::default();
     let global_opts = Arc::new(global_opts);
     let mut easy = request::generate_easy(&global_opts);
 
