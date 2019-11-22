@@ -9,7 +9,7 @@ use url::Url;
 
 use super::mock_server;
 use crate::arg_parse::GlobalOpts;
-use crate::request;
+use crate::request::{self, RequestResponse};
 
 #[test]
 fn test_200_response() {
@@ -29,5 +29,19 @@ fn test_200_response() {
 
     println!("{:?}", rr);
 
-    panic!();
+    assert_eq!(
+        rr,
+        RequestResponse {
+            url: Url::parse("http://[::1]:3000/").unwrap(),
+            code: 200,
+            content_len: 2,
+            is_directory: false,
+            is_listable: false,
+            redirect_url: "".into(),
+            found_from_listable: false,
+            parent_index: 0,
+            parent_depth: 0,
+        },
+        "Response not recognised :(",
+        );
 }
