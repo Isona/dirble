@@ -1,5 +1,5 @@
 use futures::{future, Future, Poll, Stream};
-use hyper::{self, Body, Request, Response};
+use hyper::{self, Body, Request, Response, Method};
 use tokio::net::TcpListener;
 use tower::{builder::ServiceBuilder, Service};
 use tower_hyper::server::Server;
@@ -51,10 +51,16 @@ fn start_mock_server() {
 
                 Ok(server)
             })
-            .map_err(|e| panic!("serve errror: {:?}", e))
+            .map_err(|e| panic!("server error: {:?}", e))
             .map(|_| {})
     }));
-    println!("### Bottom of the start_mock_server function");
+}
+
+fn route(req: Request<Body>) -> Response<Body> {
+    match (req.method(), req.uri().path()) {
+        (&Method::GET, "/") => Response::new(Body::from("hi")),
+        _ => unimplemented!(),
+    }
 }
 
 struct Svc;
@@ -67,8 +73,8 @@ impl Service<Request<Body>> for Svc {
         Ok(().into())
     }
 
-    fn call(&mut self, _req: Request<Body>) -> Self::Future {
-        let res = Response::new(Body::from("Hi"));
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let res: Response<_> = route(req);
         future::ok(res)
     }
 }
