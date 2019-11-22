@@ -3,14 +3,30 @@ use hyper::{self, Body, Request, Response};
 use tokio::net::TcpListener;
 use tower::{builder::ServiceBuilder, Service};
 use tower_hyper::server::Server;
+use std::sync::Once;
+use std::{thread, time};
 
 mod basic_requests;
 mod scraping;
 mod status_detection;
 
 const URL: &str = "http://[::1]:3000";
+static START: Once = Once::new();
 
+/* Wrapper around the mock server that launches a thread with it in,
+ * using std::sync::Once to make sure only one server is started.
+ * Further invocations will block until the first has completed.
+ */
 pub fn mock_server() {
+    START.call_once(|| {
+        thread::spawn(|| {
+            start_mock_server();
+        });
+        thread::sleep(time::Duration::from_millis(1000));
+    });
+}
+
+fn start_mock_server() {
     println!("Making a mock server");
     hyper::rt::run(future::lazy(|| {
         let addr = "[::1]:3000".parse().unwrap();
@@ -38,6 +54,7 @@ pub fn mock_server() {
             .map_err(|e| panic!("serve errror: {:?}", e))
             .map(|_| {})
     }));
+    println!("### Bottom of the start_mock_server function");
 }
 
 struct Svc;
