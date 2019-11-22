@@ -1,5 +1,5 @@
 use futures::{future, Future, Poll, Stream};
-use hyper::{self, Body, Request, Response, Method};
+use hyper::{self, Body, Request, Response, Method, header, StatusCode};
 use tokio::net::TcpListener;
 use tower::{builder::ServiceBuilder, Service};
 use tower_hyper::server::Server;
@@ -58,7 +58,13 @@ fn start_mock_server() {
 
 fn route(req: Request<Body>) -> Response<Body> {
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/") => Response::new(Body::from("hi")),
+        (&Method::GET, "/") => Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from("hi")).unwrap(),
+        (&Method::GET, "/301.html") => Response::builder()
+            .status(StatusCode::MOVED_PERMANENTLY)
+            .header(header::LOCATION, "/301-target.html")
+            .body(Body::from("Not here")).unwrap(),
         _ => unimplemented!(),
     }
 }
