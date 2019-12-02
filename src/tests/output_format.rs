@@ -1,5 +1,7 @@
 // This file is part of Dirble - https://www.github.com/nccgroup/dirble
-// Copyright (C) 2019 Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot)com>
+// Copyright (C) 2019
+//  * Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot)com>
+//  * David Young <David(dot)Young(at)nccgroup(dot)com>
 // Released as open source by NCC Group Plc - https://www.nccgroup.com/
 //
 // Dirble is free software: you can redistribute it and/or modify
@@ -14,10 +16,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
-
-// NOTE: Do NOT autoindent this entire file, as the XML format checker
-// relies on the indented string having the correct number of leading
-// spaces.
 
 use url::Url;
 
