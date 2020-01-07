@@ -99,7 +99,7 @@ pub fn print_report(
     if let Some(mut handle) = file_handles.output_file {
         for (index, response_list) in responses.iter().enumerate() {
             let report_string = format!(
-                "Dirble Scan Report for {}:",
+                "Dirble Scan Report for {}:\n",
                 global_opts.hostnames[index]
             );
             write_file(&mut handle, report_string);
@@ -115,6 +115,7 @@ pub fn print_report(
                     write_file(&mut handle, file_line);
                 }
             }
+            write_file(&mut handle, "\n".to_string());
         }
     }
 
