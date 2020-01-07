@@ -176,6 +176,10 @@ pub fn should_send_response(
         trace!("[{}]: code {} in blacklist", response.url, response.code);
         return false;
     }
+    if response.code == 0 {
+        trace!("[{}]: code 0 detected", response.url);
+        return false;   
+    }
     if let Some(validator) = validator_opt {
         if validator.is_not_found(&response) {
             trace!("[{}]: matches Not Found condition", response.url);
