@@ -69,7 +69,7 @@ impl UriGenerator {
 
 // Defines iterating over a UriGenerator
 impl Iterator for UriGenerator {
-    type Item = (Url);
+    type Item = Url;
 
     fn next(&mut self) -> Option<Self::Item> {
         // If we're at the end of the wordlist then return None
