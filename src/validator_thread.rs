@@ -26,7 +26,7 @@ extern crate rand;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-use log::{info, debug, warn};
+use log::{debug, info, warn};
 use url::Url;
 
 // Struct for passing information back to the main thread
@@ -230,7 +230,10 @@ pub fn validator_thread(
 
                 if !scanned_directories.insert(response.url.clone()) {
                     main_tx.send(None).unwrap();
-                    debug!("{} has already been added to the scan queue", response.url);
+                    debug!(
+                        "{} has already been added to the scan queue",
+                        response.url
+                    );
                     continue;
                 }
 

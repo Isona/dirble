@@ -28,7 +28,6 @@ use crate::request::{self, RequestResponse};
 fn test_200_response() {
     mock_server();
 
-
     let global_opts: GlobalOpts = Default::default();
     let global_opts = Arc::new(global_opts);
     let mut easy = request::generate_easy(&global_opts);
@@ -64,10 +63,7 @@ fn test_301_response() {
     let global_opts = Arc::new(global_opts);
     let mut easy = request::generate_easy(&global_opts);
 
-    let url = Url::parse(super::URL)
-        .unwrap()
-        .join("301.html")
-        .unwrap();
+    let url = Url::parse(super::URL).unwrap().join("301.html").unwrap();
 
     let rr = request::make_request(&mut easy, url);
 
@@ -88,5 +84,4 @@ fn test_301_response() {
         },
         "Response not recognised :(",
     );
-
 }

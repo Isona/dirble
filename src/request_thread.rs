@@ -178,7 +178,7 @@ pub fn should_send_response(
     }
     if response.code == 0 {
         trace!("[{}]: code 0 detected", response.url);
-        return false;   
+        return false;
     }
     if let Some(validator) = validator_opt {
         if validator.is_not_found(&response) {

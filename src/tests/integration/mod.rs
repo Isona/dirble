@@ -17,14 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-
 use futures::{future, Future, Poll, Stream};
-use hyper::{self, Body, Request, Response, Method, header, StatusCode};
+use hyper::{self, header, Body, Method, Request, Response, StatusCode};
+use std::sync::Once;
+use std::{thread, time};
 use tokio::net::TcpListener;
 use tower::{builder::ServiceBuilder, Service};
 use tower_hyper::server::Server;
-use std::sync::Once;
-use std::{thread, time};
 
 mod basic_requests;
 mod scraping;
@@ -80,11 +79,13 @@ fn route(req: Request<Body>) -> Response<Body> {
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/") => Response::builder()
             .status(StatusCode::OK)
-            .body(Body::from("hi")).unwrap(),
+            .body(Body::from("hi"))
+            .unwrap(),
         (&Method::GET, "/301.html") => Response::builder()
             .status(StatusCode::MOVED_PERMANENTLY)
             .header(header::LOCATION, "/301-target.html")
-            .body(Body::from("Not here")).unwrap(),
+            .body(Body::from("Not here"))
+            .unwrap(),
         _ => unimplemented!(),
     }
 }
