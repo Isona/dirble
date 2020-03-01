@@ -52,5 +52,5 @@ pub fn output_thread(
         }
     }
 
-    output::print_report(response_list, global_opts.clone(), file_handles);
+    output::print_report(response_list, global_opts, file_handles);
 }

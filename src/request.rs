@@ -123,7 +123,7 @@ pub fn make_request(
         Err(e) => {
             println!("Curl error after requesting {} : {}", url, e);
             let req_response = RequestResponse {
-                url: url.clone(),
+                url,
                 code: 0,
                 content_len: 0,
                 is_directory: false,
