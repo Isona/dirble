@@ -153,7 +153,9 @@ pub fn get_args() -> GlobalOpts {
     // Defines all the command line arguments with the Clap module
     let args = App::new("Dirble")
         .version(version_string)
-        .author("Developed by Izzy Whistlecroft <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
+        .author(
+            "Developed by Izzy Whistlecroft \
+            <Izzy(dot)Whistlecroft(at)nccgroup(dot).com>")
         .about("Fast directory scanning and scraping tool")
         .after_help("OUTPUT FORMAT:
     + [url] - File
@@ -661,12 +663,12 @@ set to 0 to disable")
     if let Some(whitelist_values) = args.values_of("code_whitelist") {
         whitelist = true;
         for code in whitelist_values {
-            code_list.push(code.parse::<u32>().unwrap());
+            code_list.push(code.parse::<u32>().expect("Code is an integer"));
         }
     } else if let Some(blacklist_values) = args.values_of("code_blacklist") {
         whitelist = false;
         for code in blacklist_values {
-            code_list.push(code.parse::<u32>().unwrap());
+            code_list.push(code.parse::<u32>().expect("Code is an integer"));
         }
     }
 
@@ -674,7 +676,8 @@ set to 0 to disable")
     if args.is_present("disable_recursion") {
         max_recursion_depth = Some(0);
     } else if let Some(depth) = args.value_of("max_recursion_depth") {
-        max_recursion_depth = Some(depth.parse::<i32>().unwrap());
+        max_recursion_depth =
+            Some(depth.parse::<i32>().expect("Recursion depth is an integer"));
     }
 
     let mut scan_opts = ScanOpts {
@@ -708,40 +711,57 @@ set to 0 to disable")
         prefixes: load_modifiers(&args, "prefixes"),
         extensions: load_modifiers(&args, "extensions"),
         extension_substitution: args.is_present("extension_substitution"),
-        max_threads:
-            args.value_of("max_threads").unwrap().parse::<u32>().unwrap(),
+        max_threads: args
+            .value_of("max_threads")
+            .expect("Max threads is set")
+            .parse::<u32>()
+            .expect("Max threads is an integer"),
         proxy_enabled,
         proxy_address,
         proxy_auth_enabled: false,
         ignore_cert: args.is_present("ignore_cert"),
         show_htaccess: args.is_present("show_htaccess"),
-        throttle:
-            if args.is_present("throttle") {
-                args.value_of("throttle").unwrap().parse::<u32>().unwrap()
-            } else { 0 },
+        throttle: if let Some(throttle) = args.value_of("throttle") {
+            throttle.parse::<u32>().expect("Throttle is an integer")
+        } else {
+            0
+        },
         max_recursion_depth,
-        user_agent:
-            if args.is_present("user_agent") {
-                Some(String::from(args.value_of("user_agent").unwrap()))
-            } else { None },
-        username:
-            // Dependency between username and password is handled by Clap
-            if args.is_present("username") {
-                Some(String::from(args.value_of("username").unwrap()))
-            } else { None },
-        password:
-            // Dependency between username and password is handled by Clap
-            if args.is_present("password") {
-                Some(String::from(args.value_of("password").unwrap()))
-            } else { None },
+        user_agent: if let Some(user_agent) = args.value_of("user_agent") {
+            Some(String::from(user_agent))
+        } else {
+            None
+        },
+        // Dependency between username and password is handled by Clap
+        username: if let Some(username) = args.value_of("username") {
+            Some(String::from(username))
+        } else {
+            None
+        },
+        // Dependency between username and password is handled by Clap
+        password: if let Some(password) = args.value_of("password") {
+            Some(String::from(password))
+        } else {
+            None
+        },
         output_file: filename_from_args(&args, "txt"),
         json_file: filename_from_args(&args, "json"),
         xml_file: filename_from_args(&args, "xml"),
-        timeout: args.value_of("timeout").unwrap().parse::<u32>().unwrap(),
-        max_errors:
-            args.value_of("max_errors").unwrap().parse::<u32>().unwrap(),
-        wordlist_split:
-            args.value_of("wordlist_split").unwrap().parse::<u32>().unwrap(),
+        timeout: args
+            .value_of("timeout")
+            .expect("Timeout is set")
+            .parse::<u32>()
+            .expect("Timeout is an integer"),
+        max_errors: args
+            .value_of("max_errors")
+            .expect("Max errors is set")
+            .parse::<u32>()
+            .expect("Max errors is an integer"),
+        wordlist_split: args
+            .value_of("wordlist_split")
+            .expect("Wordlist split is set")
+            .parse::<u32>()
+            .expect("Wordlist split is an integer"),
         scan_listable: args.is_present("scan_listable"),
         cookies,
         headers,
@@ -751,15 +771,24 @@ set to 0 to disable")
         is_terminal: atty::is(Stream::Stdout),
         no_color: args.is_present("no_color"),
         disable_validator: args.is_present("disable_validator"),
-        http_verb: value_t!(args.value_of("http_verb"), HttpVerb).unwrap(),
+        http_verb: value_t!(args.value_of("http_verb"), HttpVerb)
+            .expect("Must be valid HTTP verb"),
         scan_opts,
         log_level,
-        length_blacklist: if args.is_present("length_blacklist") {
-            length_blacklist_parse(args.values_of("length_blacklist").unwrap())
-        } else { Default::default() },
+        length_blacklist: if let Some(lengths) =
+            args.values_of("length_blacklist")
+        {
+            length_blacklist_parse(lengths)
+        } else {
+            Default::default()
+        },
     }
 }
 
+/// filetype is one of "txt", "json", and "xml". Returns a filename that is
+/// either the filename supplied by the user if the corresponding argument has
+/// been given, or if the "output_all" argument is provided then build a
+/// filename from the prefix given
 #[inline]
 fn filename_from_args(
     args: &clap::ArgMatches,
@@ -769,31 +798,29 @@ fn filename_from_args(
     match filetype {
         "txt" => {
             extension = "txt";
-            if args.is_present("output_file") {
-                return Some(String::from(
-                    args.value_of("output_file").unwrap(),
-                ));
+            if let Some(output_file) = args.value_of("output_file") {
+                return Some(String::from(output_file));
             }
         }
         "json" => {
             extension = "json";
-            if args.is_present("json_file") {
-                return Some(String::from(args.value_of("json_file").unwrap()));
+            if let Some(json_file) = args.value_of("json_file") {
+                return Some(String::from(json_file));
             }
         }
         "xml" => {
             extension = "xml";
-            if args.is_present("xml_file") {
-                return Some(String::from(args.value_of("xml_file").unwrap()));
+            if let Some(xml_file) = args.value_of("xml_file") {
+                return Some(String::from(xml_file));
             }
         }
-        _ => panic!(),
+        _ => unimplemented!(),
     }
 
-    if args.is_present("output_all") {
+    if let Some(output_all_prefix) = args.value_of("output_all") {
         Some(format!(
             "{}.{}",
-            args.value_of("output_all").unwrap(),
+            output_all_prefix,
             extension
         ))
     } else {
@@ -824,13 +851,13 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
         modifiers.push(String::from(""));
     }
 
-    if args.is_present(&singular_arg) {
-        for modifier in args.values_of(singular_arg).unwrap() {
+    if let Some(singular_args) = args.values_of(singular_arg) {
+        for modifier in singular_args {
             modifiers.push(String::from(modifier));
         }
     }
-    if args.is_present(&file_arg) {
-        for filename in args.values_of(file_arg).unwrap() {
+    if let Some(file_args) = args.values_of(file_arg) {
+        for filename in file_args {
             for modifier in lines_from_file(&String::from(filename)) {
                 modifiers.push(modifier);
             }
@@ -916,19 +943,24 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
                 components.len() == 2,
                 "Ranges must be in the form `150-300`"
             );
-            start = components[0].parse::<usize>().unwrap();
+            start = components[0]
+                .parse::<usize>()
+                .expect("Length must be integers");
             end = Some(
                 components[1]
                     .parse::<usize>()
                     .expect("Ranges must be in the form `150-300`"),
             );
             assert!(
+                // This unwrap is permitted because it is always a Some
                 start < end.unwrap(),
                 "The start of a range must be smaller than the end"
             );
         } else {
             // Length is just one number
-            start = length.parse::<usize>().unwrap();
+            start = length
+                .parse::<usize>()
+                .expect("Length range must be integers");
             end = None;
         }
         length_vector.push(LengthRange { start, end });
