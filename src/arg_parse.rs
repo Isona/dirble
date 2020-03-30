@@ -612,7 +612,6 @@ set to 0 to disable")
     let proxy_enabled;
     let proxy_address;
     if let Some(proxy_addr) = args.value_of("proxy") {
-    //if args.is_present("proxy") {
         proxy_enabled = true;
         proxy_address = proxy_addr;
         if proxy_address == "http://localhost:8080" {
@@ -633,26 +632,28 @@ set to 0 to disable")
     let proxy_address = String::from(proxy_address);
 
     // Read provided cookie values into a vector
-    let cookies: Option<String> = if let Some(cookies) = args.values_of("cookie") {
-        let mut temp_cookies: Vec<String> = Vec::new();
-        for cookie in cookies {
-            temp_cookies.push(String::from(cookie));
-        }
-        Some(temp_cookies.join("; "))
-    } else {
-        None
-    };
+    let cookies: Option<String> =
+        if let Some(cookies) = args.values_of("cookie") {
+            let mut temp_cookies: Vec<String> = Vec::new();
+            for cookie in cookies {
+                temp_cookies.push(String::from(cookie));
+            }
+            Some(temp_cookies.join("; "))
+        } else {
+            None
+        };
 
     // Read provided headers into a vector
-    let headers: Option<Vec<String>> = if let Some(headers) = args.values_of("header") {
-        let mut temp_headers: Vec<String> = Vec::new();
-        for header in headers {
-            temp_headers.push(String::from(header));
-        }
-        Some(temp_headers)
-    } else {
-        None
-    };
+    let headers: Option<Vec<String>> =
+        if let Some(headers) = args.values_of("header") {
+            let mut temp_headers: Vec<String> = Vec::new();
+            for header in headers {
+                temp_headers.push(String::from(header));
+            }
+            Some(temp_headers)
+        } else {
+            None
+        };
 
     let mut whitelist = false;
     let mut code_list: Vec<u32> = Vec::new();
@@ -673,8 +674,7 @@ set to 0 to disable")
     if args.is_present("disable_recursion") {
         max_recursion_depth = Some(0);
     } else if let Some(depth) = args.value_of("max_recursion_depth") {
-        max_recursion_depth =
-            Some(depth.parse::<i32>().unwrap());
+        max_recursion_depth = Some(depth.parse::<i32>().unwrap());
     }
 
     let mut scan_opts = ScanOpts {
