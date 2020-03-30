@@ -560,15 +560,15 @@ set to 0 to disable")
     let mut hostnames: Vec<Url> = Vec::new();
 
     // Get from host arguments
-    if args.is_present("host") {
-        if let Ok(host) = Url::parse(args.value_of("host").unwrap()) {
+    if let Some(host) = args.value_of("host") {
+        if let Ok(host) = Url::parse(host) {
             hostnames.push(host);
         } else {
-            println!("Invaid URL: {}", args.value_of("host").unwrap());
+            println!("Invaid URL: {}", host);
         }
     }
-    if args.is_present("host_file") {
-        for host_file in args.values_of("host_file").unwrap() {
+    if let Some(host_files) = args.values_of("host_file") {
+        for host_file in host_files {
             let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
                 if url_is_valid(hostname.clone()).is_ok() {
@@ -581,8 +581,8 @@ set to 0 to disable")
             }
         }
     }
-    if args.is_present("extra_hosts") {
-        for hostname in args.values_of("extra_hosts").unwrap() {
+    if let Some(extra_hosts) = args.values_of("extra_hosts") {
+        for hostname in extra_hosts {
             if let Ok(host) = Url::parse(hostname) {
                 hostnames.push(host);
             }
@@ -597,22 +597,24 @@ set to 0 to disable")
     hostnames.dedup();
 
     // Parse wordlist file names into a vector
-    let wordlists: Option<Vec<String>> = if args.is_present("wordlist") {
-        let mut wordlists_vec = Vec::new();
-        for wordlist_file in args.values_of("wordlist").unwrap() {
-            wordlists_vec.push(String::from(wordlist_file));
-        }
-        Some(wordlists_vec)
-    } else {
-        None
-    };
+    let wordlists: Option<Vec<String>> =
+        if let Some(wordlist_files) = args.values_of("wordlist") {
+            let mut wordlists_vec = Vec::new();
+            for wordlist_file in wordlist_files {
+                wordlists_vec.push(String::from(wordlist_file));
+            }
+            Some(wordlists_vec)
+        } else {
+            None
+        };
 
     // Check for proxy related flags
     let proxy_enabled;
     let proxy_address;
-    if args.is_present("proxy") {
+    if let Some(proxy_addr) = args.value_of("proxy") {
+    //if args.is_present("proxy") {
         proxy_enabled = true;
-        proxy_address = args.value_of("proxy").unwrap();
+        proxy_address = proxy_addr;
         if proxy_address == "http://localhost:8080" {
             println!(
                 "You could use the --burp flag instead of the --proxy flag!"
@@ -631,9 +633,9 @@ set to 0 to disable")
     let proxy_address = String::from(proxy_address);
 
     // Read provided cookie values into a vector
-    let cookies: Option<String> = if args.is_present("cookie") {
+    let cookies: Option<String> = if let Some(cookies) = args.values_of("cookie") {
         let mut temp_cookies: Vec<String> = Vec::new();
-        for cookie in args.values_of("cookie").unwrap() {
+        for cookie in cookies {
             temp_cookies.push(String::from(cookie));
         }
         Some(temp_cookies.join("; "))
@@ -642,9 +644,9 @@ set to 0 to disable")
     };
 
     // Read provided headers into a vector
-    let headers: Option<Vec<String>> = if args.is_present("header") {
+    let headers: Option<Vec<String>> = if let Some(headers) = args.values_of("header") {
         let mut temp_headers: Vec<String> = Vec::new();
-        for header in args.values_of("header").unwrap() {
+        for header in headers {
             temp_headers.push(String::from(header));
         }
         Some(temp_headers)
@@ -655,14 +657,14 @@ set to 0 to disable")
     let mut whitelist = false;
     let mut code_list: Vec<u32> = Vec::new();
 
-    if args.is_present("code_whitelist") {
+    if let Some(whitelist_values) = args.values_of("code_whitelist") {
         whitelist = true;
-        for code in args.values_of("code_whitelist").unwrap() {
+        for code in whitelist_values {
             code_list.push(code.parse::<u32>().unwrap());
         }
-    } else if args.is_present("code_blacklist") {
+    } else if let Some(blacklist_values) = args.values_of("code_blacklist") {
         whitelist = false;
-        for code in args.values_of("code_blacklist").unwrap() {
+        for code in blacklist_values {
             code_list.push(code.parse::<u32>().unwrap());
         }
     }
@@ -670,11 +672,9 @@ set to 0 to disable")
     let mut max_recursion_depth = None;
     if args.is_present("disable_recursion") {
         max_recursion_depth = Some(0);
-    } else if args.is_present("max_recursion_depth") {
-        let string_recursion_depth =
-            args.value_of("max_recursion_depth").unwrap();
+    } else if let Some(depth) = args.value_of("max_recursion_depth") {
         max_recursion_depth =
-            Some(string_recursion_depth.parse::<i32>().unwrap());
+            Some(depth.parse::<i32>().unwrap());
     }
 
     let mut scan_opts = ScanOpts {
