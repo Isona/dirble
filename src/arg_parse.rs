@@ -825,11 +825,7 @@ fn filename_from_args(
     }
 
     if let Some(output_all_prefix) = args.value_of("output_all") {
-        Some(format!(
-            "{}.{}",
-            output_all_prefix,
-            extension
-        ))
+        Some(format!("{}.{}", output_all_prefix, extension))
     } else {
         None
     }
