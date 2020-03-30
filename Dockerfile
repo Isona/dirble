@@ -15,7 +15,7 @@ WORKDIR /home/dirble
 
 COPY --from=cargo-build /usr/src/dirble/target/release/dirble .
 COPY --from=cargo-build /usr/src/dirble/dirble_wordlist.txt .
-COPY --from=cargo-build /usr/src/dirble/wordlists/* extensions/
+COPY --from=cargo-build /usr/src/dirble/extensions/* extensions/
 
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
