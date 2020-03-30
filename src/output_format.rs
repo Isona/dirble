@@ -17,7 +17,6 @@
 
 use crate::request::RequestResponse;
 use colored::*;
-use serde_json;
 use simple_xml_serialize::XMLElement;
 
 #[inline]

@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctrlc;
 use log::Level;
 use log::{debug, error, info, warn};
 use simplelog::{SimpleLogger, TermLogger};

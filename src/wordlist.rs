@@ -18,8 +18,7 @@
 use crate::validator_thread::TargetValidator;
 use chardet::{charset2encoding, detect};
 use encoding::{label::encoding_from_whatwg_label, DecoderTrap};
-use log::error;
-use std::{fs::File, io::prelude::*, process::exit, sync::Arc};
+use std::{fs, sync::Arc};
 use url::Url;
 
 // Struct for a UriGenerator, it needs the hostname, the suffix to
@@ -107,14 +106,8 @@ impl Iterator for UriGenerator {
 
 // Function used to read in lines from the wordlist file
 pub fn lines_from_file(filename: &str) -> Vec<String> {
-    let mut file = File::open(filename).unwrap_or_else(|error| {
-        error!("Opening file \"{}\" failed: {}", filename, error);
-        exit(2);
-    });
-    let mut reader: Vec<u8> = Vec::new();
-
     // Read the raw file in as a vector of bytes
-    file.read_to_end(&mut reader).expect("Error reading file");
+    let reader = fs::read(filename).unwrap();
 
     // Detect the charset of the file
     let result = detect(&reader);

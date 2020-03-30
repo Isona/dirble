@@ -18,7 +18,6 @@
 use crate::arg_parse::{get_version_string, GlobalOpts};
 use crate::output_format;
 use crate::request::RequestResponse;
-use std::error::Error;
 use std::fs::File;
 use std::io::{LineWriter, Write};
 use std::path::Path;
@@ -224,11 +223,8 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
 #[inline]
 fn generate_handle(filename: &str) -> Option<LineWriter<File>> {
     let path = Path::new(&filename);
-    let display = path.display();
     match File::create(&path) {
-        Err(why) => {
-            panic!("couldn't create {}: {}", display, why.description())
-        }
+        Err(why) => panic!("couldn't create {}: {}", path.display(), why),
         Ok(file) => Some(LineWriter::new(file)),
     }
 }

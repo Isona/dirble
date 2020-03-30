@@ -697,7 +697,7 @@ set to 0 to disable")
         match args.occurrences_of("verbose") {
             0 => LevelFilter::Info,
             1 => LevelFilter::Debug,
-            2 | _ => LevelFilter::Trace,
+            _ => LevelFilter::Trace,
         }
     };
 
