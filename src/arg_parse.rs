@@ -144,6 +144,13 @@ impl Default for HttpVerb {
     }
 }
 
+/// The supported output file types
+enum FileTypes {
+    Txt,
+    Json,
+    Xml,
+}
+
 #[allow(clippy::cognitive_complexity)]
 pub fn get_args() -> GlobalOpts {
     // For general compilation, include the current commit hash and
@@ -744,9 +751,9 @@ set to 0 to disable")
         } else {
             None
         },
-        output_file: filename_from_args(&args, "txt"),
-        json_file: filename_from_args(&args, "json"),
-        xml_file: filename_from_args(&args, "xml"),
+        output_file: filename_from_args(&args, FileTypes::Txt),
+        json_file: filename_from_args(&args, FileTypes::Json),
+        xml_file: filename_from_args(&args, FileTypes::Xml),
         timeout: args
             .value_of("timeout")
             .expect("Timeout is set")
@@ -792,29 +799,29 @@ set to 0 to disable")
 #[inline]
 fn filename_from_args(
     args: &clap::ArgMatches,
-    filetype: &str,
+    filetype: FileTypes,
 ) -> Option<String> {
     let extension;
+    use FileTypes::*;
     match filetype {
-        "txt" => {
+        Txt => {
             extension = "txt";
             if let Some(output_file) = args.value_of("output_file") {
                 return Some(String::from(output_file));
             }
         }
-        "json" => {
+        Json => {
             extension = "json";
             if let Some(json_file) = args.value_of("json_file") {
                 return Some(String::from(json_file));
             }
         }
-        "xml" => {
+        Xml => {
             extension = "xml";
             if let Some(xml_file) = args.value_of("xml_file") {
                 return Some(String::from(xml_file));
             }
         }
-        _ => unimplemented!(),
     }
 
     if let Some(output_all_prefix) = args.value_of("output_all") {
