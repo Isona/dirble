@@ -4,6 +4,7 @@ version = "1.4.2"
 authors = ["Izzy Whistlecroft <izzy.whistlecroft@nccgroup.com>"]
 edition = "2018"
 build = "build.rs"
+license = "GPL-3-or-later"
 
 [dependencies]
 curl = "0.4.19"
