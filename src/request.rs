@@ -30,23 +30,23 @@ use simple_xml_serialize_macro::xml_element;
 use url::Url;
 
 pub struct Collector {
-    pub contents: Vec<u8>,
-    pub content_len: usize,
+    contents: Vec<u8>,
 }
 
 impl Collector {
     fn clear_buffer(&mut self) {
         self.contents = Vec::new();
-        self.content_len = 0;
+    }
+
+    fn len(&self) -> usize {
+        self.contents.len()
     }
 }
 
 impl Handler for Collector {
     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
         self.contents.extend_from_slice(data);
-        let data_len = data.len();
-        self.content_len += data_len;
-        Ok(data_len)
+        Ok(data.len())
     }
 }
 
@@ -176,7 +176,7 @@ pub fn make_request(
 
     // Get the contents of the response and set the length in the struct
     let contents = easy.get_ref();
-    req_response.content_len = contents.content_len;
+    req_response.content_len = contents.len();
 
     req_response
 }
@@ -307,7 +307,6 @@ pub fn generate_easy(global_opts: &Arc<GlobalOpts>) -> Easy2<Collector> {
     // Create a new curl Easy2 instance and set it to use GET requests
     let mut easy = Easy2::new(Collector {
         contents: Vec::new(),
-        content_len: 0,
     });
 
     match &global_opts.http_verb {
