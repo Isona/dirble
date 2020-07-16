@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use log::Level;
+use log::LevelFilter;
 use log::{debug, error, info, warn};
-use simplelog::{SimpleLogger, TermLogger};
+use simplelog::{TermLogger, TerminalMode};
 use std::{
     collections::VecDeque,
     env::current_exe,
@@ -54,16 +54,18 @@ fn main() {
     // Prepare the logging handler. Default to a pretty TermLogger,
     // but if the TermLogger initialisation fails (e.g. if we are not
     // connected to a TTY) then set up a SimpleLogger instead.
-    let log_config = simplelog::Config {
-        time: Some(Level::Debug),
-        level: Some(Level::Error),
-        target: None,
-        location: None,
-        time_format: Some("%T"),
-    };
-    if TermLogger::init(global_opts.log_level, log_config).is_err() {
-        SimpleLogger::init(global_opts.log_level, log_config).unwrap();
-    }
+    let log_config = simplelog::ConfigBuilder::new()
+        .set_time_level(LevelFilter::Debug)
+        .set_time_format("%T".to_string())
+        .build();
+
+    // TermLogger::init() fails only if another Logger was initialised
+    TermLogger::init(
+        global_opts.log_level,
+        log_config.clone(),
+        TerminalMode::Mixed,
+    )
+    .expect("Failed to init TermLogger");
 
     // Get the wordlist file from the arguments. If it has not been set
     // then try the default wordlist locations.
