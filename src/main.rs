@@ -41,8 +41,6 @@ mod output_format;
 mod output_thread;
 mod request;
 mod request_thread;
-#[cfg(test)]
-mod tests;
 mod validator_thread;
 mod wordlist;
 
@@ -60,12 +58,8 @@ fn main() {
         .build();
 
     // TermLogger::init() fails only if another Logger was initialised
-    TermLogger::init(
-        global_opts.log_level,
-        log_config,
-        TerminalMode::Mixed,
-    )
-    .expect("Failed to init TermLogger");
+    TermLogger::init(global_opts.log_level, log_config, TerminalMode::Mixed)
+        .expect("Failed to init TermLogger");
 
     // Get the wordlist file from the arguments. If it has not been set
     // then try the default wordlist locations.
@@ -386,5 +380,71 @@ fn generate_end() -> request::RequestResponse {
         found_from_listable: false,
         parent_index: 0,
         parent_depth: 0,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::arg_parse::GlobalOpts;
+    use crate::request::RequestResponse;
+    use log::LevelFilter::Info;
+    use url::Url;
+
+    impl Default for GlobalOpts {
+        fn default() -> Self {
+            GlobalOpts {
+                hostnames: Default::default(),
+                wordlist_files: Default::default(),
+                prefixes: vec!["".into()],
+                extensions: vec!["".into()],
+                extension_substitution: false,
+                max_threads: Default::default(),
+                proxy_enabled: Default::default(),
+                proxy_address: Default::default(),
+                proxy_auth_enabled: Default::default(),
+                ignore_cert: Default::default(),
+                show_htaccess: Default::default(),
+                throttle: Default::default(),
+                max_recursion_depth: Default::default(),
+                user_agent: Default::default(),
+                username: Default::default(),
+                password: Default::default(),
+                output_file: Default::default(),
+                json_file: Default::default(),
+                xml_file: Default::default(),
+                timeout: Default::default(),
+                max_errors: Default::default(),
+                wordlist_split: Default::default(),
+                scan_listable: Default::default(),
+                cookies: Default::default(),
+                headers: Default::default(),
+                scrape_listable: Default::default(),
+                whitelist: Default::default(),
+                code_list: Default::default(),
+                is_terminal: Default::default(),
+                no_color: Default::default(),
+                disable_validator: Default::default(),
+                http_verb: Default::default(),
+                scan_opts: Default::default(),
+                log_level: Info,
+                length_blacklist: Default::default(),
+            }
+        }
+    }
+
+    impl Default for RequestResponse {
+        fn default() -> Self {
+            RequestResponse {
+                url: Url::parse("http://example.com/").unwrap(),
+                code: 200,
+                content_len: 200,
+                is_directory: false,
+                is_listable: false,
+                redirect_url: "".into(),
+                found_from_listable: false,
+                parent_index: 0,
+                parent_depth: 0,
+            }
+        }
     }
 }
