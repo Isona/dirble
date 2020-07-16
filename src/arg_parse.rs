@@ -14,10 +14,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
-extern crate clap;
+
 use crate::wordlist::lines_from_file;
 use atty::Stream;
-use clap::{crate_version, App, AppSettings, Arg, ArgGroup};
+use clap::{arg_enum, crate_version, value_t, App, AppSettings, Arg, ArgGroup};
 use simplelog::LevelFilter;
 use std::{fmt, process::exit};
 use url::Url;

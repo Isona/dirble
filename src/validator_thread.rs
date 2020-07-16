@@ -21,7 +21,6 @@ use curl::easy::Easy2;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::{mpsc, Arc};
-extern crate rand;
 
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};

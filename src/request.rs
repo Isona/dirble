@@ -17,16 +17,15 @@
 
 use crate::arg_parse::{GlobalOpts, HttpVerb};
 use crate::content_parse;
-use curl::Error;
-use percent_encoding::percent_decode;
-use std::sync::Arc;
-use std::time::Duration;
-extern crate curl;
 use curl::easy::{Easy2, Handler, WriteError};
+use curl::Error;
 use log::trace;
+use percent_encoding::percent_decode;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
+use std::sync::Arc;
+use std::time::Duration;
 use url::Url;
 
 pub struct Collector {

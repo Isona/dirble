@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{
-    sync::{mpsc, Arc},
-    thread,
-    time::Duration,
-};
-extern crate curl;
 use crate::arg_parse;
 use crate::request;
 use crate::validator_thread;
 use crate::wordlist;
 use log::{debug, trace, warn};
+use std::{
+    sync::{mpsc, Arc},
+    thread,
+    time::Duration,
+};
 use url::Url;
 
 pub fn thread_spawn(

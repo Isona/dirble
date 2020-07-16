@@ -32,8 +32,6 @@ use std::{
 };
 use url::Url;
 #[macro_use]
-extern crate clap;
-extern crate curl;
 mod arg_parse;
 mod content_parse;
 mod output;
