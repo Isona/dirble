@@ -29,13 +29,5 @@ url = "1.7"
 [build-dependencies]
 vergen = "3"
 
-[dev-dependencies]
-futures = "=0.1.26"
-hyper = "=0.12.29"
-tokio = "0.1.19"
-tower = { git = "https://github.com/tower-rs/tower" }
-tower-hyper = { git = "https://github.com/tower-rs/tower-hyper" }
-tower-reconnect = { git = "https://github.com/tower-rs/tower" }
-
 [features]
 release_version_string = []
