@@ -25,14 +25,6 @@ def code403():
 def code429():
 	abort(429)
 
-@app.route("/chunked.html")
-def chunked():
-	def generate():
-		s = "This is a very long string. " * 50000
-		for i in range(10):
-			yield "This is line number {} with a long string {}\n".format(i, s)
-	return Response(generate(), mimetype="text/plain")
-
 def main():
 	app.run(debug=True, host="::1", port=5000, threaded=True)
 
