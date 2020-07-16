@@ -120,4 +120,4 @@ jobs:
 
       - name: Check that the output is correct
         run: |
-          bash check-output-file.sh test-output.txt
+          bash test/check-output-file.sh test-output.txt
