@@ -62,7 +62,7 @@ fn main() {
     // TermLogger::init() fails only if another Logger was initialised
     TermLogger::init(
         global_opts.log_level,
-        log_config.clone(),
+        log_config,
         TerminalMode::Mixed,
     )
     .expect("Failed to init TermLogger");
