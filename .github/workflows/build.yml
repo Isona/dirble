@@ -101,6 +101,7 @@ jobs:
 
       - name: Install python dependencies
         run: |
+          python3 -m pip install setuptools
           python3 -m pip install -r test/requirements.txt
 
       - name: Start server
