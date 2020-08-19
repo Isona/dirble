@@ -333,7 +333,8 @@ fn add_dir_to_scan_queue(
     // improve performance of the initial discovery phase.
     let num_hosts = global_opts.hostnames.len() as u32;
     let wordlist_split;
-    if first_run
+    if first_run 
+        && global_opts.max_threads >= 3
         && (global_opts.wordlist_split * num_hosts)
             < (global_opts.max_threads - 2)
     {
