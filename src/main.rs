@@ -52,7 +52,6 @@ fn main() {
     // connected to a TTY) then set up a SimpleLogger instead.
     let log_config = simplelog::ConfigBuilder::new()
         .set_time_level(LevelFilter::Debug)
-        .set_time_format_rfc2822()
         .set_time_format_custom(format_description!("[hour]:[minute]:[second]"))
         .build();
 
