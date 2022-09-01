@@ -199,7 +199,7 @@ http://user:pass@host:port")
              .long("uri")
              .multiple(true)
              .next_line_help(true)
-             .short("u")
+             .short('u')
              .takes_value(true)
              .validator(url_is_valid)
              .value_name("uri")
@@ -213,7 +213,7 @@ headers set will be applied to all URIs")
              .long("uri-file")
              .multiple(true)
              .next_line_help(true)
-             .short("U")
+             .short('U')
              .takes_value(true)
              .value_name("uri-file")
              .visible_alias("url-file"))
@@ -239,7 +239,7 @@ folder as the executable")
              .long("wordlist")
              .multiple(true)
              .next_line_help(true)
-             .short("w")
+             .short('w')
              .takes_value(true)
              .value_name("wordlist"))
         .arg(Arg::with_name("extensions")
@@ -250,8 +250,8 @@ folder as the executable")
              .min_values(1)
              .multiple(true)
              .next_line_help(true)
-             .short("x")
-             .value_delimiter(",")
+             .short('x')
+             .value_delimiter(',')
              .value_name("extensions"))
         .arg(Arg::with_name("extension_file")
              .display_order(30)
@@ -261,7 +261,7 @@ per line")
              .long("extension-file")
              .multiple(true)
              .next_line_help(true)
-             .short("X")
+             .short('X')
              .value_name("extension-file"))
         .group(ArgGroup::with_name("extension-options")
                .args(&["extensions", "extension_file"])
@@ -277,7 +277,7 @@ substituted with the current extension")
             .display_order(31)
             .help("Only scan with provided extensions")
             .requires("extension-options")
-            .short("f")
+            .short('f')
             .long("force-extension"))
         .arg(Arg::with_name("prefixes")
              .display_order(30)
@@ -287,8 +287,8 @@ substituted with the current extension")
              .min_values(1)
              .multiple(true)
              .next_line_help(true)
-             .short("p")
-             .value_delimiter(","))
+             .short('p')
+             .value_delimiter(','))
         .arg(Arg::with_name("prefix_file")
              .display_order(30)
              .help(
@@ -297,7 +297,7 @@ per line")
              .long("prefix-file")
              .multiple(true)
              .next_line_help(true)
-             .short("P")
+             .short('P')
              .value_name("prefix-file"))
         .arg(Arg::with_name("output_file")
              .display_order(40)
@@ -305,7 +305,7 @@ per line")
 "Sets the file to write the report to")
              .long("output-file")
              .next_line_help(true)
-             .short("o")
+             .short('o')
              .takes_value(true)
              .visible_alias("oN"))
         .arg(Arg::with_name("json_file")
@@ -365,7 +365,7 @@ username and password in the form
 "Sets the maximum number of request threads that will be spawned")
              .long("max-threads")
              .next_line_help(true)
-             .short("t")
+             .short('t')
              .takes_value(true)
              .validator(positive_int_check)
              .value_name("max-threads"))
@@ -376,7 +376,7 @@ username and password in the form
 "The number of threads to run for each folder/extension combo")
              .long("wordlist-split")
              .next_line_help(true)
-             .short("T")
+             .short('T')
              .validator(positive_int_check))
         .arg(Arg::with_name("throttle")
              .display_order(61)
@@ -384,7 +384,7 @@ username and password in the form
 "Time each thread will wait between requests, given in milliseconds")
              .long("throttle")
              .next_line_help(true)
-             .short("z")
+             .short('z')
              .takes_value(true)
              .validator(positive_int_check)
              .value_name("milliseconds"))
@@ -410,7 +410,7 @@ username and password in the form
 "Disable discovered subdirectory scanning")
              .long("disable-recursion")
              .next_line_help(true)
-             .short("r"))
+             .short('r'))
         .arg(Arg::with_name("max_recursion_depth")
              .display_order(80)
              .help(
@@ -426,7 +426,7 @@ recursion")
 "Scan listable directories")
              .long("scan-listable")
              .next_line_help(true)
-             .short("l")
+             .short('l')
              .takes_value(false))
         .arg(Arg::with_name("scrape_listable")
              .display_order(80)
@@ -443,7 +443,7 @@ amounts of output")
              .long("cookie")
              .multiple(true)
              .next_line_help(true)
-             .short("c")
+             .short('c')
              .takes_value(true))
         .arg(Arg::with_name("header")
              .display_order(90)
@@ -453,7 +453,7 @@ no value must end in a semicolon")
              .long("header")
              .multiple(true)
              .next_line_help(true)
-             .short("H")
+             .short('H')
              .takes_value(true))
         .arg(Arg::with_name("user_agent")
              .display_order(90)
@@ -461,7 +461,7 @@ no value must end in a semicolon")
 "Set the user-agent provided with requests, by default it isn't set")
              .long("user-agent")
              .next_line_help(true)
-             .short("a")
+             .short('a')
              .takes_value(true))
         .arg(Arg::with_name("verbose")
              .display_order(100)
@@ -470,7 +470,7 @@ no value must end in a semicolon")
              .long("verbose")
              .multiple(true)
              .next_line_help(true)
-             .short("v")
+             .short('v')
              .takes_value(false)
              .conflicts_with("silent"))
         .arg(Arg::with_name("silent")
@@ -480,7 +480,7 @@ no value must end in a semicolon")
 the end.")
              .long("silent")
              .next_line_help(true)
-             .short("S")
+             .short('S')
              .takes_value(false))
         .arg(Arg::with_name("code_whitelist")
              .display_order(110)
@@ -491,9 +491,9 @@ also disables detection of not found codes")
              .min_values(1)
              .multiple(true)
              .next_line_help(true)
-             .short("W")
+             .short('W')
              .validator(positive_int_check)
-             .value_delimiter(","))
+             .value_delimiter(','))
         .arg(Arg::with_name("code_blacklist")
              .conflicts_with("code_whitelist")
              .display_order(110)
@@ -503,9 +503,9 @@ also disables detection of not found codes")
              .min_values(1)
              .multiple(true)
              .next_line_help(true)
-             .short("B")
+             .short('B')
              .validator(positive_int_check)
-             .value_delimiter(","))
+             .value_delimiter(','))
         .arg(Arg::with_name("disable_validator")
              .display_order(110)
              .help(
@@ -529,7 +529,7 @@ also disables detection of not found codes")
              .help(
 "Ignore the certificate validity for HTTPS")
              .long("ignore-cert")
-             .short("k"))
+             .short('k'))
         .arg(Arg::with_name("show_htaccess")
              .help(
 "Enable display of items containing .ht when they return 403 responses")
@@ -563,7 +563,7 @@ set to 0 to disable")
              .multiple(true)
              .next_line_help(true)
              .takes_value(true)
-             .value_delimiter(","))
+             .value_delimiter(','))
         .get_matches();
 
     let mut hostnames: Vec<Url> = Vec::new();
@@ -580,7 +580,7 @@ set to 0 to disable")
         for host_file in host_files {
             let hosts = lines_from_file(&String::from(host_file));
             for hostname in hosts {
-                if url_is_valid(hostname.clone()).is_ok() {
+                if url_is_valid(hostname.as_str()).is_ok() {
                     if let Ok(host) = Url::parse(hostname.as_str()) {
                         hostnames.push(host);
                     }
@@ -882,14 +882,14 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
 #[inline]
 pub fn get_version_string() -> &'static str {
     if cfg!(feature = "release_version_string")
-        || env!("VERGEN_SHA_SHORT") == "UNKNOWN"
+        || env!("VERGEN_GIT_SHA_SHORT") == "UNKNOWN"
     {
         return crate_version!();
     } else {
         return concat!(
             crate_version!(),
             " (commit ",
-            env!("VERGEN_SHA_SHORT"),
+            env!("VERGEN_GIT_SHA_SHORT"),
             ", build ",
             env!("VERGEN_BUILD_DATE"),
             ")"
@@ -897,8 +897,8 @@ pub fn get_version_string() -> &'static str {
     }
 }
 
-fn url_is_valid(hostname: String) -> Result<(), String> {
-    let url = Url::parse(hostname.as_str());
+fn url_is_valid(hostname: &str) -> Result<(), String> {
+    let url = Url::parse(hostname);
     if let Ok(u) = url {
         if u.scheme() == "http" || u.scheme() == "https" {
             Ok(())
@@ -912,7 +912,7 @@ fn url_is_valid(hostname: String) -> Result<(), String> {
 
 // Validator for arguments including the --max-threads flag
 // Ensures that the value is a positive integer (not 0)
-fn positive_int_check(value: String) -> Result<(), String> {
+fn positive_int_check(value: &str) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     if let Ok(max) = int_val {
         if max > 0 {
@@ -924,7 +924,7 @@ fn positive_int_check(value: String) -> Result<(), String> {
 
 // Validator for various arguments, ensures that value is a
 // positive integer, including 0
-fn int_check(value: String) -> Result<(), String> {
+fn int_check(value: &str) -> Result<(), String> {
     let int_val = value.parse::<u32>();
     match int_val {
         Ok(_) => Ok(()),

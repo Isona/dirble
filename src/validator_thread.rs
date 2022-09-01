@@ -18,12 +18,13 @@
 use crate::arg_parse;
 use crate::request;
 use curl::easy::Easy2;
+use rand::distributions::DistString;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::{mpsc, Arc};
 
 use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 
 use log::{debug, info, warn};
 use url::Url;
@@ -415,8 +416,5 @@ fn determine_not_found(
 // Based on https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html
 // Generates a string of alphanumeric characters of the given length
 fn rand_string(length: usize) -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(length)
-        .collect()
+    Alphanumeric.sample_string(&mut thread_rng(), length)
 }

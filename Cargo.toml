@@ -1,6 +1,6 @@
 [package]
 name = "dirble"
-version = "1.4.2"
+version = "1.4.3"
 authors = ["Izzy Whistlecroft <izzy.whistlecroft@nccgroup.com>"]
 edition = "2018"
 build = "build.rs"
@@ -9,25 +9,26 @@ license = "GPL-3-or-later"
 [dependencies]
 curl = "0.4.19"
 percent-encoding = "2.1"
-clap = "2.32"
+clap = { version = "3.1.18", features = ["cargo"] }
 select = "0.5"
 chardet = "0.2.4"
 encoding = "0.2.33"
 atty = "0.2.11"
 colored = "2.0"
-rand = "0.7"
+rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_test = "1.0"
-simple_xml_serialize = "0.2.1"
-simple_xml_serialize_macro = "0.2.1"
+simple_xml_serialize = "0.3.0"
+simple_xml_serialize_macro = "0.3.0"
 log = "0.4.6"
-simplelog = "0.8.0"
+simplelog = "0.12.0"
 ctrlc = "3.0"
 url = "2.1"
+time = "0.3.14"
 
 [build-dependencies]
-vergen = "3"
+vergen = "7.4.2"
 
 [features]
 release_version_string = []

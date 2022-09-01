@@ -1,9 +1,9 @@
-use vergen::{generate_cargo_keys, ConstantsFlags};
+use vergen::{Config, ShaKind, TimestampKind};
 
 fn main() {
-    let mut flags = ConstantsFlags::all();
-    flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+    let mut config = Config::default();
+    *config.git_mut().sha_kind_mut() = ShaKind::Short;
+    *config.build_mut().kind_mut() = TimestampKind::DateOnly;
 
-    generate_cargo_keys(ConstantsFlags::all())
-        .expect("Unable to generate Cargo env keys");
+    vergen::vergen(config).expect("Couldn't generate keys");
 }
