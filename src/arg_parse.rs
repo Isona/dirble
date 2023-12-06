@@ -89,7 +89,7 @@ impl fmt::Debug for LengthRange {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LengthRanges {
     pub ranges: Vec<LengthRange>,
 }
@@ -106,12 +106,6 @@ impl LengthRanges {
 
     pub fn is_empty(&self) -> bool {
         self.ranges.is_empty()
-    }
-}
-
-impl Default for LengthRanges {
-    fn default() -> Self {
-        Self { ranges: Vec::new() }
     }
 }
 
@@ -734,23 +728,11 @@ set to 0 to disable")
             0
         },
         max_recursion_depth,
-        user_agent: if let Some(user_agent) = args.value_of("user_agent") {
-            Some(String::from(user_agent))
-        } else {
-            None
-        },
+        user_agent: args.value_of("user_agent").map(String::from),
         // Dependency between username and password is handled by Clap
-        username: if let Some(username) = args.value_of("username") {
-            Some(String::from(username))
-        } else {
-            None
-        },
+        username: args.value_of("username").map(String::from),
         // Dependency between username and password is handled by Clap
-        password: if let Some(password) = args.value_of("password") {
-            Some(String::from(password))
-        } else {
-            None
-        },
+        password: args.value_of("password").map(String::from),
         output_file: filename_from_args(&args, FileTypes::Txt),
         json_file: filename_from_args(&args, FileTypes::Json),
         xml_file: filename_from_args(&args, FileTypes::Xml),
@@ -824,11 +806,8 @@ fn filename_from_args(
         }
     }
 
-    if let Some(output_all_prefix) = args.value_of("output_all") {
-        Some(format!("{}.{}", output_all_prefix, extension))
-    } else {
-        None
-    }
+    args.value_of("output_all")
+        .map(|output_all_prefix| format!("{}.{}", output_all_prefix, extension))
 }
 
 #[inline]
@@ -884,16 +863,16 @@ pub fn get_version_string() -> &'static str {
     if cfg!(feature = "release_version_string")
         || env!("VERGEN_SHA_SHORT") == "UNKNOWN"
     {
-        return crate_version!();
+        crate_version!()
     } else {
-        return concat!(
+        concat!(
             crate_version!(),
             " (commit ",
             env!("VERGEN_SHA_SHORT"),
             ", build ",
             env!("VERGEN_BUILD_DATE"),
             ")"
-        );
+        )
     }
 }
 

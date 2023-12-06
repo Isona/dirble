@@ -47,16 +47,16 @@ pub fn print_response(
 
     let mut output = String::new();
     output += &output_format::output_indentation(
-        &response,
+        response,
         print_newlines,
         indentation,
     );
 
-    output += &output_format::output_letter(&response);
+    output += &output_format::output_letter(response);
 
-    output += &output_format::output_url(&response);
+    output += &output_format::output_url(response);
 
-    output += &output_format::output_suffix(&response, colour);
+    output += &output_format::output_suffix(response, colour);
 
     Some(output)
 }
@@ -68,9 +68,9 @@ pub fn print_report(
     global_opts: Arc<GlobalOpts>,
     file_handles: FileHandles,
 ) {
-    for mut response_list in &mut responses {
+    for response_list in &mut responses {
         //*response_list =
-        sort_responses(&mut response_list);
+        sort_responses(response_list);
     }
 
     // If stdout is a terminal then write a report to it
@@ -82,7 +82,7 @@ pub fn print_report(
             );
             for response in response_list {
                 if let Some(line) = print_response(
-                    &response,
+                    response,
                     global_opts.clone(),
                     true,
                     true,
@@ -104,7 +104,7 @@ pub fn print_report(
             write_file(&mut handle, report_string);
             for response in response_list {
                 if let Some(line) = print_response(
-                    &response,
+                    response,
                     global_opts.clone(),
                     true,
                     false,
@@ -170,10 +170,10 @@ fn write_file(file_writer: &mut LineWriter<File>, line: String) {
 
 // Sorts responses so that files in a directory come first, followed by
 // the subdirs
-pub fn sort_responses(responses: &mut Vec<RequestResponse>) {
+pub fn sort_responses(responses: &mut [RequestResponse]) {
     responses.sort_by(|a, b| {
-        directory_name(&a)
-            .cmp(&directory_name(&b))
+        directory_name(a)
+            .cmp(&directory_name(b))
             .then(a.url.cmp(&b.url))
     });
 }
@@ -223,7 +223,7 @@ pub fn create_files(global_opts: Arc<GlobalOpts>) -> FileHandles {
 #[inline]
 fn generate_handle(filename: &str) -> Option<LineWriter<File>> {
     let path = Path::new(&filename);
-    match File::create(&path) {
+    match File::create(path) {
         Err(why) => panic!("couldn't create {}: {}", path.display(), why),
         Ok(file) => Some(LineWriter::new(file)),
     }
@@ -259,19 +259,20 @@ pub fn startup_text(
         format!("{}Wordlist: {}\n", text, wordlist_file)
     };
 
-    let text =
-        if global_opts.prefixes.len() == 1 && global_opts.prefixes[0] == "" {
-            format!("{}No Prefixes\n", text)
-        } else {
-            format!(
-                "{}Prefixes: {}\n",
-                text,
-                global_opts.prefixes.clone()[1..].join(" ")
-            )
-        };
+    let text = if global_opts.prefixes.len() == 1
+        && global_opts.prefixes[0].is_empty()
+    {
+        format!("{}No Prefixes\n", text)
+    } else {
+        format!(
+            "{}Prefixes: {}\n",
+            text,
+            global_opts.prefixes.clone()[1..].join(" ")
+        )
+    };
 
     let text = if global_opts.extensions.len() == 1
-        && global_opts.extensions[0] == ""
+        && global_opts.extensions[0].is_empty()
     {
         format!("{}No Extensions\n", text)
     } else {

@@ -107,17 +107,14 @@ impl RequestResponse {
 // This function takes an instance of "Easy2", a base URL and a suffix
 // It then makes the request, if the response was not a 404
 // then it will return a RequestResponse struct
-pub fn make_request(
-    mut easy: &mut Easy2<Collector>,
-    url: Url,
-) -> RequestResponse {
+pub fn make_request(easy: &mut Easy2<Collector>, url: Url) -> RequestResponse {
     trace!("Requesting {}", url);
     // Set the url in the Easy2 instance
-    easy.url(&url.as_str()).unwrap();
+    easy.url(url.as_str()).unwrap();
 
     // Perform the request and check if it's empty
     // If it's empty then return a RequestResponse struct
-    match perform(&mut easy) {
+    match perform(easy) {
         Ok(_v) => {}
         Err(e) => {
             println!("Curl error after requesting {} : {}", url, e);
@@ -195,7 +192,7 @@ pub fn listable_check(
         dir_url += "/";
     }
     let mut response =
-        make_request(easy, Url::parse(&dir_url.as_str()).unwrap());
+        make_request(easy, Url::parse(dir_url.as_str()).unwrap());
     let content = get_content(easy).to_lowercase();
     let mut output_list: Vec<RequestResponse> = Vec::new();
 
@@ -262,7 +259,7 @@ pub fn listable_check(
                     depth -= 1;
                 }
 
-                depth -= parent_depth as i32;
+                depth -= parent_depth;
 
                 // If we've exceeded the max depth, add the url to the
                 // values to be returned
