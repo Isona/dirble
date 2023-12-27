@@ -237,36 +237,18 @@ fn main() {
 
         // Ignore any errors - this happens if the message queue is
         // empty, that's okay
-        if let Ok(dir_info_opt) = to_scan {
-            if let Some(dir_info) = dir_info_opt {
-                // If a thread has sent end, then we can reduce the
-                // threads in use count
-                if dir_info.url.as_str() == "data:END" {
-                    threads_in_use -= 1;
-                }
-                // Check the validator to see if the directory should
-                // be scanned
-                else {
-                    match &dir_info.validator {
-                        Some(validator) => {
-                            if validator.scan_folder(&global_opts.scan_opts) {
-                                add_dir_to_scan_queue(
-                                    &mut scan_queue,
-                                    &global_opts,
-                                    &dir_info,
-                                    &wordlist,
-                                    false,
-                                );
-                            } else {
-                                info!(
-                                    "Skipping {}{}",
-                                    dir_info.url,
-                                    &validator.print_alert()
-                                )
-                            }
-                        }
-                        // If there is no validator, then scan the folder
-                        None => {
+        if let Ok(Some(dir_info)) = to_scan {
+            // If a thread has sent end, then we can reduce the
+            // threads in use count
+            if dir_info.url.as_str() == "data:END" {
+                threads_in_use -= 1;
+            }
+            // Check the validator to see if the directory should
+            // be scanned
+            else {
+                match &dir_info.validator {
+                    Some(validator) => {
+                        if validator.scan_folder(&global_opts.scan_opts) {
                             add_dir_to_scan_queue(
                                 &mut scan_queue,
                                 &global_opts,
@@ -274,7 +256,23 @@ fn main() {
                                 &wordlist,
                                 false,
                             );
+                        } else {
+                            info!(
+                                "Skipping {}{}",
+                                dir_info.url,
+                                &validator.print_alert()
+                            )
                         }
+                    }
+                    // If there is no validator, then scan the folder
+                    None => {
+                        add_dir_to_scan_queue(
+                            &mut scan_queue,
+                            &global_opts,
+                            &dir_info,
+                            &wordlist,
+                            false,
+                        );
                     }
                 }
             }
@@ -333,7 +331,7 @@ fn add_dir_to_scan_queue(
     // improve performance of the initial discovery phase.
     let num_hosts = global_opts.hostnames.len() as u32;
     let wordlist_split;
-    if first_run 
+    if first_run
         && global_opts.max_threads >= 3
         && (global_opts.wordlist_split * num_hosts)
             < (global_opts.max_threads - 2)

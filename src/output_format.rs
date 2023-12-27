@@ -94,7 +94,7 @@ pub fn output_suffix(response: &RequestResponse, color: bool) -> String {
 
 #[inline]
 pub fn output_xml(response: &RequestResponse) -> String {
-    format!("{}\n", XMLElement::from(response).to_string())
+    format!("{}\n", XMLElement::from(response))
 }
 
 #[inline]

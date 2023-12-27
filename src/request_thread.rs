@@ -148,7 +148,7 @@ fn send_response(
         output_tx.send(response).unwrap();
         return;
     }
-    if should_send_response(&global_opts, &response, &validator_opt) {
+    if should_send_response(global_opts, &response, validator_opt) {
         output_tx.send(response).unwrap();
     }
 }
@@ -180,7 +180,7 @@ pub fn should_send_response(
         return false;
     }
     if let Some(validator) = validator_opt {
-        if validator.is_not_found(&response) {
+        if validator.is_not_found(response) {
             trace!("[{}]: matches Not Found condition", response.url);
             return false;
         }

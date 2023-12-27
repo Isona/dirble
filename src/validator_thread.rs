@@ -164,7 +164,7 @@ impl TargetValidator {
         // This branch should never happen because this function should
         // only be used if scan_folder returned false
         else {
-            format!("")
+            String::new()
         }
     }
 }
@@ -180,22 +180,21 @@ pub enum ValidatorAlert {
 impl fmt::Display for ValidatorAlert {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ValidatorAlert::Code401 =>{
+            ValidatorAlert::Code401 => {
                 write!(f,
                     "\n    Scanning of directories returning 401 is disabled.\n    \
                     Use the --scan-401 flag to scan this directory,\n    \
                     or provide a valid session token or credentials.")
-            },
+            }
             ValidatorAlert::Code403 => {
                 write!(f,
                     "\n    Scanning of directories returning 403 is disabled.\n    \
                     Use the --scan-403 flag to scan this directory,\n    \
                     or provide valid session token or credentials.")
-            },
+            }
             // Placeholder branch
             ValidatorAlert::RedirectToHTTPS => {
-                write!(f,
-                    "The directory redirected to HTTPS")
+                write!(f, "The directory redirected to HTTPS")
             }
         }
     }
@@ -385,7 +384,7 @@ fn determine_not_found(
     }
 
     let mut diff_response_size = None;
-    if response_size == None {
+    if response_size.is_none() {
         let diff_0 = ((responses[0].content_len as i32)
             - responses[0].url.as_str().len() as i32)
             .abs();
