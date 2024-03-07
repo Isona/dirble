@@ -5,6 +5,7 @@ authors = ["Izzy Whistlecroft <izzy.whistlecroft@nccgroup.com>"]
 edition = "2018"
 build = "build.rs"
 license = "GPL-3-or-later"
+description = "Fast directory scanning and scraping tool"
 
 [dependencies]
 curl = "0.4.19"
