@@ -15,17 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse::{GlobalOpts, HttpVerb};
-use crate::content_parse;
-use curl::easy::{Easy2, Handler, WriteError};
-use curl::Error;
+use crate::{
+    arg_parse::{GlobalOpts, HttpVerb},
+    content_parse,
+};
+use curl::{
+    Error,
+    easy::{Easy2, Handler, WriteError},
+};
 use log::trace;
 use percent_encoding::percent_decode;
-use serde::{ser::SerializeStruct, Serialize, Serializer};
+use serde::{Serialize, Serializer, ser::SerializeStruct};
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use url::Url;
 
 pub struct Collector {
@@ -181,7 +184,6 @@ pub fn listable_check(
     easy: &mut Easy2<Collector>,
     original_url: Url,
     max_recursion_depth: Option<i32>,
-    parent_index: usize,
     parent_depth: i32,
     scrape_listable: bool,
 ) -> Vec<RequestResponse> {
@@ -274,7 +276,6 @@ pub fn listable_check(
                         easy,
                         Url::parse(scraped_url.as_str()).unwrap(),
                         max_recursion_depth,
-                        parent_index,
                         parent_depth,
                         scrape_listable,
                     ));
@@ -287,7 +288,6 @@ pub fn listable_check(
                     easy,
                     Url::parse(scraped_url.as_str()).unwrap(),
                     max_recursion_depth,
-                    parent_index,
                     parent_depth,
                     scrape_listable,
                 ));

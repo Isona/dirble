@@ -1,1 +1,3 @@
 max_width = 80
+# nightly formats
+# imports_granularity = "crate"

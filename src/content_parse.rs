@@ -15,8 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use select::document::Document;
-use select::predicate::Name;
+use select::{document::Document, predicate::Name};
 
 // Returns complete URLs based on the contents of a listable folder
 pub fn scrape_urls(content: String, original_url: String) -> Vec<String> {
