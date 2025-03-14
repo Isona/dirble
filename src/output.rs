@@ -318,11 +318,13 @@ mod test {
             parent_index: 0,
             parent_depth: 0,
         };
-        let mut globalopts: GlobalOpts = Default::default();
 
         // Verify that htaccess files are hidden when the option is set in
         // globalopts
-        globalopts.show_htaccess = false;
+        let mut globalopts = GlobalOpts {
+            show_htaccess: false,
+            ..Default::default()
+        };
         let output = print_response(
             &rr,
             Arc::new(globalopts.clone()),
@@ -331,6 +333,7 @@ mod test {
             false,
         );
         assert_eq!(output, None, ".htaccess is not being hidden");
+
         // And check that they are not hidden otherwise
         globalopts.show_htaccess = true;
         let output =
@@ -409,9 +412,11 @@ mod test {
 
     #[test]
     fn test_directory_name() {
-        let mut rr: RequestResponse = Default::default();
         // First case: rr is a directory ending with slash
-        rr.url = Url::parse("http://example.com/test/dir/").unwrap();
+        let mut rr = RequestResponse {
+            url: Url::parse("http://example.com/test/dir/").unwrap(),
+            ..Default::default()
+        };
         rr.is_directory = true;
         assert_eq!(
             directory_name(&rr),

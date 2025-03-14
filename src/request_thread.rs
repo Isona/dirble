@@ -60,7 +60,6 @@ pub fn thread_spawn(
                 &mut easy,
                 response.url,
                 global_opts.max_recursion_depth,
-                response.parent_index,
                 response.parent_depth as i32,
                 global_opts.scrape_listable,
             );
@@ -232,43 +231,38 @@ mod test {
         globalopts.whitelist = false;
         globalopts.code_list = vec![200, 201];
         rr.code = 200;
-        assert_eq!(
-            should_send_response(&globalopts, &rr, &None),
-            false,
+        assert!(
+            !should_send_response(&globalopts, &rr, &None),
             "Code in blacklist failed"
         );
 
         // Response code is not in blacklist -> true
         rr.code = 300;
-        assert_eq!(
+        assert!(
             should_send_response(&globalopts, &rr, &None),
-            true,
             "Code not in blacklist failed"
         );
 
         // Response code is in whitelist -> true
         globalopts.whitelist = true;
         rr.code = 200;
-        assert_eq!(
+        assert!(
             should_send_response(&globalopts, &rr, &None),
-            true,
             "Code in whitelist failed"
         );
 
         // Response code is not in whitelist -> false
         rr.code = 301;
-        assert_eq!(
-            should_send_response(&globalopts, &rr, &None),
-            false,
+        assert!(
+            !should_send_response(&globalopts, &rr, &None),
             "Code not in whitelist failed"
         );
 
         // Response matches Not Found condition -> false
         globalopts.whitelist = false;
         let val = TargetValidator::new(301, None, None, None, None);
-        assert_eq!(
-            should_send_response(&globalopts, &rr, &Some(val)),
-            false,
+        assert!(
+            !should_send_response(&globalopts, &rr, &Some(val)),
             "Not Found response failed"
         );
 
@@ -286,25 +280,22 @@ mod test {
                 },
             ],
         };
-        assert_eq!(
-            should_send_response(&globalopts, &rr, &None),
-            false,
+        assert!(
+            !should_send_response(&globalopts, &rr, &None),
             "Length matches blacklist failed"
         );
 
         // Response length is within a blacklist range -> false
         rr.content_len = 5300;
-        assert_eq!(
-            should_send_response(&globalopts, &rr, &None),
-            false,
+        assert!(
+            !should_send_response(&globalopts, &rr, &None),
             "Length within blacklist range failed"
         );
 
         // Response length_is outside of the blacklist ranges -> true
         rr.content_len = 5;
-        assert_eq!(
+        assert!(
             should_send_response(&globalopts, &rr, &None),
-            true,
             "Length outside blacklist range failed"
         );
     }

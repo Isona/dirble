@@ -181,7 +181,6 @@ pub fn listable_check(
     easy: &mut Easy2<Collector>,
     original_url: Url,
     max_recursion_depth: Option<i32>,
-    parent_index: usize,
     parent_depth: i32,
     scrape_listable: bool,
 ) -> Vec<RequestResponse> {
@@ -274,7 +273,6 @@ pub fn listable_check(
                         easy,
                         Url::parse(scraped_url.as_str()).unwrap(),
                         max_recursion_depth,
-                        parent_index,
                         parent_depth,
                         scrape_listable,
                     ));
@@ -287,7 +285,6 @@ pub fn listable_check(
                     easy,
                     Url::parse(scraped_url.as_str()).unwrap(),
                     max_recursion_depth,
-                    parent_index,
                     parent_depth,
                     scrape_listable,
                 ));

@@ -22,8 +22,8 @@ use std::collections::HashSet;
 use std::fmt;
 use std::sync::{mpsc, Arc};
 
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::distr::Alphanumeric;
+use rand::Rng;
 
 use log::{debug, info, warn};
 use url::Url;
@@ -414,8 +414,9 @@ fn determine_not_found(
 // Based on https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html
 // Generates a string of alphanumeric characters of the given length
 fn rand_string(length: usize) -> String {
-    thread_rng()
+    rand::rng()
         .sample_iter(&Alphanumeric)
+        .map(char::from)
         .take(length)
         .collect()
 }

@@ -32,6 +32,7 @@ pub struct GlobalOpts {
     pub max_threads: u32,
     pub proxy_enabled: bool,
     pub proxy_address: String,
+    #[expect(dead_code, reason = "TODO")]
     pub proxy_auth_enabled: bool,
     pub ignore_cert: bool,
     pub show_htaccess: bool,
@@ -132,6 +133,7 @@ arg_enum! {
     }
 }
 
+#[expect(clippy::derivable_impls, reason = "Interaction with arg_enum!")]
 impl Default for HttpVerb {
     fn default() -> Self {
         HttpVerb::Get

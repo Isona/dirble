@@ -17,7 +17,7 @@
 
 use log::LevelFilter;
 use log::{debug, error, info, warn};
-use simplelog::{TermLogger, TerminalMode};
+use simplelog::{ColorChoice, TermLogger, TerminalMode};
 use std::{
     collections::VecDeque,
     env::current_exe,
@@ -52,12 +52,19 @@ fn main() {
     // connected to a TTY) then set up a SimpleLogger instead.
     let log_config = simplelog::ConfigBuilder::new()
         .set_time_level(LevelFilter::Debug)
-        .set_time_format("%T".to_string())
+        .set_time_format_custom(time::macros::format_description!(
+            "[hour]:[minute]:[second]"
+        ))
         .build();
 
     // TermLogger::init() fails only if another Logger was initialised
-    TermLogger::init(global_opts.log_level, log_config, TerminalMode::Mixed)
-        .expect("Failed to init TermLogger");
+    TermLogger::init(
+        global_opts.log_level,
+        log_config,
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )
+    .expect("Failed to init TermLogger");
 
     // Get the wordlist file from the arguments. If it has not been set
     // then try the default wordlist locations.
