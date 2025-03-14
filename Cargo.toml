@@ -2,7 +2,7 @@
 name = "dirble"
 version = "1.4.2"
 authors = ["Izzy Whistlecroft <izzy.whistlecroft@nccgroup.com>"]
-edition = "2018"
+edition = "2024"
 build = "build.rs"
 license = "GPL-3-or-later"
 description = "Fast directory scanning and scraping tool"
@@ -11,11 +11,11 @@ description = "Fast directory scanning and scraping tool"
 curl = "0.4.19"
 percent-encoding = "2.1"
 clap = "2.32"
-select = "0.5"
+select = "0.6"
 chardet = "0.2.4"
 encoding = "0.2.33"
 atty = "0.2.11"
-colored = "2.0"
+colored = "3.0"
 rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -29,7 +29,7 @@ url = "2.1"
 time = "0.3.39"
 
 [build-dependencies]
-vergen = "3"
+vergen-gix = { version = "1.0.6", features = ["build", "si"] }
 
 [features]
 release_version_string = []

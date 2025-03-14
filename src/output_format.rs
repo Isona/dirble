@@ -183,6 +183,8 @@ mod test {
 
     #[test]
     fn check_output_letter() {
+        unsafe { std::env::set_var("CLICOLOR_FORCE", "TRUE") };
+
         // Check that:
         // * directory && listable -> L
         // * directory && !listable -> D
@@ -234,6 +236,7 @@ mod test {
 
     #[test]
     fn check_output_suffix() {
+        unsafe { std::env::set_var("CLICOLOR_FORCE", "TRUE") };
         // output_suffix takes a RR and returns a string of the format
         // (CODE:{}|SIZE{}), where the code is coloured appropriately.
         let mut req_response = generate_request_response();
@@ -355,9 +358,10 @@ mod test {
                 Token::StructEnd,
             ],
         );*/
-        assert_eq!(serde_json::to_string(&req_response).unwrap(),
-    "{\"url\":\"http://example.com/\",\"code\":200,\"size\":350,\"is_directory\":false,\"is_listable\":true,\"redirect_url\":\"https://example.org\",\"found_from_listable\":false}"
-    );
+        assert_eq!(
+            serde_json::to_string(&req_response).unwrap(),
+            "{\"url\":\"http://example.com/\",\"code\":200,\"size\":350,\"is_directory\":false,\"is_listable\":true,\"redirect_url\":\"https://example.org\",\"found_from_listable\":false}"
+        );
     }
 
     #[inline]

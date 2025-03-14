@@ -1,9 +1,15 @@
-use vergen::{generate_cargo_keys, ConstantsFlags};
+use vergen_gix::{BuildBuilder, Emitter, GixBuilder, SysinfoBuilder};
 
-fn main() {
-    let mut flags = ConstantsFlags::all();
-    flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let build = BuildBuilder::all_build()?;
+    let gitcl = GixBuilder::default().all().sha(true).build()?;
+    let si = SysinfoBuilder::all_sysinfo()?;
 
-    generate_cargo_keys(ConstantsFlags::all())
-        .expect("Unable to generate Cargo env keys");
+    Emitter::default()
+        .add_instructions(&build)?
+        .add_instructions(&gitcl)?
+        .add_instructions(&si)?
+        .emit()?;
+
+    Ok(())
 }

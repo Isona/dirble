@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use log::LevelFilter;
-use log::{debug, error, info, warn};
+use log::{LevelFilter, debug, error, info, warn};
 use simplelog::{ColorChoice, TermLogger, TerminalMode};
 use std::{
     collections::VecDeque,
     env::current_exe,
     path::Path,
     sync::{
+        Arc,
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, Sender},
-        Arc,
     },
     thread,
     time::Duration,
@@ -389,8 +388,7 @@ fn generate_end() -> request::RequestResponse {
 
 #[cfg(test)]
 mod test {
-    use crate::arg_parse::GlobalOpts;
-    use crate::request::RequestResponse;
+    use crate::{arg_parse::GlobalOpts, request::RequestResponse};
     use log::LevelFilter::Info;
     use url::Url;
 

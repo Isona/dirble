@@ -15,13 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse::{get_version_string, GlobalOpts};
-use crate::output_format;
-use crate::request::RequestResponse;
-use std::fs::File;
-use std::io::{LineWriter, Write};
-use std::path::Path;
-use std::sync::Arc;
+use crate::{
+    arg_parse::{GlobalOpts, get_version_string},
+    output_format,
+    request::RequestResponse,
+};
+use std::{
+    fs::File,
+    io::{LineWriter, Write},
+    path::Path,
+    sync::Arc,
+};
 
 // Struct giving access to each current file handle
 // Will be extended in future with handles for different formats
@@ -294,11 +298,13 @@ pub fn startup_text(
 
 #[cfg(test)]
 mod test {
-    use crate::arg_parse::{GlobalOpts, LengthRange, LengthRanges};
-    use crate::output::{
-        directory_name, print_response, sort_responses, startup_text,
+    use crate::{
+        arg_parse::{GlobalOpts, LengthRange, LengthRanges},
+        output::{
+            directory_name, print_response, sort_responses, startup_text,
+        },
+        request::RequestResponse,
     };
-    use crate::request::RequestResponse;
     use std::sync::Arc;
     use url::Url;
 

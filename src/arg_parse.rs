@@ -17,7 +17,7 @@
 
 use crate::wordlist::lines_from_file;
 use atty::Stream;
-use clap::{arg_enum, crate_version, value_t, App, AppSettings, Arg, ArgGroup};
+use clap::{App, AppSettings, Arg, ArgGroup, arg_enum, crate_version, value_t};
 use simplelog::LevelFilter;
 use std::{fmt, process::exit};
 use url::Url;
@@ -853,8 +853,9 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
 
     if modifiers.is_empty() {
         panic!(
-"The length of the {} list is zero! Did you use -f with an empty {} file?",
- mod_type, mod_type);
+            "The length of the {} list is zero! Did you use -f with an empty {} file?",
+            mod_type, mod_type
+        );
     }
 
     modifiers
@@ -863,14 +864,14 @@ fn load_modifiers(args: &clap::ArgMatches, mod_type: &str) -> Vec<String> {
 #[inline]
 pub fn get_version_string() -> &'static str {
     if cfg!(feature = "release_version_string")
-        || env!("VERGEN_SHA_SHORT") == "UNKNOWN"
+        || env!("VERGEN_GIT_SHA") == "UNKNOWN"
     {
         crate_version!()
     } else {
         concat!(
             crate_version!(),
             " (commit ",
-            env!("VERGEN_SHA_SHORT"),
+            env!("VERGEN_GIT_SHA"),
             ", build ",
             env!("VERGEN_BUILD_DATE"),
             ")"

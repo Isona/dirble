@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse;
-use crate::request;
+use crate::{arg_parse, request};
 use curl::easy::Easy2;
-use std::collections::HashSet;
-use std::fmt;
-use std::sync::{mpsc, Arc};
+use std::{
+    collections::HashSet,
+    fmt,
+    sync::{Arc, mpsc},
+};
 
-use rand::distr::Alphanumeric;
-use rand::Rng;
+use rand::{Rng, distr::Alphanumeric};
 
 use log::{debug, info, warn};
 use url::Url;
@@ -181,16 +181,20 @@ impl fmt::Display for ValidatorAlert {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ValidatorAlert::Code401 => {
-                write!(f,
+                write!(
+                    f,
                     "\n    Scanning of directories returning 401 is disabled.\n    \
                     Use the --scan-401 flag to scan this directory,\n    \
-                    or provide a valid session token or credentials.")
+                    or provide a valid session token or credentials."
+                )
             }
             ValidatorAlert::Code403 => {
-                write!(f,
+                write!(
+                    f,
                     "\n    Scanning of directories returning 403 is disabled.\n    \
                     Use the --scan-403 flag to scan this directory,\n    \
-                    or provide valid session token or credentials.")
+                    or provide valid session token or credentials."
+                )
             }
             // Placeholder branch
             ValidatorAlert::RedirectToHTTPS => {

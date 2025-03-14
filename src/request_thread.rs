@@ -15,13 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse;
-use crate::request;
-use crate::validator_thread;
-use crate::wordlist;
+use crate::{arg_parse, request, validator_thread, wordlist};
 use log::{debug, trace, warn};
 use std::{
-    sync::{mpsc, Arc},
+    sync::{Arc, mpsc},
     thread,
     time::Duration,
 };
@@ -165,8 +162,7 @@ pub fn should_send_response(
     if global_opts.whitelist && !contains_code {
         trace!(
             "[{}]: code {} not in whitelist",
-            response.url,
-            response.code
+            response.url, response.code
         );
         return false;
     }
@@ -189,8 +185,7 @@ pub fn should_send_response(
     if global_opts.length_blacklist.contains(response.content_len) {
         trace!(
             "[{}]: length {} is in a blacklist range",
-            response.url,
-            response.content_len
+            response.url, response.content_len
         );
         return false;
     }
@@ -217,10 +212,12 @@ fn generate_end() -> request::RequestResponse {
 #[cfg(test)]
 mod test {
 
-    use crate::arg_parse::{GlobalOpts, LengthRange, LengthRanges};
-    use crate::request::RequestResponse;
-    use crate::request_thread::should_send_response;
-    use crate::validator_thread::TargetValidator;
+    use crate::{
+        arg_parse::{GlobalOpts, LengthRange, LengthRanges},
+        request::RequestResponse,
+        request_thread::should_send_response,
+        validator_thread::TargetValidator,
+    };
 
     #[test]
     fn test_should_send_response() {
