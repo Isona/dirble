@@ -15,12 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse;
-use crate::output;
-use crate::request;
+use crate::{arg_parse, output, request};
 use log::debug;
 use simplelog::LevelFilter;
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 use url::Url;
 
 pub fn output_thread(

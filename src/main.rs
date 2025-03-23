@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use log::LevelFilter;
-use log::{debug, error, info, warn};
-use simplelog::{TermLogger, TerminalMode};
+use log::{LevelFilter, debug, error, info, warn};
+use simplelog::{ColorChoice, TermLogger, TerminalMode};
 use std::{
     collections::VecDeque,
     env::current_exe,
     path::Path,
     sync::{
+        Arc,
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, Sender},
-        Arc,
     },
     thread,
     time::Duration,
@@ -52,12 +51,19 @@ fn main() {
     // connected to a TTY) then set up a SimpleLogger instead.
     let log_config = simplelog::ConfigBuilder::new()
         .set_time_level(LevelFilter::Debug)
-        .set_time_format("%T".to_string())
+        .set_time_format_custom(time::macros::format_description!(
+            "[hour]:[minute]:[second]"
+        ))
         .build();
 
     // TermLogger::init() fails only if another Logger was initialised
-    TermLogger::init(global_opts.log_level, log_config, TerminalMode::Mixed)
-        .expect("Failed to init TermLogger");
+    TermLogger::init(
+        global_opts.log_level,
+        log_config,
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )
+    .expect("Failed to init TermLogger");
 
     // Get the wordlist file from the arguments. If it has not been set
     // then try the default wordlist locations.
@@ -382,8 +388,7 @@ fn generate_end() -> request::RequestResponse {
 
 #[cfg(test)]
 mod test {
-    use crate::arg_parse::GlobalOpts;
-    use crate::request::RequestResponse;
+    use crate::{arg_parse::GlobalOpts, request::RequestResponse};
     use log::LevelFilter::Info;
     use url::Url;
 

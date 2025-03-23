@@ -15,13 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arg_parse::{get_version_string, GlobalOpts};
-use crate::output_format;
-use crate::request::RequestResponse;
-use std::fs::File;
-use std::io::{LineWriter, Write};
-use std::path::Path;
-use std::sync::Arc;
+use crate::{
+    arg_parse::{GlobalOpts, get_version_string},
+    output_format,
+    request::RequestResponse,
+};
+use std::{
+    fs::File,
+    io::{LineWriter, Write},
+    path::Path,
+    sync::Arc,
+};
 
 // Struct giving access to each current file handle
 // Will be extended in future with handles for different formats
@@ -294,11 +298,13 @@ pub fn startup_text(
 
 #[cfg(test)]
 mod test {
-    use crate::arg_parse::{GlobalOpts, LengthRange, LengthRanges};
-    use crate::output::{
-        directory_name, print_response, sort_responses, startup_text,
+    use crate::{
+        arg_parse::{GlobalOpts, LengthRange, LengthRanges},
+        output::{
+            directory_name, print_response, sort_responses, startup_text,
+        },
+        request::RequestResponse,
     };
-    use crate::request::RequestResponse;
     use std::sync::Arc;
     use url::Url;
 
@@ -318,11 +324,13 @@ mod test {
             parent_index: 0,
             parent_depth: 0,
         };
-        let mut globalopts: GlobalOpts = Default::default();
 
         // Verify that htaccess files are hidden when the option is set in
         // globalopts
-        globalopts.show_htaccess = false;
+        let mut globalopts = GlobalOpts {
+            show_htaccess: false,
+            ..Default::default()
+        };
         let output = print_response(
             &rr,
             Arc::new(globalopts.clone()),
@@ -331,6 +339,7 @@ mod test {
             false,
         );
         assert_eq!(output, None, ".htaccess is not being hidden");
+
         // And check that they are not hidden otherwise
         globalopts.show_htaccess = true;
         let output =
@@ -409,9 +418,11 @@ mod test {
 
     #[test]
     fn test_directory_name() {
-        let mut rr: RequestResponse = Default::default();
         // First case: rr is a directory ending with slash
-        rr.url = Url::parse("http://example.com/test/dir/").unwrap();
+        let mut rr = RequestResponse {
+            url: Url::parse("http://example.com/test/dir/").unwrap(),
+            ..Default::default()
+        };
         rr.is_directory = true;
         assert_eq!(
             directory_name(&rr),
