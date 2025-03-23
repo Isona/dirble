@@ -153,12 +153,229 @@ where
     ArgsIter: IntoIterator,
     ArgsIter::Item: Into<OsString> + Clone,
 {
+    // Defines all the command line arguments with the Clap module
+    let args = app().get_matches_from(args);
+
+    let mut hostnames: Vec<Url> = Vec::new();
+
+    // Get from host arguments
+    if let Some(host) = args.value_of("host") {
+        if let Ok(host) = Url::parse(host) {
+            hostnames.push(host);
+        } else {
+            println!("Invaid URL: {}", host);
+        }
+    }
+    if let Some(host_files) = args.values_of("host_file") {
+        for host_file in host_files {
+            let hosts = lines_from_file(&String::from(host_file));
+            for hostname in hosts {
+                if url_is_valid(hostname.clone()).is_ok() {
+                    if let Ok(host) = Url::parse(hostname.as_str()) {
+                        hostnames.push(host);
+                    }
+                } else {
+                    println!("Invalid URL: {}", hostname);
+                }
+            }
+        }
+    }
+    if let Some(extra_hosts) = args.values_of("extra_hosts") {
+        for hostname in extra_hosts {
+            if let Ok(host) = Url::parse(hostname) {
+                hostnames.push(host);
+            }
+        }
+    }
+
+    if hostnames.is_empty() {
+        println!("No valid hosts were provided - exiting");
+        exit(2);
+    }
+    hostnames.sort();
+    hostnames.dedup();
+
+    // Parse wordlist file names into a vector
+    let wordlists: Option<Vec<String>> =
+        if let Some(wordlist_files) = args.values_of("wordlist") {
+            let mut wordlists_vec = Vec::new();
+            for wordlist_file in wordlist_files {
+                wordlists_vec.push(String::from(wordlist_file));
+            }
+            Some(wordlists_vec)
+        } else {
+            None
+        };
+
+    // Check for proxy related flags
+    let proxy_enabled;
+    let proxy_address;
+    if let Some(proxy_addr) = args.value_of("proxy") {
+        proxy_enabled = true;
+        proxy_address = proxy_addr;
+        if proxy_address == "http://localhost:8080" {
+            println!(
+                "You could use the --burp flag instead of the --proxy flag!"
+            );
+        }
+    } else if args.is_present("burp") {
+        proxy_enabled = true;
+        proxy_address = "http://localhost:8080";
+    } else if args.is_present("no_proxy") {
+        proxy_enabled = true;
+        proxy_address = "";
+    } else {
+        proxy_enabled = false;
+        proxy_address = "";
+    }
+    let proxy_address = String::from(proxy_address);
+
+    // Read provided cookie values into a vector
+    let cookies: Option<String> =
+        if let Some(cookies) = args.values_of("cookie") {
+            let mut temp_cookies: Vec<String> = Vec::new();
+            for cookie in cookies {
+                temp_cookies.push(String::from(cookie));
+            }
+            Some(temp_cookies.join("; "))
+        } else {
+            None
+        };
+
+    // Read provided headers into a vector
+    let headers: Option<Vec<String>> =
+        if let Some(headers) = args.values_of("header") {
+            let mut temp_headers: Vec<String> = Vec::new();
+            for header in headers {
+                temp_headers.push(String::from(header));
+            }
+            Some(temp_headers)
+        } else {
+            None
+        };
+
+    let mut whitelist = false;
+    let mut code_list: Vec<u32> = Vec::new();
+
+    if let Some(whitelist_values) = args.values_of("code_whitelist") {
+        whitelist = true;
+        for code in whitelist_values {
+            code_list.push(code.parse::<u32>().expect("Code is an integer"));
+        }
+    } else if let Some(blacklist_values) = args.values_of("code_blacklist") {
+        whitelist = false;
+        for code in blacklist_values {
+            code_list.push(code.parse::<u32>().expect("Code is an integer"));
+        }
+    }
+
+    let mut max_recursion_depth = None;
+    if args.is_present("disable_recursion") {
+        max_recursion_depth = Some(0);
+    } else if let Some(depth) = args.value_of("max_recursion_depth") {
+        max_recursion_depth =
+            Some(depth.parse::<i32>().expect("Recursion depth is an integer"));
+    }
+
+    let mut scan_opts = ScanOpts {
+        scan_401: false,
+        scan_403: false,
+    };
+    if args.is_present("scan_401") || (whitelist && code_list.contains(&401)) {
+        scan_opts.scan_401 = true;
+    }
+
+    if args.is_present("scan_403") || (whitelist && code_list.contains(&403)) {
+        scan_opts.scan_403 = true;
+    }
+
+    // Configure the logging level. The silent flag overrides any
+    // verbose flags in use.
+    let log_level = if args.is_present("silent") {
+        LevelFilter::Warn
+    } else {
+        match args.occurrences_of("verbose") {
+            0 => LevelFilter::Info,
+            1 => LevelFilter::Debug,
+            _ => LevelFilter::Trace,
+        }
+    };
+
+    // Create the GlobalOpts struct and return it
+    GlobalOpts {
+        hostnames,
+        wordlist_files: wordlists,
+        prefixes: load_modifiers(&args, "prefixes"),
+        extensions: load_modifiers(&args, "extensions"),
+        extension_substitution: args.is_present("extension_substitution"),
+        max_threads: args
+            .value_of("max_threads")
+            .expect("Max threads is set")
+            .parse::<u32>()
+            .expect("Max threads is an integer"),
+        proxy_enabled,
+        proxy_address,
+        proxy_auth_enabled: false,
+        ignore_cert: args.is_present("ignore_cert"),
+        show_htaccess: args.is_present("show_htaccess"),
+        throttle: if let Some(throttle) = args.value_of("throttle") {
+            throttle.parse::<u32>().expect("Throttle is an integer")
+        } else {
+            0
+        },
+        max_recursion_depth,
+        user_agent: args.value_of("user_agent").map(String::from),
+        // Dependency between username and password is handled by Clap
+        username: args.value_of("username").map(String::from),
+        // Dependency between username and password is handled by Clap
+        password: args.value_of("password").map(String::from),
+        output_file: filename_from_args(&args, FileTypes::Txt),
+        json_file: filename_from_args(&args, FileTypes::Json),
+        xml_file: filename_from_args(&args, FileTypes::Xml),
+        timeout: args
+            .value_of("timeout")
+            .expect("Timeout is set")
+            .parse::<u32>()
+            .expect("Timeout is an integer"),
+        max_errors: args
+            .value_of("max_errors")
+            .expect("Max errors is set")
+            .parse::<u32>()
+            .expect("Max errors is an integer"),
+        wordlist_split: args
+            .value_of("wordlist_split")
+            .expect("Wordlist split is set")
+            .parse::<u32>()
+            .expect("Wordlist split is an integer"),
+        scan_listable: args.is_present("scan_listable"),
+        cookies,
+        headers,
+        scrape_listable: args.is_present("scrape_listable"),
+        whitelist,
+        code_list,
+        is_terminal: atty::is(Stream::Stdout),
+        no_color: args.is_present("no_color"),
+        disable_validator: args.is_present("disable_validator"),
+        http_verb: value_t!(args.value_of("http_verb"), HttpVerb)
+            .expect("Must be valid HTTP verb"),
+        scan_opts,
+        log_level,
+        length_blacklist: if let Some(lengths) =
+            args.values_of("length_blacklist")
+        {
+            length_blacklist_parse(lengths)
+        } else {
+            Default::default()
+        },
+    }
+}
+
+fn app() -> App<'static, 'static> {
     // For general compilation, include the current commit hash and
     // build date in the version string. When building releases via the
     // Makefile, only use the release number.
     let version_string = get_version_string();
-    // Defines all the command line arguments with the Clap module
-    let args = App::new("Dirble")
+    App::new("Dirble")
         .version(version_string)
         .author(
             "Developed by Izzy Whistlecroft \
@@ -564,220 +781,6 @@ set to 0 to disable")
              .next_line_help(true)
              .takes_value(true)
              .value_delimiter(","))
-        .get_matches_from(args);
-
-    let mut hostnames: Vec<Url> = Vec::new();
-
-    // Get from host arguments
-    if let Some(host) = args.value_of("host") {
-        if let Ok(host) = Url::parse(host) {
-            hostnames.push(host);
-        } else {
-            println!("Invaid URL: {}", host);
-        }
-    }
-    if let Some(host_files) = args.values_of("host_file") {
-        for host_file in host_files {
-            let hosts = lines_from_file(&String::from(host_file));
-            for hostname in hosts {
-                if url_is_valid(hostname.clone()).is_ok() {
-                    if let Ok(host) = Url::parse(hostname.as_str()) {
-                        hostnames.push(host);
-                    }
-                } else {
-                    println!("Invalid URL: {}", hostname);
-                }
-            }
-        }
-    }
-    if let Some(extra_hosts) = args.values_of("extra_hosts") {
-        for hostname in extra_hosts {
-            if let Ok(host) = Url::parse(hostname) {
-                hostnames.push(host);
-            }
-        }
-    }
-
-    if hostnames.is_empty() {
-        println!("No valid hosts were provided - exiting");
-        exit(2);
-    }
-    hostnames.sort();
-    hostnames.dedup();
-
-    // Parse wordlist file names into a vector
-    let wordlists: Option<Vec<String>> =
-        if let Some(wordlist_files) = args.values_of("wordlist") {
-            let mut wordlists_vec = Vec::new();
-            for wordlist_file in wordlist_files {
-                wordlists_vec.push(String::from(wordlist_file));
-            }
-            Some(wordlists_vec)
-        } else {
-            None
-        };
-
-    // Check for proxy related flags
-    let proxy_enabled;
-    let proxy_address;
-    if let Some(proxy_addr) = args.value_of("proxy") {
-        proxy_enabled = true;
-        proxy_address = proxy_addr;
-        if proxy_address == "http://localhost:8080" {
-            println!(
-                "You could use the --burp flag instead of the --proxy flag!"
-            );
-        }
-    } else if args.is_present("burp") {
-        proxy_enabled = true;
-        proxy_address = "http://localhost:8080";
-    } else if args.is_present("no_proxy") {
-        proxy_enabled = true;
-        proxy_address = "";
-    } else {
-        proxy_enabled = false;
-        proxy_address = "";
-    }
-    let proxy_address = String::from(proxy_address);
-
-    // Read provided cookie values into a vector
-    let cookies: Option<String> =
-        if let Some(cookies) = args.values_of("cookie") {
-            let mut temp_cookies: Vec<String> = Vec::new();
-            for cookie in cookies {
-                temp_cookies.push(String::from(cookie));
-            }
-            Some(temp_cookies.join("; "))
-        } else {
-            None
-        };
-
-    // Read provided headers into a vector
-    let headers: Option<Vec<String>> =
-        if let Some(headers) = args.values_of("header") {
-            let mut temp_headers: Vec<String> = Vec::new();
-            for header in headers {
-                temp_headers.push(String::from(header));
-            }
-            Some(temp_headers)
-        } else {
-            None
-        };
-
-    let mut whitelist = false;
-    let mut code_list: Vec<u32> = Vec::new();
-
-    if let Some(whitelist_values) = args.values_of("code_whitelist") {
-        whitelist = true;
-        for code in whitelist_values {
-            code_list.push(code.parse::<u32>().expect("Code is an integer"));
-        }
-    } else if let Some(blacklist_values) = args.values_of("code_blacklist") {
-        whitelist = false;
-        for code in blacklist_values {
-            code_list.push(code.parse::<u32>().expect("Code is an integer"));
-        }
-    }
-
-    let mut max_recursion_depth = None;
-    if args.is_present("disable_recursion") {
-        max_recursion_depth = Some(0);
-    } else if let Some(depth) = args.value_of("max_recursion_depth") {
-        max_recursion_depth =
-            Some(depth.parse::<i32>().expect("Recursion depth is an integer"));
-    }
-
-    let mut scan_opts = ScanOpts {
-        scan_401: false,
-        scan_403: false,
-    };
-    if args.is_present("scan_401") || (whitelist && code_list.contains(&401)) {
-        scan_opts.scan_401 = true;
-    }
-
-    if args.is_present("scan_403") || (whitelist && code_list.contains(&403)) {
-        scan_opts.scan_403 = true;
-    }
-
-    // Configure the logging level. The silent flag overrides any
-    // verbose flags in use.
-    let log_level = if args.is_present("silent") {
-        LevelFilter::Warn
-    } else {
-        match args.occurrences_of("verbose") {
-            0 => LevelFilter::Info,
-            1 => LevelFilter::Debug,
-            _ => LevelFilter::Trace,
-        }
-    };
-
-    // Create the GlobalOpts struct and return it
-    GlobalOpts {
-        hostnames,
-        wordlist_files: wordlists,
-        prefixes: load_modifiers(&args, "prefixes"),
-        extensions: load_modifiers(&args, "extensions"),
-        extension_substitution: args.is_present("extension_substitution"),
-        max_threads: args
-            .value_of("max_threads")
-            .expect("Max threads is set")
-            .parse::<u32>()
-            .expect("Max threads is an integer"),
-        proxy_enabled,
-        proxy_address,
-        proxy_auth_enabled: false,
-        ignore_cert: args.is_present("ignore_cert"),
-        show_htaccess: args.is_present("show_htaccess"),
-        throttle: if let Some(throttle) = args.value_of("throttle") {
-            throttle.parse::<u32>().expect("Throttle is an integer")
-        } else {
-            0
-        },
-        max_recursion_depth,
-        user_agent: args.value_of("user_agent").map(String::from),
-        // Dependency between username and password is handled by Clap
-        username: args.value_of("username").map(String::from),
-        // Dependency between username and password is handled by Clap
-        password: args.value_of("password").map(String::from),
-        output_file: filename_from_args(&args, FileTypes::Txt),
-        json_file: filename_from_args(&args, FileTypes::Json),
-        xml_file: filename_from_args(&args, FileTypes::Xml),
-        timeout: args
-            .value_of("timeout")
-            .expect("Timeout is set")
-            .parse::<u32>()
-            .expect("Timeout is an integer"),
-        max_errors: args
-            .value_of("max_errors")
-            .expect("Max errors is set")
-            .parse::<u32>()
-            .expect("Max errors is an integer"),
-        wordlist_split: args
-            .value_of("wordlist_split")
-            .expect("Wordlist split is set")
-            .parse::<u32>()
-            .expect("Wordlist split is an integer"),
-        scan_listable: args.is_present("scan_listable"),
-        cookies,
-        headers,
-        scrape_listable: args.is_present("scrape_listable"),
-        whitelist,
-        code_list,
-        is_terminal: atty::is(Stream::Stdout),
-        no_color: args.is_present("no_color"),
-        disable_validator: args.is_present("disable_validator"),
-        http_verb: value_t!(args.value_of("http_verb"), HttpVerb)
-            .expect("Must be valid HTTP verb"),
-        scan_opts,
-        log_level,
-        length_blacklist: if let Some(lengths) =
-            args.values_of("length_blacklist")
-        {
-            length_blacklist_parse(lengths)
-        } else {
-            Default::default()
-        },
-    }
 }
 
 /// filetype is one of "txt", "json", and "xml". Returns a filename that is
