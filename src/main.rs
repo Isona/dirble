@@ -15,16 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Dirble.  If not, see <https://www.gnu.org/licenses/>.
 
-use log::{debug, error, info, warn, LevelFilter};
+use log::{LevelFilter, debug, error, info, warn};
 use simplelog::{ColorChoice, TermLogger, TerminalMode};
 use std::{
     collections::VecDeque,
     env::current_exe,
     path::Path,
     sync::{
+        Arc,
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, Sender},
-        Arc,
     },
     thread,
     time::Duration,

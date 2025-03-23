@@ -17,7 +17,7 @@
 
 use crate::validator_thread::TargetValidator;
 use chardet::{charset2encoding, detect};
-use encoding::{label::encoding_from_whatwg_label, DecoderTrap};
+use encoding::{DecoderTrap, label::encoding_from_whatwg_label};
 use std::{fs, path::Path, sync::Arc};
 use url::Url;
 
