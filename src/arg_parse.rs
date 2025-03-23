@@ -17,12 +17,12 @@
 
 use crate::wordlist::lines_from_file;
 use atty::Stream;
-use clap::{App, AppSettings, Arg, ArgGroup, arg_enum, crate_version, value_t};
+use clap::{arg_enum, crate_version, value_t, App, AppSettings, Arg, ArgGroup};
 use simplelog::LevelFilter;
-use std::{fmt, process::exit};
+use std::{ffi::OsString, fmt, process::exit};
 use url::Url;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GlobalOpts {
     pub hostnames: Vec<Url>,
     pub wordlist_files: Option<Vec<String>>,
@@ -32,7 +32,7 @@ pub struct GlobalOpts {
     pub max_threads: u32,
     pub proxy_enabled: bool,
     pub proxy_address: String,
-    #[expect(dead_code, reason = "TODO")]
+    #[allow(dead_code, reason = "TODO")]
     pub proxy_auth_enabled: bool,
     pub ignore_cert: bool,
     pub show_htaccess: bool,
@@ -62,7 +62,7 @@ pub struct GlobalOpts {
     pub length_blacklist: LengthRanges,
 }
 
-#[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
 pub struct LengthRange {
     pub start: usize,
     pub end: Option<usize>,
@@ -90,7 +90,7 @@ impl fmt::Debug for LengthRange {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LengthRanges {
     pub ranges: Vec<LengthRange>,
 }
@@ -118,14 +118,14 @@ impl fmt::Display for LengthRanges {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct ScanOpts {
     pub scan_401: bool,
     pub scan_403: bool,
 }
 
 arg_enum! {
-    #[derive(Clone)]
+    #[derive(Copy,Clone, Debug,PartialEq,Eq)]
     pub enum HttpVerb {
         Get,
         Head,
@@ -148,7 +148,11 @@ enum FileTypes {
 }
 
 #[allow(clippy::cognitive_complexity)]
-pub fn get_args() -> GlobalOpts {
+pub fn get_args<ArgsIter>(args: ArgsIter) -> GlobalOpts
+where
+    ArgsIter: IntoIterator,
+    ArgsIter::Item: Into<OsString> + Clone,
+{
     // For general compilation, include the current commit hash and
     // build date in the version string. When building releases via the
     // Makefile, only use the release number.
@@ -560,7 +564,7 @@ set to 0 to disable")
              .next_line_help(true)
              .takes_value(true)
              .value_delimiter(","))
-        .get_matches();
+        .get_matches_from(args);
 
     let mut hostnames: Vec<Url> = Vec::new();
 
@@ -957,10 +961,58 @@ fn length_blacklist_parse(blacklist_inputs: clap::Values) -> LengthRanges {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+    use log::LevelFilter::Info;
+    use pretty_assertions::assert_eq;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    impl Default for GlobalOpts {
+        fn default() -> Self {
+            GlobalOpts {
+                hostnames: Default::default(),
+                wordlist_files: Default::default(),
+                prefixes: vec!["".into()],
+                extensions: vec!["".into()],
+                extension_substitution: false,
+                max_threads: 10,
+                proxy_enabled: Default::default(),
+                proxy_address: Default::default(),
+                proxy_auth_enabled: Default::default(),
+                ignore_cert: Default::default(),
+                show_htaccess: Default::default(),
+                throttle: Default::default(),
+                max_recursion_depth: Default::default(),
+                user_agent: Default::default(),
+                username: Default::default(),
+                password: Default::default(),
+                output_file: Default::default(),
+                json_file: Default::default(),
+                xml_file: Default::default(),
+                timeout: 5,
+                max_errors: 5,
+                wordlist_split: 3,
+                scan_listable: Default::default(),
+                cookies: Default::default(),
+                headers: Default::default(),
+                scrape_listable: Default::default(),
+                whitelist: Default::default(),
+                code_list: Default::default(),
+                is_terminal: Default::default(),
+                no_color: Default::default(),
+                disable_validator: Default::default(),
+                http_verb: Default::default(),
+                scan_opts: Default::default(),
+                log_level: Info,
+                length_blacklist: Default::default(),
+            }
+        }
+    }
+
     #[test]
     fn argparse_length_range_contains() {
         // Range with start and end values
-        let range = crate::arg_parse::LengthRange {
+        let range = LengthRange {
             start: 3,
             end: Some(6),
         };
@@ -976,7 +1028,7 @@ mod test {
         assert!(!range.contains(7));
 
         // Range with just a start value
-        let range = crate::arg_parse::LengthRange {
+        let range = LengthRange {
             start: 5,
             end: None,
         };
@@ -991,17 +1043,17 @@ mod test {
     #[test]
     fn argparse_length_ranges_contain() {
         // Empty range
-        let ranges: crate::arg_parse::LengthRanges = Default::default();
+        let ranges: LengthRanges = Default::default();
         assert!(!ranges.contains(4));
 
         // Non-overlapping ranges
-        let ranges = crate::arg_parse::LengthRanges {
+        let ranges = LengthRanges {
             ranges: vec![
-                crate::arg_parse::LengthRange {
+                LengthRange {
                     start: 4,
                     end: Some(10),
                 },
-                crate::arg_parse::LengthRange {
+                LengthRange {
                     start: 15,
                     end: Some(18),
                 },
@@ -1017,5 +1069,1018 @@ mod test {
         assert!(ranges.contains(18));
         // too large
         assert!(!ranges.contains(19));
+    }
+
+    #[test]
+    fn test_int_checks() {
+        let expected_err = "The number given must be a positive integer.";
+        positive_int_check("1".into()).unwrap();
+        positive_int_check(u32::MAX.to_string()).unwrap();
+        assert_eq!(positive_int_check("0".into()).unwrap_err(), expected_err);
+        assert_eq!(positive_int_check("-1".into()).unwrap_err(), expected_err);
+        assert_eq!(
+            positive_int_check((u32::MAX as u64 + 1).to_string()).unwrap_err(),
+            expected_err
+        );
+        assert_eq!(
+            positive_int_check("text".into()).unwrap_err(),
+            expected_err
+        );
+        assert_eq!(positive_int_check("".into()).unwrap_err(), expected_err);
+
+        let expected_err = "The number given must be an integer.";
+        int_check("1".into()).unwrap();
+        int_check("0".into()).unwrap();
+        int_check(u32::MAX.to_string()).unwrap();
+        assert_eq!(int_check("-1".into()).unwrap_err(), expected_err);
+        assert_eq!(
+            int_check((u32::MAX as u64 + 1).to_string()).unwrap_err(),
+            expected_err
+        );
+        assert_eq!(int_check("text".into()).unwrap_err(), expected_err);
+        assert_eq!(int_check("".into()).unwrap_err(), expected_err);
+    }
+
+    #[track_caller]
+    fn assert_args<ArgsIter>(args: ArgsIter, expected: GlobalOpts)
+    where
+        ArgsIter: IntoIterator,
+        ArgsIter::Item: Into<OsString> + Clone,
+    {
+        let mut opts = get_args(args);
+        // normalise the is-terminal value as it's not useful to test
+        opts.is_terminal = expected.is_terminal;
+        let info = std::panic::Location::caller();
+        assert_eq!(opts, expected, "Caller: {}:{}", info.file(), info.line());
+    }
+
+    fn make_uri_file() -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(
+            &mut file,
+            "http://some-host
+            https://other-host"
+        )
+        .unwrap();
+        file
+    }
+
+    fn make_extensions_file() -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(&mut file, "txt").unwrap();
+        writeln!(&mut file, "jpg").unwrap();
+        writeln!(&mut file, "png").unwrap();
+        file
+    }
+
+    #[test]
+    fn required_args() {
+        assert_args(
+            ["test", "http://some-host"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "-u", "http://some-host", "-u", "https://other-host"],
+            GlobalOpts {
+                hostnames: vec![
+                    "http://some-host".parse().unwrap(),
+                    "https://other-host".parse().unwrap(),
+                ],
+                ..Default::default()
+            },
+        );
+        let uri_file = make_uri_file();
+        assert_args(
+            ["test", "-U", &uri_file.path().display().to_string()],
+            GlobalOpts {
+                hostnames: vec![
+                    "http://some-host".parse().unwrap(),
+                    "https://other-host".parse().unwrap(),
+                ],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "-U",
+                &uri_file.path().display().to_string(),
+                "-u",
+                "http://third-host",
+            ],
+            GlobalOpts {
+                hostnames: vec![
+                    "http://some-host".parse().unwrap(),
+                    "http://third-host".parse().unwrap(),
+                    "https://other-host".parse().unwrap(),
+                ],
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn http_verb() {
+        assert_args(
+            ["test", "--verb", "Get", "http://some-host"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "--verb", "Post", "http://some-host"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                http_verb: HttpVerb::Post,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "--verb", "Head", "http://some-host"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                http_verb: HttpVerb::Head,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--verb", "Head"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                http_verb: HttpVerb::Head,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn wordlist() {
+        assert_args(
+            ["test", "http://some-host", "--wordlist", "file-one"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                wordlist_files: Some(vec!["file-one".into()]),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--wordlist",
+                "file-one",
+                "-w",
+                "file-two",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                wordlist_files: Some(vec![
+                    "file-one".into(),
+                    "file-two".into(),
+                ]),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn extensions() {
+        assert_args(
+            ["test", "http://some-host", "--extensions", "txt"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: vec![String::new(), "txt".into()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--extensions", "txt,jpg"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: vec![String::new(), "jpg".into(), "txt".into()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--extensions",
+                "txt,jpg",
+                "-x",
+                "png",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn extension_file() {
+        let exts_file = make_extensions_file();
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--extension-file",
+                &exts_file.path().display().to_string(),
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "-X",
+                &exts_file.path().display().to_string(),
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "-X",
+                &exts_file.path().display().to_string(),
+                "-x",
+                "rs",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["", "jpg", "png", "rs", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn ext_sub() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--ext-sub",
+                "-x",
+                "txt,png,rs,jpg",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["", "jpg", "png", "rs", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                extension_substitution: true,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--ext-sub",
+                "-x",
+                "txt,png,rs,jpg",
+                "--force-extension",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["jpg", "png", "rs", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                extension_substitution: true,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--ext-sub",
+                "-x",
+                "txt,png,rs,jpg",
+                "-f",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                extensions: ["jpg", "png", "rs", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                extension_substitution: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn prefixes() {
+        assert_args(
+            ["test", "http://some-host", "--prefixes", "txt"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: vec![String::new(), "txt".into()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--prefixes", "txt,jpg"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: vec![String::new(), "jpg".into(), "txt".into()],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--prefixes",
+                "txt,jpg",
+                "-p",
+                "png",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn prefix_file() {
+        let exts_file = make_extensions_file();
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--prefix-file",
+                &exts_file.path().display().to_string(),
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "-P",
+                &exts_file.path().display().to_string(),
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: ["", "jpg", "png", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "-P",
+                &exts_file.path().display().to_string(),
+                "-p",
+                "rs",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                prefixes: ["", "jpg", "png", "rs", "txt"]
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn output_file() {
+        assert_args(
+            ["test", "http://some-host", "-o", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                output_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--oN", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                output_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn json_file() {
+        assert_args(
+            ["test", "http://some-host", "--json-file", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                json_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--oJ", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                json_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn xml_file() {
+        assert_args(
+            ["test", "http://some-host", "--xml-file", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                xml_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--oX", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                xml_file: Some("some-file".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn output_all() {
+        assert_args(
+            ["test", "http://some-host", "--output-all", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                output_file: Some("some-file.txt".into()),
+                json_file: Some("some-file.json".into()),
+                xml_file: Some("some-file.xml".into()),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--oA", "some-file"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                output_file: Some("some-file.txt".into()),
+                json_file: Some("some-file.json".into()),
+                xml_file: Some("some-file.xml".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn proxy() {
+        assert_args(
+            ["test", "http://some-host", "--proxy", "http://proxy:8000"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                proxy_enabled: true,
+                proxy_address: "http://proxy:8000".into(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--burp"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                proxy_enabled: true,
+                proxy_address: "http://localhost:8080".into(),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--no-proxy"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                //TODO should this set proxy_enabled to false?
+                proxy_enabled: true,
+                proxy_address: String::new(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn max_threads() {
+        assert_args(
+            ["test", "http://some-host", "--max-threads", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_threads: 4,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-t", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_threads: 4,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn wordlist_split() {
+        assert_args(
+            ["test", "http://some-host", "--wordlist-split", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                wordlist_split: 4,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-T", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                wordlist_split: 4,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn throttle() {
+        assert_args(
+            ["test", "http://some-host", "--throttle", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                throttle: 4,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-z", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                throttle: 4,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn username_password() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--username",
+                "user",
+                "--password",
+                "pass",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                username: Some("user".into()),
+                password: Some("pass".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn recursion() {
+        assert_args(
+            ["test", "http://some-host", "--disable-recursion"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_recursion_depth: Some(0),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--max-recursion-depth", "4"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_recursion_depth: Some(4),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--max-recursion-depth",
+                "4",
+                "--disable-recursion",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_recursion_depth: Some(0),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn listable() {
+        assert_args(
+            ["test", "http://some-host", "--scan-listable"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                scan_listable: true,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--scrape-listable"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                scrape_listable: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn cookie() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--cookie",
+                "name1=value1",
+                "-c",
+                "name2=value2",
+                "-c",
+                "name3=value3",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                cookies: Some(
+                    "name1=value1; name2=value2; name3=value3".into(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn header() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--header",
+                "header1:value1",
+                "-H",
+                "header2: value2",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                headers: Some(
+                    ["header1:value1", "header2: value2"]
+                        .into_iter()
+                        .map(Into::into)
+                        .collect(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn user_agent() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--user-agent",
+                "some user agent",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                user_agent: Some("some user agent".into()),
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-a", "some user agent"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                user_agent: Some("some user agent".into()),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn verbosity() {
+        assert_args(
+            ["test", "http://some-host", "--verbose"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Debug,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--verbose", "--verbose"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Trace,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--verbose",
+                "--verbose",
+                "--verbose",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Trace,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-v"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Debug,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-vv"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Trace,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-vvv"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Trace,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn silent() {
+        assert_args(
+            ["test", "http://some-host", "--silent"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Warn,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-S"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                log_level: LevelFilter::Warn,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn code_whitelist() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--code-whitelist",
+                "200,201,204",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                whitelist: true,
+                code_list: vec![200, 201, 204],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-W", "200,201,204"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                whitelist: true,
+                code_list: vec![200, 201, 204],
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn code_blacklist() {
+        assert_args(
+            [
+                "test",
+                "http://some-host",
+                "--code-blacklist",
+                "200,201,204",
+            ],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                whitelist: false,
+                code_list: vec![200, 201, 204],
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-B", "200,201,204"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                whitelist: false,
+                code_list: vec![200, 201, 204],
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn disable_validator() {
+        assert_args(
+            ["test", "http://some-host", "--disable-validator"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                disable_validator: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn scan_opts() {
+        assert_args(
+            ["test", "http://some-host", "--scan-401"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                scan_opts: ScanOpts {
+                    scan_401: true,
+                    scan_403: false,
+                },
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--scan-403"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                scan_opts: ScanOpts {
+                    scan_401: false,
+                    scan_403: true,
+                },
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn ignore_cert() {
+        assert_args(
+            ["test", "http://some-host", "--ignore-cert"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                ignore_cert: true,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "-k"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                ignore_cert: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn show_htaccess() {
+        assert_args(
+            ["test", "http://some-host", "--show-htaccess"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                show_htaccess: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn timeout() {
+        assert_args(
+            ["test", "http://some-host", "--timeout", "2"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                timeout: 2,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn max_errors() {
+        assert_args(
+            ["test", "http://some-host", "--max-errors", "2"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                max_errors: 2,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn no_colour() {
+        assert_args(
+            ["test", "http://some-host", "--no-colour"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                no_color: true,
+                ..Default::default()
+            },
+        );
+        assert_args(
+            ["test", "http://some-host", "--no-color"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                no_color: true,
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn hide_lengths() {
+        assert_args(
+            ["test", "http://some-host", "--hide-lengths", "400,600-700"],
+            GlobalOpts {
+                hostnames: vec!["http://some-host".parse().unwrap()],
+                length_blacklist: LengthRanges {
+                    ranges: vec![
+                        LengthRange {
+                            start: 400,
+                            end: None,
+                        },
+                        LengthRange {
+                            start: 600,
+                            end: Some(700),
+                        },
+                    ],
+                },
+                ..Default::default()
+            },
+        );
     }
 }
