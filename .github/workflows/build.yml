@@ -91,39 +91,3 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
-
-  # flask:
-  #   name: Test against flask server
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout sources
-  #       uses: actions/checkout@v1
-
-  #     - name: Install stable toolchain
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         override: true
-
-  #     - name: Install python dependencies
-  #       run: |
-  #         python3 -m pip install setuptools
-  #         python3 -m pip install -r test/requirements.txt
-
-  #     - name: Start server
-  #       run: |
-  #         python3 test/flask-server.py &
-  #         python3 test/aio-chunk-server.py &
-
-  #     - name: Run Dirble
-  #       run: |
-  #         cargo run -- \
-  #           -u http://localhost:5000 \
-  #           -u http://localhost:5001 \
-  #           -w dirble_wordlist.txt \
-  #           -w test/flask_wordlist.txt \
-  #           -o test-output.txt
-
-  #     - name: Check that the output is correct
-  #       run: |
-  #         bash test/check-output-file.sh test-output.txt

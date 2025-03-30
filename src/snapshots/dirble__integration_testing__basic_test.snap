@@ -1,0 +1,7 @@
+---
+source: src/integration_testing.rs
+expression: output
+---
+Dirble Scan Report for http://localhost/:
++ http://localhost/201 (CODE:201|SIZE:11)
++ http://localhost/ok (CODE:200|SIZE:10)

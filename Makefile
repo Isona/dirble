@@ -4,10 +4,7 @@
 targets = x86_64-unknown-linux-gnu \
 		  i686-unknown-linux-gnu \
 		  x86_64-pc-windows-gnu \
-		  i686-pc-windows-gnu \
-#		  wasm32-unknown-emscripten
-#		  ^ Potential bug in cross, openssl does not compile for wasm for some
-#		  reason.
+		  i686-pc-windows-gnu
 
 cargo_flags = --release \
 			  --features release_version_string
