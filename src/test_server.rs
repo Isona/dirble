@@ -1,4 +1,4 @@
-use axum::{extract::Path, Router};
+use axum::{Router, extract::Path};
 use http::StatusCode;
 use tokio::net::TcpListener;
 
