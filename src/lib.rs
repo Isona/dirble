@@ -44,6 +44,8 @@ mod validator_thread;
 mod wordlist;
 
 #[cfg(test)]
+mod integration_testing;
+#[cfg(test)]
 mod test_server;
 
 #[allow(clippy::cognitive_complexity)]
