@@ -18,7 +18,7 @@
 use crate::validator_thread::TargetValidator;
 use chardet::{charset2encoding, detect};
 use encoding::{DecoderTrap, label::encoding_from_whatwg_label};
-use std::{fs, sync::Arc};
+use std::{fs, path::Path, sync::Arc};
 use url::Url;
 
 // Struct for a UriGenerator, it needs the hostname, the suffix to
@@ -105,7 +105,9 @@ impl Iterator for UriGenerator {
 }
 
 // Function used to read in lines from the wordlist file
-pub fn lines_from_file(filename: &str) -> Vec<String> {
+pub fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
+    let filename = filename.as_ref();
+
     // Read the raw file in as a vector of bytes
     let reader = fs::read(filename).unwrap();
 
@@ -127,7 +129,7 @@ pub fn lines_from_file(filename: &str) -> Vec<String> {
         None => {
             panic!(
                 "Error detecting file encoding of {} - is the file empty?",
-                filename
+                filename.display(),
             );
         }
     }

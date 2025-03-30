@@ -10,7 +10,7 @@ description = "Fast directory scanning and scraping tool"
 [dependencies]
 curl = "0.4.19"
 percent-encoding = "2.1"
-clap = "2.32"
+clap = { version = "4.5.32", features = ["cargo", "derive"] }
 select = "0.6"
 chardet = "0.2.4"
 encoding = "0.2.33"
@@ -33,3 +33,7 @@ vergen-gix = { version = "1.0.6", features = ["build", "si"] }
 
 [features]
 release_version_string = []
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+tempfile = "3.19.1"

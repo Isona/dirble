@@ -44,7 +44,7 @@ mod wordlist;
 #[allow(clippy::cognitive_complexity)]
 fn main() {
     // Read the arguments in using the arg_parse module
-    let global_opts = Arc::new(arg_parse::get_args());
+    let global_opts = Arc::new(arg_parse::get_args(std::env::args_os()));
 
     // Prepare the logging handler. Default to a pretty TermLogger,
     // but if the TermLogger initialisation fails (e.g. if we are not
@@ -388,51 +388,8 @@ fn generate_end() -> request::RequestResponse {
 
 #[cfg(test)]
 mod test {
-    use crate::{arg_parse::GlobalOpts, request::RequestResponse};
-    use log::LevelFilter::Info;
+    use crate::request::RequestResponse;
     use url::Url;
-
-    impl Default for GlobalOpts {
-        fn default() -> Self {
-            GlobalOpts {
-                hostnames: Default::default(),
-                wordlist_files: Default::default(),
-                prefixes: vec!["".into()],
-                extensions: vec!["".into()],
-                extension_substitution: false,
-                max_threads: Default::default(),
-                proxy_enabled: Default::default(),
-                proxy_address: Default::default(),
-                proxy_auth_enabled: Default::default(),
-                ignore_cert: Default::default(),
-                show_htaccess: Default::default(),
-                throttle: Default::default(),
-                max_recursion_depth: Default::default(),
-                user_agent: Default::default(),
-                username: Default::default(),
-                password: Default::default(),
-                output_file: Default::default(),
-                json_file: Default::default(),
-                xml_file: Default::default(),
-                timeout: Default::default(),
-                max_errors: Default::default(),
-                wordlist_split: Default::default(),
-                scan_listable: Default::default(),
-                cookies: Default::default(),
-                headers: Default::default(),
-                scrape_listable: Default::default(),
-                whitelist: Default::default(),
-                code_list: Default::default(),
-                is_terminal: Default::default(),
-                no_color: Default::default(),
-                disable_validator: Default::default(),
-                http_verb: Default::default(),
-                scan_opts: Default::default(),
-                log_level: Info,
-                length_blacklist: Default::default(),
-            }
-        }
-    }
 
     impl Default for RequestResponse {
         fn default() -> Self {
