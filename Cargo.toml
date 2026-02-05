@@ -26,7 +26,7 @@ log = "0.4.6"
 simplelog = "0.12.2"
 ctrlc = "3.0"
 url = "2.1"
-time = "0.3.39"
+time = "0.3.47"
 
 [build-dependencies]
 vergen-gix = { version = "1.0.6", features = ["build", "si"] }
