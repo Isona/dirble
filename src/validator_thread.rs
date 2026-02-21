@@ -23,7 +23,7 @@ use std::{
     sync::{Arc, mpsc},
 };
 
-use rand::{Rng, distr::Alphanumeric};
+use rand::{RngExt, distr::Alphanumeric};
 
 use log::{debug, info, warn};
 use url::Url;
