@@ -174,11 +174,11 @@ pub fn should_send_response(
         trace!("[{}]: code 0 detected", response.url);
         return false;
     }
-    if let Some(validator) = validator_opt {
-        if validator.is_not_found(response) {
-            trace!("[{}]: matches Not Found condition", response.url);
-            return false;
-        }
+    if let Some(validator) = validator_opt
+        && validator.is_not_found(response)
+    {
+        trace!("[{}]: matches Not Found condition", response.url);
+        return false;
     }
 
     // Check that the response size has not been blacklisted

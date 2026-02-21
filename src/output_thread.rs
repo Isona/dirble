@@ -35,16 +35,16 @@ pub fn output_thread(
                 debug!("Received signal to end, generating the report");
                 break;
             }
-            if global_opts.log_level >= LevelFilter::Info {
-                if let Some(output) = output::print_response(
+            if global_opts.log_level >= LevelFilter::Info
+                && let Some(output) = output::print_response(
                     &response,
                     global_opts.clone(),
                     false,
                     false,
                     global_opts.is_terminal && !global_opts.no_color,
-                ) {
-                    println!("{}", output);
-                }
+                )
+            {
+                println!("{}", output);
             }
             response_list[response.parent_index].push(response);
         }
