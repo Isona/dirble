@@ -122,32 +122,29 @@ pub fn print_report(
         }
     }
 
-    if !responses.is_empty() {
-        if let Some(mut handle) = file_handles.json_file {
-            write_file(&mut handle, String::from("["));
-            for response_list in &responses[0..responses.len() - 1] {
-                for response in response_list {
-                    let line =
-                        format!("{},\n", output_format::output_json(response));
-                    write_file(&mut handle, line);
-                }
-            }
-            let final_response_list = &responses[responses.len() - 1];
-            for response in
-                &final_response_list[0..final_response_list.len() - 1]
-            {
+    if !responses.is_empty()
+        && let Some(mut handle) = file_handles.json_file
+    {
+        write_file(&mut handle, String::from("["));
+        for response_list in &responses[0..responses.len() - 1] {
+            for response in response_list {
                 let line =
                     format!("{},\n", output_format::output_json(response));
                 write_file(&mut handle, line);
             }
-            let final_line = format!(
-                "{}]",
-                output_format::output_json(
-                    &final_response_list[final_response_list.len() - 1]
-                )
-            );
-            write_file(&mut handle, final_line);
         }
+        let final_response_list = &responses[responses.len() - 1];
+        for response in &final_response_list[0..final_response_list.len() - 1] {
+            let line = format!("{},\n", output_format::output_json(response));
+            write_file(&mut handle, line);
+        }
+        let final_line = format!(
+            "{}]",
+            output_format::output_json(
+                &final_response_list[final_response_list.len() - 1]
+            )
+        );
+        write_file(&mut handle, final_line);
     }
 
     if let Some(mut handle) = file_handles.xml_file {
